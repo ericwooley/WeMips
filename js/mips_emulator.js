@@ -80,7 +80,7 @@ function mips_emulator(){
                 }
             } else {
                 // TODO: check for special cases, like jump, that don't fit into the standard pattern
-                console.log("----> No matches");
+                console.log("----> No matches or perhaps a comment");
             }
             mips_code.code.push(val);
         });
