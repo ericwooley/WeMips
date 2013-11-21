@@ -73,6 +73,11 @@ function mips_emulator(){
             // if ar is null, that means the regex didn't match
 
             if(ar){
+                // if we have a label, save it to the hashtable and save it to line
+                if(ar[1] && ar[1].length > 0){
+                    line['label'] = ar[1];
+                    mips_code.labels[ar[1]] = line;
+                }
 
                 // If we got variables back
                 if(ar[3]){
