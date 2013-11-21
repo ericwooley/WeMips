@@ -2,7 +2,7 @@ function mips_emulator(){
     
     ret = {};
     registers = {};
-
+    // Set the initial register data to garbage
     function register_init(){
         return Math.floor((Math.random()*1000));
     };
@@ -61,7 +61,7 @@ function mips_emulator(){
         console.log("Analyzing...");
         $.each(mc.split('\n'), function(index, val){
             console.log("--> "+val);
-            var regex = /^\s*((\w*(\w*\d*)):)?\s*(\w+)\s*(\$?\w[\w\d]*),\s*(\$?[\d\w]*),?\s*(\$?[\d\w]*)/;
+            var regex = /^\s*((\w*(\w*\d*)):)?\s*(\w+)\s+(\$?\w[\w\d]*),?\s*(\$?[\d\w]*),?\s*(\$?[\d\w]*)/;
             var ar = val.match(regex);
             // when matched the array contains the following
             // ----> [0] The instruction
