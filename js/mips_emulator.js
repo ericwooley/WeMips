@@ -61,18 +61,21 @@ function mips_emulator(){
         console.log("Analyzing...");
         $.each(mc.split('\n'), function(index, val){
             console.log("--> "+val);
-            var regex = /^\s*((\w*(\w*\d*)):)?\s*(\w+)\s+(\$?\w[\w\d]*),?\s*(\$?[\d\w]*),?\s*(\$?[\d\w]*)/;
+            var regex = /^\s*(?:(\w+)\s*:\s*)?(?:(\w+)\s+([^#]+))?(?:#(.*))?$/;
             var ar = val.match(regex);
             // when matched the array contains the following
-            // ----> [0] The instruction
-            // ----> [1] The lable with the : included
-            // ----> [2] The lable without the :
-            // ----> [3] This one is always blank, i think
-            // ----> [4] The instruction
-            // ----> [5] register 1
-            // ----> [6] register 2 or immediate
-            // ----> [7] register 3 or blank (blank implies that register 2 should be immediate)
+            // ----> [0] The entire line
+            // ----> [1] The label without the ':'
+            // ----> [2] The instruction (e.g. 'ADD', 'LW', etc.)
+            // ----> [3] The arguments (e.g. '$rd, $rs, $rt'), this should be trimmed
+            // ----> [4] The comment without the '#', this should be trimmed
             // if ar is null, that means the regex didn't match
+
+            // TODO: trim the arguments (i.e. remove trailing whitespace)
+            // TODO: split the arguments on /\s*,\s*/
+
+            // TODO: trim the comment (i.e. remove leading & trailing whitespace)
+
             if(ar){
                 // TODO: save each piece of info in this array
                 for(var i = 0; i < ar.length; i++){
