@@ -17,13 +17,14 @@
     <script src="js/jquery.min.js"></script>
     <link rel="stylesheet" href="css/codemirror.css">
     <script src="js/codemirror.js"></script>
+    <script src="../js/underscore-min.js"></script>
     <script type="text/javascript">
       $(document).ready(function(){
         console.log("Editor value: "+$("#editor").val());
         var editor = CodeMirror.fromTextArea(
         document.getElementById("editor"),{
           lineNumbers: true,
-          mode: "text/html",
+          mode: "text/css",
           matchBrackets: true,
           //viewportMargin: 'Infinity'
         });
@@ -43,7 +44,10 @@
       <div class="row">
         <div class="col-lg-8">
           <div id="editor_container" class="CodeMirror">
-            <textarea id="editor" >value</textarea>
+            <textarea id="editor" >Label: Instruction $s1, $s2, $s3
+Label:Instruction $s1, $s2, $s3
+Instruction $s1, $s2, $s3
+Instruction $s1, 16</textarea>
           </div>
           <button id="step"> Step </button>
           <button id="run"> Run </button>
