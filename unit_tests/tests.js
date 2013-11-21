@@ -7,7 +7,9 @@ J Lable\n\
 LW $s1, 16( $sp )\n\
 ADDI $s1, $s2, 16\n\
 ADD $s1, $s2, $s3 #testing it out\n\
-ADD $s1, $s2, $s3 # testing it out";
+ADD $s1, $s2, $s3 # testing it out\n\
+# This is just a comment\n\
+Bad code that doesn't work cause it's written in english";
 console.log("Input:");
 console.log(test_string);
 var me = mips_emulator();
