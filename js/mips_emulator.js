@@ -61,7 +61,7 @@ function mips_emulator(){
         console.log("Analyzing...");
         $.each(mc.split('\n'), function(index, val){
             console.log("--> "+val);
-            var regex = /^\s*(?:(\w+)\s*:\s*)?(?:(\w+)\s+([^#]+))?(?:#\s?(.*))?$/;
+            var regex = /^\s*(?:(\w+)\s*:\s*)?(?:(\w+)\s+([^#]+))?(?:#\s*(.*))?$/;
             var ar = val.match(regex);
             // when matched the array contains the following
             // ----> [0] The entire line
