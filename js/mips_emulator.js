@@ -185,20 +185,33 @@ function mips_emulator(mips_args){
             ME.setRegister(line.rt.reg_name, line.rs.val + line.imm);
         }   
     };
-
+    /**
+     * check if argument is an immediate, parse, and return the results.
+     * @param  {String} arg
+     * @return {Number}
+     */
     function getImmediate(arg) {
         if (isImmediate(arg)) {
             return parseInt(arg, 10);
         }
         return null;
     };
-
+    /**
+     * Checks if a string matches as a number
+     * @param  {String}  arg
+     * @return {Boolean}
+     */
     function isImmediate(arg) {
         return /^[-+]?\d+$/.test(arg);
     };
 
 
-    // Mips Line Object
+    /**
+     * @class mips_line 
+     * Turns a string into a mips line object which contains a mips line of code and metadata needed to run it
+     * @param  {String} line
+     * @return {[type]}
+     */
     function mips_line(line){
 
         // Object that will save information about a line of code.
