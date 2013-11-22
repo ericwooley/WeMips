@@ -10,10 +10,10 @@ ADD $s1, $s2, $s3 #testing it out\n\
 ADD $s1, $s2, $s3 # testing it out\n\
 # This is just a comment\n\
 Bad code that doesn't work cause it's written in english";
-console.log("Input:");
-console.log(test_string);
-var ME = new mips_emulator();
-ME.setCode(test_string);
+// console.log("Input:");
+// console.log(test_string);
+var ME = new mips_emulator({debug: true});
+// ME.setCode(test_string);
 
 // function isValidLine(string) {
 // 	var line = new mips_line(string);
@@ -54,43 +54,55 @@ test("Labels", function() {
 	ok(ME.isValidLine("mylabel:ADD $t0, $t1, $t2"), "we can have attached labels.");
 });
 
+test("Set/Get Registers", function(){
+    ME.setRegister('$t0', 10);
+    equal( ME.getRegister('$t0'), 10);
+    ME.setRegister('$s0', 10);
+    equal(ME.getRegister('$s0'), 10);
+    ME.setRegister('$a0', 10);
+    equal(ME.getRegister('$a0'), 10);
+});
+
+
 module("Execution", {
 	setup: function() {
 		// fill up some of the registers with predictable, usable data
-		ME.setRegister('t0', 10);
-		ME.setRegister('t1', 11);
-		ME.setRegister('t2', 12);
-		ME.setRegister('t3', 13);
-		ME.setRegister('t4', 14);
+		ME.setRegister('$t0', 10);
+		ME.setRegister('$t1', 11);
+		ME.setRegister('$t2', 12);
+		ME.setRegister('$t3', 13);
+		ME.setRegister('$t4', 14);
 	}
 });
 
+
+
 test("ADD", function() {
 	ME.runLine("ADD $t0, $t1, $t2");
-	equal(ME.getRegister('t0'), 23, "11 + 12 = 23.");
-	equal(ME.getRegister('t1'), 11, "None of the other register's values should change.");
-	equal(ME.getRegister('t2'), 12, "None of the other register's values should change.");
+	equal(ME.getRegister('$t0'), 23, "11 + 12 = 23.");
+	equal(ME.getRegister('$t1'), 11, "None of the other register's values should change.");
+	equal(ME.getRegister('$t2'), 12, "None of the other register's values should change.");
 });
 
 test("ADDI", function() {
 	ME.runLine("ADDI $t1, $t0, 505");
-	equal(ME.getRegister('t1'), 515, "10 + 505 = 515");
+	equal(ME.getRegister('$t1'), 515, "10 + 505 = 515");
 	ME.runLine("ADDI $t0, $t1, 2");
-	equal(ME.getRegister('t0'), 517, "515 + 2 = 517");
+	equal(ME.getRegister('$t0'), 517, "515 + 2 = 517");
 });
 
 module("API");
 
 test("OnChange called", function() {
 	var onChangeCalled = false;
-	ME.onChange('t0', function() { onChangeCalled = true; });
+	ME.onChange('$t0', function() { onChangeCalled = true; });
 	
 	ok(!onChangeCalled, "Didn't change anything, so it should still be false.");
 	ME.runLine("ADDI $t0, $t1, 2");
 	ok(onChangeCalled, "On change should be called when t0 is changed.");
 
 	// reset handler
-	ME.onChange('t0', null);
+	ME.onChange('$t0', null);
 	onChangeCalled = false;
 	ME.runLine("ADDI $t0, $t1, 2");
 	ok(!onChangeCalled, "Should have removed the on change handler.");	
