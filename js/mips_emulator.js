@@ -3,7 +3,8 @@
  * Mips Emulation engine.
  */
 function mips_emulator(mips_args){
-    _.defaults(mips_args{starting_code: null, debug: false});
+    mips_args = mips_args || {};
+    mips_args = _.defaults(mips_args, {starting_code: null, debug: false});
     var debug = mips_args.debug
     //////////////////////////////////
     // Private Variables / Setup
@@ -24,13 +25,13 @@ function mips_emulator(mips_args){
 
     // The intial line where we start the emulation.
     var current_line = 0;
-
     // populate registers with all the read and write registers and set their inital values to random
     for (var i = 0; i < readwriteRegs.length; i++) {
         registers[readwriteRegs[i]] = {
             val: Math.floor((Math.random()*1000)), // Set the initial register data to garbage
             onChange: null,
-            writable: true
+            writable: true,
+            reg_name: readwriteRegs[i]
         };
     };
 
@@ -38,10 +39,11 @@ function mips_emulator(mips_args){
     for (var i = 0; i < readonlyRegs.length; i++) {
         registers[readonlyRegs[i]] = {
             val: Math.floor((Math.random()*1000)), // Set the initial register data to garbage
-            writable: false
+            writable: false,
+            reg_name: readonlyRegs[i]
         };
     };
-    registers.zero = {val:0, writable: false};
+    registers.zero = {val:0, writable: false, reg_name: '$zero'};
 
     // Object that will contain analyzed code information
     var mips_code = {
@@ -56,6 +58,7 @@ function mips_emulator(mips_args){
          * @return {String} 
          */
         getRegister: function(reg){
+            if(!registers[reg]) return false;
             return registers[reg].val;
         },
         /**
@@ -64,9 +67,14 @@ function mips_emulator(mips_args){
          * @param {Number} value
          */
         setRegister: function(reg, value){
+            if(debug) console.log("Setting register " + reg + " to " + value);
+
+            if(!registers[reg]) return false;
             // TODO: ensure the register name does not exist in readonlyRegs (or better yet, ensure it exists in the readwriteRegs)
             if(registers[reg].onChange) registers[reg].onChange();
-            return registers[reg].val = value;
+                registers[reg].val = value;
+            if(debug) console.log("----> New value: "+ ME.getRegister(reg));
+            
         },
         /**
          * Set an Onchange function for a register
@@ -110,7 +118,7 @@ function mips_emulator(mips_args){
          * @param  {String} input_line 
          * @return {None}
          */
-        runLineFromString: function(input_line) {
+        runLine: function(input_line) {
             var line = new mips_line(input_line);
             runLine(line);
         },
@@ -130,11 +138,9 @@ function mips_emulator(mips_args){
             line.rd = registers[line.args[0]];
             line.rs = registers[line.args[1]];
             line.rt = registers[line.args[2]];
-
             // $rd must be writable
-            if(line.rd && line.rd.writable) line.error = "Register " + line.rd + " is not writable";
-            console.error("Error parsing line: " + JSON.stringify(line));
-            console.log(line.error)
+            if(line.rd && !line.rd.writable) line.error = "Register " + line.rd + " is not writable";
+            if(line.error) console.warn("Error parsing line: " +line.error +"\n" + JSON.stringify(line));
             return line.error || (line.rd && line.rs && line.rt);
         },
         'ADDI': function(line) {
@@ -164,11 +170,13 @@ function mips_emulator(mips_args){
     var runMethods = {
         'ADD': function(line) {
             //reg[line.rd] = reg[line.rs] + reg[line.rt];
-            ME.setRegister(line.rd, ME.getRegister(line.rs) + ME.getRegister(line.rt));
+            console.log("running add: " + JSON.stringify(line));
+            if(debug) console.log(line.rs.val + " + " + line.rt.val + " = " + (line.rs.val + line.rt.val) + " Saved to: "+ line.rd.reg_name);
+            ME.setRegister(line.rd.reg_name, line.rs.val + line.rt.val);
         },
         'ADDI': function(line) {
             //reg[line.rt] = reg[line.rs] + line.imm;
-            ME.setRegister(line.rt, ME.getRegister(line.rs) + line.imm);
+            ME.setRegister(line.rt.reg_name, line.rs.val + line.imm);
         }   
     };
 
@@ -253,7 +261,7 @@ function mips_emulator(mips_args){
             LINE.error = "Error parsing line: "+ (index+1);
             console.log("----> No matches");
         }
-
+        if(debug) console.log("Finished parsing line: " + JSON.stringify(LINE));
         return LINE;
     }
     // Set the starting code if there was any.
