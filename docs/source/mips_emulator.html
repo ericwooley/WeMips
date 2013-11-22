@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js"><span id='mips_emulator'>/**
+</span> * @class mips_emulator
+ * Mips Emulation engine.
+ */
+function mips_emulator(mips_args){
+    mips_args = mips_args || {};
+    mips_args = _.defaults(mips_args, {starting_code: null, debug: false});
+    var debug = mips_args.debug
+    //////////////////////////////////
+    // Private Variables / Setup
+    //////////////////////////////////
+    var registers = {};
+
+    var readwriteRegs = [
+        &#39;$s0&#39;, &#39;$s1&#39;, &#39;$s2&#39;, &#39;$s3&#39;, &#39;$s4&#39;, &#39;$s5&#39;, &#39;$s6&#39;, &#39;$s7&#39;,
+        &#39;$t0&#39;, &#39;$t1&#39;, &#39;$t2&#39;, &#39;$t3&#39;, &#39;$t4&#39;, &#39;$t5&#39;, &#39;$t6&#39;, &#39;$t7&#39;, &#39;$t8&#39;, &#39;$t9&#39;,
+        &#39;$v0&#39;, &#39;$v1&#39;,
+        &#39;$a0&#39;, &#39;$a1&#39;, &#39;$a2&#39;, &#39;$a3&#39;
+    ];
+    var readonlyRegs = [
+        &#39;$zero&#39;, &#39;$at&#39;,
+        &#39;$k0&#39;, &#39;$k1&#39;,
+        &#39;$gp&#39;, &#39;$sp&#39;, &#39;$fp&#39;, &#39;$ra&#39;
+    ];
+
+    // The intial line where we start the emulation.
+    var current_line = 0;
+    // populate registers with all the read and write registers and set their inital values to random
+    for (var i = 0; i &lt; readwriteRegs.length; i++) {
+        registers[readwriteRegs[i]] = {
+            val: Math.floor((Math.random()*1000)), // Set the initial register data to garbage
+            onChange: null,
+            writable: true,
+            reg_name: readwriteRegs[i]
+        };
+    };
+
+    // populate registers with all the read and write registers and set their inital values to random
+    for (var i = 0; i &lt; readonlyRegs.length; i++) {
+        registers[readonlyRegs[i]] = {
+            val: Math.floor((Math.random()*1000)), // Set the initial register data to garbage
+            writable: false,
+            reg_name: readonlyRegs[i]
+        };
+    };
+    registers.zero = {val:0, writable: false, reg_name: &#39;$zero&#39;};
+
+    // Object that will contain analyzed code information
+    var mips_code = {
+        code:[null], // Initialize with null in the 0 place, to make line numbers line up.
+        labels: {}
+    };
+    // Public methods
+    var ME = {
+<span id='mips_emulator-method-getRegister'>        /**
+</span>         * Returns a specified registers value
+         * @param  {String} reg
+         * @return {String} 
+         */
+        getRegister: function(reg){
+            if(reg.charAt(0) != &#39;$&#39;) reg = &#39;$&#39; + reg;
+            if(!registers[reg]) return false;
+            return registers[reg].val;
+        },
+<span id='mips_emulator-method-setRegister'>        /**
+</span>         * Set a register value, and call onChange function for that register
+         * @param {String} reg
+         * @param {Number} value
+         */
+        setRegister: function(reg, value){
+            if(reg.charAt(0) != &#39;$&#39;){
+                console.log(&quot;register passed without $, &quot;)
+                reg = &#39;$&#39; + reg;
+
+            }
+            if(debug) console.log(&quot;Setting register &quot; + reg + &quot; to &quot; + value);
+
+            if(!registers[reg]) return false;
+            // TODO: ensure the register name does not exist in readonlyRegs (or better yet, ensure it exists in the readwriteRegs)
+            if(registers[reg].onChange) registers[reg].onChange();
+                registers[reg].val = value;
+            if(debug) console.log(&quot;----&gt; New value: &quot;+ ME.getRegister(reg));
+
+        },
+<span id='mips_emulator-method-onChange'>        /**
+</span>         * Set an Onchange function for a register
+         * @param  {String} reg
+         * @param  {Function} func
+         * @return {Null}
+         */
+        onChange: function(reg, func){
+            registers[reg].onChange = func;
+        },
+<span id='mips_emulator-method-isRegister'>        /**
+</span>         * Checks if a register is a valid register
+         * @param  {String}  reg
+         * @return {Boolean}
+         */
+        isRegister: function(reg){
+            return registers[reg] &amp;&amp; typeof(registers[reg]) !== &#39;undefined&#39;;
+        },
+<span id='mips_emulator-method-isValidLine'>        /**
+</span>         * Checks if a string is a valid mips line
+         * @param  {String}  line
+         * @return {Boolean}
+         */
+        isValidLine: function(line){
+            return !(new mips_line(line).error);
+        },
+<span id='mips_emulator-method-setCode'>        /**
+</span>         * Set code to be emulated
+         * @param {String} mc
+         */
+        setCode: function(mc){   
+            console.log(&quot;Analyzing...&quot;);
+            $.each(mc.split(&#39;\n&#39;), function(index, val){
+                var line = new mips_line(val);
+                console.log(JSON.stringify(line));
+                mips_code.code.push(line);
+            });
+        },
+<span id='mips_emulator-method-runLine'>        /**
+</span>         * Run an individual line
+         * @param  {String} input_line 
+         * @return {None}
+         */
+        runLine: function(input_line) {
+            var line = new mips_line(input_line);
+            runLine(line);
+        },
+    };
+
+
+    ////////////////////////////////////////////////
+    // Private Methods
+    ////////////////////////////////////////////////
+<span id='mips_emulator-property-parseMethods'>    /**
+</span>     * Verifies that an operation can use these registers
+     * @type {Object}
+     */
+    var parseMethods = {
+        &#39;ADD&#39;: function(line) {
+            // Grab each register from the registers
+            line.rd = registers[line.args[0]];
+            line.rs = registers[line.args[1]];
+            line.rt = registers[line.args[2]];
+            // $rd must be writable
+            if(line.rd &amp;&amp; !line.rd.writable) line.error = &quot;Register &quot; + line.rd + &quot; is not writable&quot;;
+            if(line.error) console.warn(&quot;Error parsing line: &quot; +line.error +&quot;\n&quot; + JSON.stringify(line));
+            return line.error || (line.rd &amp;&amp; line.rs &amp;&amp; line.rt);
+        },
+        &#39;ADDI&#39;: function(line) {
+            line.rt = registers[line.args[0]];
+            line.rs = registers[line.args[1]];
+            line.imm = getImmediate(line.args[2]);
+            return line.rt &amp;&amp; line.rs &amp;&amp; line.imm;
+        }
+    };
+<span id='mips_emulator-method-runLine'>    /**
+</span>     * Run an individual line
+     * @return {[type]}
+     */
+    runLine = function(line) {
+        if (line.ignore || line.error) { return line.error; };// returns error if there is one or null if not.
+        // we can assume that we parsed successfully at this point.
+        runMethods[line.instruction](line);
+
+    };
+    // these will be called after the parse method has been called
+    // the goal is to make these methods look as close to the MIPS cheat sheet as possible.
+    
+<span id='mips_emulator-property-runMethods'>    /**
+</span>     * Collection of methods to run the intended operations.
+     * @type {Object}
+     */
+    var runMethods = {
+        &#39;ADD&#39;: function(line) {
+            //reg[line.rd] = reg[line.rs] + reg[line.rt];
+            console.log(&quot;running add: &quot; + JSON.stringify(line));
+            if(debug) console.log(line.rs.val + &quot; + &quot; + line.rt.val + &quot; = &quot; + (line.rs.val + line.rt.val) + &quot; Saved to: &quot;+ line.rd.reg_name);
+            ME.setRegister(line.rd.reg_name, line.rs.val + line.rt.val);
+        },
+        &#39;ADDI&#39;: function(line) {
+            //reg[line.rt] = reg[line.rs] + line.imm;
+            ME.setRegister(line.rt.reg_name, line.rs.val + line.imm);
+        }   
+    };
+<span id='mips_emulator-method-getImmediate'>    /**
+</span>     * check if argument is an immediate, parse, and return the results.
+     * @param  {String} arg
+     * @return {Number}
+     */
+    function getImmediate(arg) {
+        if (isImmediate(arg)) {
+            return parseInt(arg, 10);
+        }
+        return null;
+    };
+<span id='mips_emulator-method-isImmediate'>    /**
+</span>     * Checks if a string matches as a number
+     * @param  {String}  arg
+     * @return {Boolean}
+     */
+    function isImmediate(arg) {
+        return /^[-+]?\d+$/.test(arg);
+    };
+
+
+<span id='mips_line'>    /**
+</span>     * @class mips_line 
+     * Turns a string into a mips line object which contains a mips line of code and metadata needed to run it
+     * @param  {String} line
+     * @return {[type]}
+     */
+    function mips_line(line){
+
+        // Object that will save information about a line of code.
+        var LINE = {
+            args: [],
+            instruction: null, 
+            ignore: true, 
+            comment: &#39;&#39;, 
+            label: null, 
+            error: null
+        };
+
+
+        //console.log(&quot;--&gt; &quot;+val);
+        var regex = /^\s*(?:(\w+)\s*:\s*)?(?:(\w+)\s+([^#]+))?(?:#\s*(.*))?$/;
+        var ar = line.match(regex);
+        // when matched the array contains the following
+        // ----&gt; [0] The entire line
+        // ----&gt; [1] The label without the &#39;:&#39;
+        // ----&gt; [2] The instruction (e.g. &#39;ADD&#39;, &#39;LW&#39;, etc.)
+        // ----&gt; [3] The arguments (e.g. &#39;$rd, $rs, $rt&#39;), this should be trimmed
+        // ----&gt; [4] The comment without the &#39;#&#39;, this should be trimmed
+        // if ar is null, that means the regex didn&#39;t match
+
+        if(ar){
+            // if we have a label, save it to the hashtable and save it to line
+            if(ar[1] &amp;&amp; ar[1].length &gt; 0){
+                LINE.label = ar[1];
+                // TODO: mips_code.labels[ar[1]] = line;
+            }
+
+            // If we got variables back
+            if(ar[3]){
+                // Split the args by `,`
+                LINE.args = ar[3].split(&#39;,&#39;);
+
+                // Trim the varaibles
+                for(var i = 0; i &lt; LINE.args.length; i++){
+                   LINE.args[i] = $.trim(LINE.args[i]);
+                }
+            }
+
+            // The instruction for this code;
+            LINE.instruction = $.trim(ar[2]).toUpperCase();
+
+            // If the line has an instruction, we should not ignore it. otherwise it may be a comment or blank
+            if(LINE.instruction &amp;&amp; LINE.instruction.length &gt; 0) LINE.ignore = false;
+
+            // The comment, obviously
+            LINE.comment = $.trim(ar[4]);
+
+            // parse the instruction now, so it can be executed whenever we want
+            if (LINE.instruction) {
+                // an instruction was found, so try to parse it
+                var parseMethod = parseMethods[LINE.instruction];
+                if (!parseMethod) {
+                    LINE.error = &quot;Error. Unknown instruction: &quot; + LINE.instruction;
+                } else if (!parseMethod(LINE)) {
+                    LINE.error = &quot;Error. Invalid arguments: &quot; + LINE.args;
+                }
+            };
+
+        // In the else case, the regex didn&#39;t match, possible error?
+        } else {
+            // TODO: check for special cases
+            LINE.error = &quot;Error parsing line: &quot;+ (index+1);
+            console.log(&quot;----&gt; No matches&quot;);
+        }
+        if(debug) console.log(&quot;Finished parsing line: &quot; + JSON.stringify(LINE));
+        return LINE;
+    }
+    // Set the starting code if there was any.
+    if(mips_args.starting_code) ME.setCode(mips_args.starting_code);
+    return ME;
+}</pre>
+</body>
+</html>
