@@ -19,24 +19,38 @@ function isValidLine(string) {
 	return !line.error;
 }
 
-test("Parsing", function() {
+module("Parsing");
+
+test("General", function() {
 	ok(isValidLine("ADD $t0, $t1, $t2"), "ADD should have 3 registers as arguments.");
 	ok(!isValidLine("ADD $t0, $t1, 515"), "ADD should not be able to have an immediate as last argument.");
 	ok(!isValidLine("ADDI $t0, $t1, $t2"));
 	ok(isValidLine("ADDI $t0, $t1, 515"));
+	ok(isValidLine("ADDI $t0, $t1, -515"), "Immediates can be negative.");
+	ok(isValidLine("ADDI $t0, $t1, +515"), "Immediates can have plus sign.");
+	ok(!isValidLine("ADDI $t0, $t1, 1.5"), "Immediates must be integers.");
+	// TODO: ADDI $t0, $t1, -  515
+	// TODO: ADDI $t0, $t1,  +  515
 	ok(!isValidLine("ADD $z0, $t1, $t2"), "z0 is not a valid register.");
 	ok(isValidLine("adD $t0, $t1, $t2"), "instruction case doesn't matter.");
 	ok(!isValidLine("ADD $T0, $t1, $t2"), "register case DOES matter.");
 	ok(!isValidLine("FOO $t0, $t1, $t2"), "foo is not a valid instruction.");
+	
+	ok(isValidLine("  "), "We can have whitespace lines.");
+	ok(!isValidLine("This is an english statement"), "We cannot have english phrases.");
+});
+
+test("Comments", function() {
 	ok(isValidLine("ADD $t0, $t1, $t2#comment here"), "we can have attached comments.");
-	ok(isValidLine("mylabel:ADD $t0, $t1, $t2"), "we can have attached labels.");
-	ok(isValidLine("mylabel: ADD $t0, $t1, $t2 # comment here"), "we can have labels and comments.");
 	ok(isValidLine("# Hello there"), "we can have single line comments.");
+	ok(isValidLine("mylabel: ADD $t0, $t1, $t2 # comment here"), "we can have labels and comments.");
+});
+
+test("Labels", function() {
 	ok(isValidLine("loop:"), "we can have single line labels.");
 	ok(isValidLine(" loop  :"), "A label can have whitespace between the text and the colon");
 	ok(!isValidLine("loop start:"), "A label cannot have more than one word");
-	ok(isValidLine("  "), "We can have whitespace lines.");
-	ok(!isValidLine("This is an english statement"), "We cannot have english phrases.");
+	ok(isValidLine("mylabel:ADD $t0, $t1, $t2"), "we can have attached labels.");
 });
 
 module("Execution", {
