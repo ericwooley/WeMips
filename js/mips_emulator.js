@@ -1,3 +1,5 @@
+var ME = new mips_emulator();
+
 function mips_emulator(){
     
     ret = {};
@@ -60,58 +62,15 @@ function mips_emulator(){
         // Rformat regex (for 3 register ops): (\w*(\w*\d*)):\s*(\w+)(\s*\$\w[\d\w]){3}
         console.log("Analyzing...");
         $.each(mc.split('\n'), function(index, val){
-            line = {} // Object that will save information about this line of code.
-            console.log("--> "+val);
-            var regex = /^\s*(?:(\w+)\s*:\s*)?(?:(\w+)\s+([^#]+))?(?:#\s*(.*))?$/;
-            var ar = val.match(regex);
-            // when matched the array contains the following
-            // ----> [0] The entire line
-            // ----> [1] The label without the ':'
-            // ----> [2] The instruction (e.g. 'ADD', 'LW', etc.)
-            // ----> [3] The arguments (e.g. '$rd, $rs, $rt'), this should be trimmed
-            // ----> [4] The comment without the '#', this should be trimmed
-            // if ar is null, that means the regex didn't match
-
-            if(ar){
-                // if we have a label, save it to the hashtable and save it to line
-                if(ar[1] && ar[1].length > 0){
-                    line['label'] = ar[1];
-                    mips_code.labels[ar[1]] = line;
-                }
-
-                // If we got variables back
-                if(ar[3]){
-                    // Split the args by `,`
-                    line['args'] = ar[3].split(',');
-
-                    // Trim the varaibles
-                    for(var i = 0; i < line['args'].length; i++){
-                       line['args'][i] = $.trim(line['args'][i]);
-                    }
-                }
-
-                // The instruction for this code;
-                line['instruction'] = $.trim(ar[2]);
-
-                // If the line has an instruction, we should not ignore it. otherwise it may be a comment or blank
-                if(line['instruction'] && line['instruction'].length > 0) line['ignore'] = false;
-
-                // The comment, obviously
-                line['comment'] = $.trim(ar[4]);
-
-            // In the else case, the regex didn't match, possible error?
-            } else {
-                // TODO: check for special cases
-                line['error'] = "Error parsing line: "+ (index+1);
-                console.log("----> No matches");
-            }
-
-            // Fill in any thing we may have missed with defaults
-            _.defaults(line, {args: [], instruction: null, ignore: true, comment: '', label: null, error: null});
-
+            var line = new mips_line(val);
             console.log(JSON.stringify(line));
             mips_code.code.push(line);
         });
+    };
+    ret.registers = registers;
+    ret.runLine = function(string) {
+        var line = new mips_line(string);
+        line.run();
     };
 
     return ret;
