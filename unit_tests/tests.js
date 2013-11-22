@@ -12,45 +12,46 @@ ADD $s1, $s2, $s3 # testing it out\n\
 Bad code that doesn't work cause it's written in english";
 console.log("Input:");
 console.log(test_string);
+var ME = new mips_emulator();
 ME.setCode(test_string);
 
-function isValidLine(string) {
-	var line = new mips_line(string);
-	return !line.error;
-}
+// function isValidLine(string) {
+// 	var line = new mips_line(string);
+// 	return !line.error;
+// }
 
 module("Parsing");
 
 test("General", function() {
-	ok(isValidLine("ADD $t0, $t1, $t2"), "ADD should have 3 registers as arguments.");
-	ok(!isValidLine("ADD $t0, $t1, 515"), "ADD should not be able to have an immediate as last argument.");
-	ok(!isValidLine("ADDI $t0, $t1, $t2"));
-	ok(isValidLine("ADDI $t0, $t1, 515"));
-	ok(isValidLine("ADDI $t0, $t1, -515"), "Immediates can be negative.");
-	ok(isValidLine("ADDI $t0, $t1, +515"), "Immediates can have plus sign.");
-	ok(!isValidLine("ADDI $t0, $t1, 1.5"), "Immediates must be integers.");
+	ok(ME.isValidLine("ADD $t0, $t1, $t2"), "ADD should have 3 registers as arguments.");
+	ok(!ME.isValidLine("ADD $t0, $t1, 515"), "ADD should not be able to have an immediate as last argument.");
+	ok(!ME.isValidLine("ADDI $t0, $t1, $t2"));
+	ok(ME.isValidLine("ADDI $t0, $t1, 515"));
+	ok(ME.isValidLine("ADDI $t0, $t1, -515"), "Immediates can be negative.");
+	ok(ME.isValidLine("ADDI $t0, $t1, +515"), "Immediates can have plus sign.");
+	ok(!ME.isValidLine("ADDI $t0, $t1, 1.5"), "Immediates must be integers.");
 	// TODO: ADDI $t0, $t1, -  515
 	// TODO: ADDI $t0, $t1,  +  515
-	ok(!isValidLine("ADD $z0, $t1, $t2"), "z0 is not a valid register.");
-	ok(isValidLine("adD $t0, $t1, $t2"), "instruction case doesn't matter.");
-	ok(!isValidLine("ADD $T0, $t1, $t2"), "register case DOES matter.");
-	ok(!isValidLine("FOO $t0, $t1, $t2"), "foo is not a valid instruction.");
+	ok(!ME.isValidLine("ADD $z0, $t1, $t2"), "z0 is not a valid register.");
+	ok(ME.isValidLine("adD $t0, $t1, $t2"), "instruction case doesn't matter.");
+	ok(!ME.isValidLine("ADD $T0, $t1, $t2"), "register case DOES matter.");
+	ok(!ME.isValidLine("FOO $t0, $t1, $t2"), "foo is not a valid instruction.");
 
-	ok(isValidLine("  "), "We can have whitespace lines.");
-	ok(!isValidLine("This is an english statement"), "We cannot have english phrases.");
+	ok(ME.isValidLine("  "), "We can have whitespace lines.");
+	ok(!ME.isValidLine("This is an english statement"), "We cannot have english phrases.");
 });
 
 test("Comments", function() {
-	ok(isValidLine("ADD $t0, $t1, $t2#comment here"), "we can have attached comments.");
-	ok(isValidLine("# Hello there"), "we can have single line comments.");
-	ok(isValidLine("mylabel: ADD $t0, $t1, $t2 # comment here"), "we can have labels and comments.");
+	ok(ME.isValidLine("ADD $t0, $t1, $t2#comment here"), "we can have attached comments.");
+	ok(ME.isValidLine("# Hello there"), "we can have single line comments.");
+	ok(ME.isValidLine("mylabel: ADD $t0, $t1, $t2 # comment here"), "we can have labels and comments.");
 });
 
 test("Labels", function() {
-	ok(isValidLine("loop:"), "we can have single line labels.");
-	ok(isValidLine(" loop  :"), "A label can have whitespace between the text and the colon");
-	ok(!isValidLine("loop start:"), "A label cannot have more than one word");
-	ok(isValidLine("mylabel:ADD $t0, $t1, $t2"), "we can have attached labels.");
+	ok(ME.isValidLine("loop:"), "we can have single line labels.");
+	ok(ME.isValidLine(" loop  :"), "A label can have whitespace between the text and the colon");
+	ok(!ME.isValidLine("loop start:"), "A label cannot have more than one word");
+	ok(ME.isValidLine("mylabel:ADD $t0, $t1, $t2"), "we can have attached labels.");
 });
 
 module("Execution", {
