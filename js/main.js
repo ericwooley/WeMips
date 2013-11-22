@@ -1,8 +1,7 @@
 $(document).ready(function(){
     var me = mips_emulator();
     // The next time we go to step or run, we need to reset the code from the text editor.
-    me.outdated = true; 
-    console.log("Editor value: "+$("#editor").val());
+    me.valid = true; 
     var editor = CodeMirror.fromTextArea(
         document.getElementById("editor"),{
           lineNumbers: true,
