@@ -67,8 +67,8 @@ test("Set/Get Registers", function(){
 module("Execution", {
 	setup: function() {
 		// fill up some of the registers with predictable, usable data
-		ME.setRegister('$t0', 10);
-		ME.setRegister('$t1', 11);
+		ME.setRegister('t0', 10);
+		ME.setRegister('t1', 11);
 		ME.setRegister('$t2', 12);
 		ME.setRegister('$t3', 13);
 		ME.setRegister('$t4', 14);
