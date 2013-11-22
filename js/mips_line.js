@@ -16,11 +16,13 @@ var parseMethods = {
 // these will be called after the parse method has been called
 // the goal is to make these methods look as close to the MIPS cheat sheet as possible.
 var runMethods = {
-	'ADD': function(line, reg) {
-		reg[line.rd] = reg[line.rs] + reg[line.rt];
+	'ADD': function(line, me) {
+		//reg[line.rd] = reg[line.rs] + reg[line.rt];
+		me.setRegister(line.rd, me.getRegister(line.rs) + me.getRegister(line.rt));
 	},
-	'ADDI': function(line, reg) {
-		reg[line.rt] = reg[line.rs] + line.imm;
+	'ADDI': function(line, me) {
+		//reg[line.rt] = reg[line.rs] + line.imm;
+		me.setRegister(line.rt, me.getRegister(line.rs) + line.imm);
 	}	
 };
 
@@ -39,11 +41,8 @@ function getImmediate(arg) {
 }
 
 function isRegister(arg) {
-	for (var registerName in ME.registers) {
-	    // important check that this is objects own property 
-	    // not from prototype prop inherited
-	    if (!ME.registers.hasOwnProperty(registerName)) continue;
-	    if ('$' + registerName === arg) {
+	for (var i = 0; i < ME.allRegNames.length; i++) {
+	    if ('$' + ME.allRegNames[i] === arg) {
 	    	return true;
 	    }
 	}
@@ -125,7 +124,7 @@ function mips_line(line){
     ret.run = function() {
     	if (ret.ignore || ret.error) { return; };
     	// we can assume that we parsed successfully at this point.
-    	runMethods[ret.instruction](ret, ME.registers);
+    	runMethods[ret.instruction](ret, ME);
     };
 
 	return ret;

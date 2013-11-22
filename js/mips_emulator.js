@@ -1,41 +1,30 @@
 var ME = new mips_emulator();
 
 function mips_emulator(){
-    
     ret = {};
     registers = {};
-    // Set the initial register data to garbage
-    function register_init(){
-        return Math.floor((Math.random()*1000));
+
+    readwriteRegs = [
+        's0', 's1', 's2', 's3', 's4', 's5', 's6', 's7',
+        't0', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9',
+        'v0', 'v1',
+        'a0', 'a1', 'a2', 'a3'
+    ];
+    readonlyRegs = [
+        'zero', 'at',
+        'k0', 'k1',
+        'gp', 'sp', 'fp', 'ra'
+    ];
+    ret.allRegNames = readwriteRegs.concat(readonlyRegs);
+
+    // Initialize the register values
+    for (var i = 0; i < ret.allRegNames.length; i++) {
+        registers[ret.allRegNames[i]] = {
+            val: Math.floor((Math.random()*1000)), // Set the initial register data to garbage
+            onChange: null
+        };
     };
-
-    registers.s0 = register_init(); 
-    registers.s1 = register_init(); 
-    registers.s2 = register_init(); 
-    registers.s3 = register_init(); 
-    registers.s4 = register_init(); 
-    registers.s5 = register_init(); 
-    registers.s6 = register_init(); 
-    registers.s7 = register_init(); 
-
-    registers.t0 = register_init(); 
-    registers.t1 = register_init(); 
-    registers.t2 = register_init(); 
-    registers.t3 = register_init(); 
-    registers.t4 = register_init(); 
-    registers.t5 = register_init(); 
-    registers.t6 = register_init(); 
-    registers.t7 = register_init(); 
-    registers.t8 = register_init();
-    registers.t9 = register_init(); 
-
-    registers.v0 = register_init(); 
-    registers.v1 = register_init(); 
-
-    registers.a0 = register_init(); 
-    registers.a1 = register_init();
-    registers.a2 = register_init();
-    registers.a3 = register_init();
+    registers.zero.val = 0;
 
     // Register getters and setters
     // allows us to verify/modify when someone wants to access the regester
@@ -43,6 +32,7 @@ function mips_emulator(){
         return registers[reg].val;
     };
     ret.setRegister = function(reg, value){
+        // TODO: ensure the register name does not exist in readonlyRegs (or better yet, ensure it exists in the readwriteRegs)
         if(registers[reg].onChange) registers[reg].onChange();
         return registers[reg].val = value;
     };
@@ -67,7 +57,6 @@ function mips_emulator(){
             mips_code.code.push(line);
         });
     };
-    ret.registers = registers;
     ret.runLine = function(string) {
         var line = new mips_line(string);
         line.run();

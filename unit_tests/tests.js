@@ -35,7 +35,7 @@ test("General", function() {
 	ok(isValidLine("adD $t0, $t1, $t2"), "instruction case doesn't matter.");
 	ok(!isValidLine("ADD $T0, $t1, $t2"), "register case DOES matter.");
 	ok(!isValidLine("FOO $t0, $t1, $t2"), "foo is not a valid instruction.");
-	
+
 	ok(isValidLine("  "), "We can have whitespace lines.");
 	ok(!isValidLine("This is an english statement"), "We cannot have english phrases.");
 });
@@ -55,25 +55,43 @@ test("Labels", function() {
 
 module("Execution", {
 	setup: function() {
-		// fill up some of the registers with predictable data
-		ME.registers['t0'] = 0;
-		ME.registers['t1'] = 1;
-		ME.registers['t2'] = 2;
-		ME.registers['t3'] = 3;
-		ME.registers['t4'] = 4;
+		// fill up some of the registers with predictable, usable data
+		ME.setRegister('t0', 10);
+		ME.setRegister('t1', 11);
+		ME.setRegister('t2', 12);
+		ME.setRegister('t3', 13);
+		ME.setRegister('t4', 14);
 	}
 });
 
 test("ADD", function() {
 	ME.runLine("ADD $t0, $t1, $t2");
-	equal(ME.registers['t0'], 3, "1 + 2 should be 3.");
-	equal(ME.registers['t1'], 1, "None of the other register's values should change.");
-	equal(ME.registers['t2'], 2, "None of the other register's values should change.");
+	equal(ME.getRegister('t0'), 23, "11 + 12 = 23.");
+	equal(ME.getRegister('t1'), 11, "None of the other register's values should change.");
+	equal(ME.getRegister('t2'), 12, "None of the other register's values should change.");
 });
 
 test("ADDI", function() {
 	ME.runLine("ADDI $t1, $t0, 505");
-	equal(ME.registers['t1'], 505, "0 + 505 = 505");
+	equal(ME.getRegister('t1'), 515, "10 + 505 = 515");
 	ME.runLine("ADDI $t0, $t1, 2");
-	equal(ME.registers['t0'], 507, "505 + 2 = 507");
+	equal(ME.getRegister('t0'), 517, "515 + 2 = 517");
 });
+
+module("API");
+
+test("OnChange called", function() {
+	var onChangeCalled = false;
+	ME.onChange('t0', function() { onChangeCalled = true; });
+	
+	ok(!onChangeCalled, "Didn't change anything, so it should still be false.");
+	ME.runLine("ADDI $t0, $t1, 2");
+	ok(onChangeCalled, "On change should be called when t0 is changed.");
+
+	// reset handler
+	ME.onChange('t0', null);
+	onChangeCalled = false;
+	ME.runLine("ADDI $t0, $t1, 2");
+	ok(!onChangeCalled, "Should have removed the on change handler.");	
+});
+
