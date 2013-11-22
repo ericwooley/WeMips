@@ -1,94 +1,166 @@
-function mips_emulator(){
-    ME = {};
-    registers = {};
+/**
+ * @class mips_emulator
+ * Mips Emulation engine.
+ */
+function mips_emulator(mips_args){
+    _.defaults(mips_args{starting_code: null, debug: false});
+    var debug = mips_args.debug
+    //////////////////////////////////
+    // Private Variables / Setup
+    //////////////////////////////////
+    var registers = {};
 
-    readwriteRegs = [
-        's0', 's1', 's2', 's3', 's4', 's5', 's6', 's7',
-        't0', 't1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9',
-        'v0', 'v1',
-        'a0', 'a1', 'a2', 'a3'
+    var readwriteRegs = [
+        '$s0', '$s1', '$s2', '$s3', '$s4', '$s5', '$s6', '$s7',
+        '$t0', '$t1', '$t2', '$t3', '$t4', '$t5', '$t6', '$t7', '$t8', '$t9',
+        '$v0', '$v1',
+        '$a0', '$a1', '$a2', '$a3'
     ];
-    readonlyRegs = [
-        'zero', 'at',
-        'k0', 'k1',
-        'gp', 'sp', 'fp', 'ra'
+    var readonlyRegs = [
+        '$zero', '$at',
+        '$k0', '$k1',
+        '$gp', '$sp', '$fp', '$ra'
     ];
-    ME.allRegNames = readwriteRegs.concat(readonlyRegs);
 
-    // Initialize the register values
-    for (var i = 0; i < ME.allRegNames.length; i++) {
-        registers[ME.allRegNames[i]] = {
+    // The intial line where we start the emulation.
+    var current_line = 0;
+
+    // populate registers with all the read and write registers and set their inital values to random
+    for (var i = 0; i < readwriteRegs.length; i++) {
+        registers[readwriteRegs[i]] = {
             val: Math.floor((Math.random()*1000)), // Set the initial register data to garbage
-            onChange: null
+            onChange: null,
+            writable: true
         };
     };
-    registers.zero.val = 0;
-    
-    ////////////////////////////////////////////////
-    // Public Methods
-    ////////////////////////////////////////////////
 
-    // Register getters and setters
-    // allows us to verify/modify when someone wants to access the regester
-    ME.getRegister = function(reg){
-        return registers[reg].val;
+    // populate registers with all the read and write registers and set their inital values to random
+    for (var i = 0; i < readonlyRegs.length; i++) {
+        registers[readonlyRegs[i]] = {
+            val: Math.floor((Math.random()*1000)), // Set the initial register data to garbage
+            writable: false
+        };
     };
-    ME.setRegister = function(reg, value){
-        // TODO: ensure the register name does not exist in readonlyRegs (or better yet, ensure it exists in the readwriteRegs)
-        if(registers[reg].onChange) registers[reg].onChange();
-        return registers[reg].val = value;
-    };
+    registers.zero = {val:0, writable: false};
 
-    // Allows you to set a function that is called when this varaible is changed.
-    ME.onChange = function(reg, func){
-        registers[reg].onChange = func;
-    };
-
-    ME.isRegister = function(reg){
-        return registers[reg] && typeof(registers[reg]) !== 'undefined';
-    };
     // Object that will contain analyzed code information
     var mips_code = {
         code:[null], // Initialize with null in the 0 place, to make line numbers line up.
         labels: {}
     };
-    ME.isValidLine = function(line){
-        return !(new mips_line(line).error);
+    // Public methods
+    var ME = {
+        /**
+         * Returns a specified registers value
+         * @param  {String} reg
+         * @return {String} 
+         */
+        getRegister: function(reg){
+            return registers[reg].val;
+        },
+        /**
+         * Set a register value, and call onChange function for that register
+         * @param {String} reg
+         * @param {Number} value
+         */
+        setRegister: function(reg, value){
+            // TODO: ensure the register name does not exist in readonlyRegs (or better yet, ensure it exists in the readwriteRegs)
+            if(registers[reg].onChange) registers[reg].onChange();
+            return registers[reg].val = value;
+        },
+        /**
+         * Set an Onchange function for a register
+         * @param  {String} reg
+         * @param  {Function} func
+         * @return {Null}
+         */
+        onChange: function(reg, func){
+            registers[reg].onChange = func;
+        },
+        /**
+         * Checks if a register is a valid register
+         * @param  {String}  reg
+         * @return {Boolean}
+         */
+        isRegister: function(reg){
+            return registers[reg] && typeof(registers[reg]) !== 'undefined';
+        },
+        /**
+         * Checks if a string is a valid mips line
+         * @param  {String}  line
+         * @return {Boolean}
+         */
+        isValidLine: function(line){
+            return !(new mips_line(line).error);
+        },
+        /**
+         * Set code to be emulated
+         * @param {String} mc
+         */
+        setCode: function(mc){   
+            console.log("Analyzing...");
+            $.each(mc.split('\n'), function(index, val){
+                var line = new mips_line(val);
+                console.log(JSON.stringify(line));
+                mips_code.code.push(line);
+            });
+        },
+        /**
+         * Run an individual line
+         * @param  {String} input_line 
+         * @return {None}
+         */
+        runLineFromString: function(input_line) {
+            var line = new mips_line(input_line);
+            runLine(line);
+        },
     };
-    // Set the code that is to be run
-    ME.setCode = function(mc){   
-        console.log("Analyzing...");
-        $.each(mc.split('\n'), function(index, val){
-            var line = new mips_line(val);
-            console.log(JSON.stringify(line));
-            mips_code.code.push(line);
-        });
-    };
-    ME.runLine = function(string) {
-        var line = new mips_line(string);
-        line.run();
-    };
+
 
     ////////////////////////////////////////////////
     // Private Methods
     ////////////////////////////////////////////////
+    /**
+     * Verifies that an operation can use these registers
+     * @type {Object}
+     */
     var parseMethods = {
         'ADD': function(line) {
-            line.rd = getRegister(line.args[0]);
-            line.rs = getRegister(line.args[1]);
-            line.rt = getRegister(line.args[2]);
-            return line.rd && line.rs && line.rt;
+            // Grab each register from the registers
+            line.rd = registers[line.args[0]];
+            line.rs = registers[line.args[1]];
+            line.rt = registers[line.args[2]];
+
+            // $rd must be writable
+            if(line.rd && line.rd.writable) line.error = "Register " + line.rd + " is not writable";
+            console.error("Error parsing line: " + JSON.stringify(line));
+            console.log(line.error)
+            return line.error || (line.rd && line.rs && line.rt);
         },
         'ADDI': function(line) {
-            line.rt = getRegister(line.args[0]);
-            line.rs = getRegister(line.args[1]);
+            line.rt = registers[line.args[0]];
+            line.rs = registers[line.args[1]];
             line.imm = getImmediate(line.args[2]);
             return line.rt && line.rs && line.imm;
-        },
+        }
     };
+    /**
+     * Run an individual line
+     * @return {[type]}
+     */
+    runLine = function(line) {
+        if (line.ignore || line.error) { return line.error; };// returns error if there is one or null if not.
+        // we can assume that we parsed successfully at this point.
+        runMethods[line.instruction](line);
 
+    };
     // these will be called after the parse method has been called
     // the goal is to make these methods look as close to the MIPS cheat sheet as possible.
+    
+    /**
+     * Collection of methods to run the intended operations.
+     * @type {Object}
+     */
     var runMethods = {
         'ADD': function(line) {
             //reg[line.rd] = reg[line.rs] + reg[line.rt];
@@ -100,13 +172,6 @@ function mips_emulator(){
         }   
     };
 
-    function getRegister(arg) {
-        // e.g. getRegister('$t0') -> ME.registers.t0;
-        if (isRegister(arg)) {
-            return arg.substring(1);//ME.registers[arg.substring(1)];
-        }
-        return null;
-    };
     function getImmediate(arg) {
         if (isImmediate(arg)) {
             return parseInt(arg, 10);
@@ -114,14 +179,6 @@ function mips_emulator(){
         return null;
     };
 
-    function isRegister(arg) {
-        for (var i = 0; i < ME.allRegNames.length; i++) {
-            if ('$' + ME.allRegNames[i] === arg) {
-                return true;
-            }
-        }
-        return false;
-    };
     function isImmediate(arg) {
         return /^[-+]?\d+$/.test(arg);
     };
@@ -129,9 +186,9 @@ function mips_emulator(){
 
     // Mips Line Object
     function mips_line(line){
-        // Object that will save information about a line of code.
 
-        LINE = {
+        // Object that will save information about a line of code.
+        var LINE = {
             args: [],
             instruction: null, 
             ignore: true, 
@@ -197,14 +254,9 @@ function mips_emulator(){
             console.log("----> No matches");
         }
 
-        LINE.run = function() {
-            if (LINE.ignore || LINE.error) { return; };
-            // we can assume that we parsed successfully at this point.
-            runMethods[LINE.instruction](LINE);
-        };
-
         return LINE;
     }
-
+    // Set the starting code if there was any.
+    if(mips_args.starting_code) ME.setCode(mips_args.starting_code);
     return ME;
 }
