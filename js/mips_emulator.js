@@ -58,6 +58,7 @@ function mips_emulator(mips_args){
          * @return {String} 
          */
         getRegister: function(reg){
+            if(reg.charAt(0) != '$') reg = '$' + reg;
             if(!registers[reg]) return false;
             return registers[reg].val;
         },
@@ -67,6 +68,11 @@ function mips_emulator(mips_args){
          * @param {Number} value
          */
         setRegister: function(reg, value){
+            if(reg.charAt(0) != '$'){
+                console.log("register passed without $, ")
+                reg = '$' + reg;
+
+            }
             if(debug) console.log("Setting register " + reg + " to " + value);
 
             if(!registers[reg]) return false;
@@ -74,7 +80,7 @@ function mips_emulator(mips_args){
             if(registers[reg].onChange) registers[reg].onChange();
                 registers[reg].val = value;
             if(debug) console.log("----> New value: "+ ME.getRegister(reg));
-            
+
         },
         /**
          * Set an Onchange function for a register
