@@ -103,7 +103,7 @@ function mips_emulator(mips_args){
 </span>         * Set an Onchange function for a register
          * @param  {String} reg
          * @param  {Function} func
-         * @return {Null}
+         * @return {null}
          */
         onChange: function(reg, func){
             registers[reg].onChange = func;
@@ -139,11 +139,11 @@ function mips_emulator(mips_args){
 <span id='mips_emulator-method-runLine'>        /**
 </span>         * Run an individual line
          * @param  {String} input_line 
-         * @return {None}
+         * @return {null}
          */
         runLine: function(input_line) {
             var line = new mips_line(input_line);
-            runLine(line);
+            run_line(line);
         },
     };
 
@@ -173,11 +173,11 @@ function mips_emulator(mips_args){
             return line.rt &amp;&amp; line.rs &amp;&amp; line.imm;
         }
     };
-<span id='mips_emulator-method-runLine'>    /**
+<span id='mips_emulator-method-run_line'>    /**
 </span>     * Run an individual line
-     * @return {[type]}
+     * @return {null}
      */
-    runLine = function(line) {
+    run_line = function(line) {
         if (line.ignore || line.error) { return line.error; };// returns error if there is one or null if not.
         // we can assume that we parsed successfully at this point.
         runMethods[line.instruction](line);
@@ -223,11 +223,10 @@ function mips_emulator(mips_args){
     };
 
 
-<span id='mips_line'>    /**
-</span>     * @class mips_line 
-     * Turns a string into a mips line object which contains a mips line of code and metadata needed to run it
+<span id='mips_emulator-method-mips_line'>    /**
+</span>     * Turns a string into a mips line object which contains a mips line of code and metadata needed to run it
      * @param  {String} line
-     * @return {[type]}
+     * @return {Object}
      */
     function mips_line(line){
 
@@ -300,6 +299,7 @@ function mips_emulator(mips_args){
         if(debug) console.log(&quot;Finished parsing line: &quot; + JSON.stringify(LINE));
         return LINE;
     }
+
     // Set the starting code if there was any.
     if(mips_args.starting_code) ME.setCode(mips_args.starting_code);
     return ME;
