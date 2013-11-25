@@ -15,10 +15,7 @@
   </script>
 </head>
 <body onload="prettyPrint(); highlight();">
-  <pre class="prettyprint lang-js"><span id='Stack'>/**
-</span> * Stack public methods
- * @class Stack
- */
+  <pre class="prettyprint lang-js">
 function Stack(stack_args){
     _.default(stack_args, {onError: null, debug: false, onChange: null, onMove: null});
     var stack_pointer = 0;
@@ -29,21 +26,40 @@ function Stack(stack_args){
     var word_size = 32;
     
     
-    
-     var stack = {
+<span id='Stack'>    /**
+</span>     * Emulates a stack
+     * @class Stack
+     */
+    var stack = {
+<span id='Stack-method-get_stack_pointer'>        /**
+</span>         * Returns the number the stack currently points too.
+         * @member Stack
+         * @return {Number}
+         */
         get_stack_pointer: function(){
             return stack_pointer;
         },
+<span id='Stack-method-move_pointer'>        /**
+</span>         * Move the stack pointer up or down depending on the input
+         * @member Stack
+         * @param  {Number} movement How many bits you want to move the stack pointer (It&#39;s helpful to make this a multiple of your word size.)
+         * @return {Number} returns the new stack position
+         */
         move_pointer: function(movement){
             // If wordsize is 32, and you ask for 64 bits, we just want to move it 2 words
             // because each index in the array represents 1 word
-            stack_pointer = stack_pointer + movement / word_size;
+            stack_pointer = stack_pointer + floor(movement / word_size);
 
             // if the user moves by a multiple of wordsize then the offset should be zero.
             // if the user moves by something thats not a multiple of the wordsize, we need to 
             // keep that information.
             word_offset = movement % wordsize;
+            return stack_pointer + word_offset
         },
+<span id='Stack-method-set_word'>        /**
+</span>         * Set the word that the stack is pointing
+         * @param {Number} num The new value
+         */
         set_word: function(num){
             num = Number(num); // Just ensure we are workign with a number.
             
@@ -53,7 +69,15 @@ function Stack(stack_args){
             if(String(num.binary).length &gt; word_size) return error();
             // set the word that we are currently pointing too
             stack[stack_pointer] = num;
+            // TODO: Handle the case where there is an offset
         },
+<span id='Stack-method-get_word'>        /**
+</span>         * Retrieve the word that the stack pointer is currently pointing too
+         * @param  {Object} args
+         * - args.base The number base (ex: 2 for binary or 10 for decimal) that you would like to get the word back in.
+         * - args.offset The offset of where you want to grab it from
+         * @return {Number/String} Returns a number if you requested base 10, or a string if you requeseted something else.
+         */
         get_word: function(args){
             _.default(args, {base: 10, offset: word_offset}); // Set the default base to 10
             if(args.offset == 0){
@@ -68,6 +92,12 @@ function Stack(stack_args){
                 //       concatinated with first (wordsize - offset) characters of the next word.
             }
         },
+<span id='Stack-method-get_word_at'>        /**
+</span>         * Get the word at a given offset from the stack pointer
+         * @param  {Number} offset The number of bits you want the stack pointer to go before grabbing your data
+         * @param  {Object} args See get_word for details
+         * @return {Number/String} see get_word for details
+         */
         get_word_at: function(offset, args){
             if(!args) args = {};
             // save our stack pointer;
@@ -75,7 +105,7 @@ function Stack(stack_args){
             // add the offset
             stack_pointer += offset;
             // get the word at the new temporary stack_point position
-            word = STACK.get_word(args);
+            var word = STACK.get_word(args);
             // reset the stack pointer
             stack_pointer = saved_sp;
             // return the result
