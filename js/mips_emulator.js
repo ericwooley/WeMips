@@ -1,6 +1,10 @@
 /**
- * @class mips_emulator
- * Mips Emulation engine.
+ * Mips emulator constructor
+ * @param  {Object} mips_args Arguments to construct the mips emulater.
+ * @param mips_args.starting_code Set the default code for this emulator to run.
+ * @param mips_args.debug If debug is set to true, the console will print debug statements
+ * @return {mips_emulator}
+ * @member mips_emulator
  */
 function mips_emulator(mips_args){
     mips_args = mips_args || {};
@@ -9,48 +13,96 @@ function mips_emulator(mips_args){
     //////////////////////////////////
     // Private Variables / Setup
     //////////////////////////////////
+    
+    /**
+     * Hash table of registers
+     * @property registers
+     * @private
+     * @member mips_emulator
+     * @type {Object}
+     */
     var registers = {};
-
+    /**
+     * Array of read/write registers
+     * @property readwriteRegs
+     * @private
+     * @member mips_emulator
+     * @type {Array}
+     */
     var readwriteRegs = [
         '$s0', '$s1', '$s2', '$s3', '$s4', '$s5', '$s6', '$s7',
         '$t0', '$t1', '$t2', '$t3', '$t4', '$t5', '$t6', '$t7', '$t8', '$t9',
         '$v0', '$v1',
         '$a0', '$a1', '$a2', '$a3'
     ];
+
+    /**
+     * Array of read only registers
+     * @property readonlyRegs
+     * @private
+     * @member mips_emulator
+     * @type {Array}
+     */
     var readonlyRegs = [
         '$zero', '$at',
         '$k0', '$k1',
         '$gp', '$sp', '$fp', '$ra'
     ];
-
     // The intial line where we start the emulation.
+    /**
+     * The current line the mips emulator is looking at.
+     * @property current_line
+     * @private
+     * @member mips_emulator
+     * @type {Number}
+     */
     var current_line = 0;
     // populate registers with all the read and write registers and set their inital values to random
     for (var i = 0; i < readwriteRegs.length; i++) {
-        registers[readwriteRegs[i]] = {
-            val: Math.floor((Math.random()*1000)), // Set the initial register data to garbage
-            onChange: null,
+        registers[readwriteRegs[i]] = create_register({
             writable: true,
-            reg_name: readwriteRegs[i]
-        };
+            reg_name:readwriteRegs[i] 
+        });
     };
 
     // populate registers with all the read and write registers and set their inital values to random
     for (var i = 0; i < readonlyRegs.length; i++) {
-        registers[readonlyRegs[i]] = {
-            val: Math.floor((Math.random()*1000)), // Set the initial register data to garbage
+        registers[readonlyRegs[i]] = create_register({
             writable: false,
             reg_name: readonlyRegs[i]
-        };
+        });
     };
-    registers.zero = {val:0, writable: false, reg_name: '$zero'};
+    registers.zero = create_register({val:0, writable: false, reg_name: '$zero'});
 
     // Object that will contain analyzed code information
+    /**
+     * @class mips_code
+     * @private
+     * @member mips_emulator
+     * Object that keeps the code to be executed
+     * @type {Object}
+     */
     var mips_code = {
+        /**
+         * Array of lines that can be exectued
+         * @property code
+         * @member mips_code
+         * @type {Array}
+         */
         code:[null], // Initialize with null in the 0 place, to make line numbers line up.
+        /**
+         * Hashtable of labels pointing to lines of code
+         * @property labels
+         * @member mips_code
+         * @type {Object}
+         */
         labels: {}
     };
     // Public methods
+    /**
+     * @class mips_emulator
+     * Mips Emulation engine.
+     */
     var ME = {
         /**
          * Returns a specified registers value
@@ -136,6 +188,8 @@ function mips_emulator(mips_args){
     ////////////////////////////////////////////////
     /**
      * Verifies that an operation can use these registers
+     * @member mips_emulator
+     * @private
      * @type {Object}
      */
     var parseMethods = {
@@ -158,6 +212,8 @@ function mips_emulator(mips_args){
     };
     /**
      * Run an individual line
+     * @member mips_emulator
+     * @private
      * @return {null}
      */
     run_line = function(line) {
@@ -166,11 +222,51 @@ function mips_emulator(mips_args){
         runMethods[line.instruction](line);
 
     };
+
+    /**
+     * Create a default register
+     * @member mips_emulator
+     * @private
+     * @param  {Object} reg
+     * @return {register}
+     */
+    var create_register = function(reg){
+        /**
+         * @class register
+         * contains register information.
+         */
+        var register = {
+            /**
+             * registers value
+             * @property
+             * @type {Number}
+             */
+            val: Math.floor((Math.random()*1000)), // Set the initial register data to garbage
+            /**
+             * Function that is called when this register is changed.
+             * @type {Function}
+             */
+            onChange: null,
+            /**
+             * Wether or not this register is writable (false if this register is read only)
+             * @type {Boolean}
+             */
+            writable: true,
+            /**
+             * This registers name
+             * @type {String}
+             */
+            reg_name: null
+        };
+        return _.defaults(reg, registers);
+    };
     // these will be called after the parse method has been called
     // the goal is to make these methods look as close to the MIPS cheat sheet as possible.
     
     /**
      * Collection of methods to run the intended operations.
+     * @member mips_emulator
+     * @private
      * @type {Object}
      */
     var runMethods = {
@@ -187,6 +283,8 @@ function mips_emulator(mips_args){
     };
     /**
      * check if argument is an immediate, parse, and return the results.
+     * @member mips_emulator
+     * @private
      * @param  {String} arg
      * @return {Number}
      */
@@ -198,6 +296,8 @@ function mips_emulator(mips_args){
     };
     /**
      * Checks if a string matches as a number
+     * @member mips_emulator
+     * @private
      * @param  {String}  arg
      * @return {Boolean}
      */
@@ -208,18 +308,51 @@ function mips_emulator(mips_args){
 
     /**
      * Turns a string into a mips line object which contains a mips line of code and metadata needed to run it
+     * @member mips_emulator
+     * @private
      * @param  {String} line
      * @return {Object}
      */
     function mips_line(line){
 
         // Object that will save information about a line of code.
+        /**
+         * @class line
+         * Contains information about a single line of mips code
+         * @member mips_emulator
+         * @private
+         */
         var LINE = {
+            /**
+             * Arguments for this line of code ex: [$t0, $s0, $zero]
+             * @property
+             * @type {Array}
+             */
             args: [],
-            instruction: null, 
+            /**
+             * The lines instruction ex: ADD
+             * @type {String}
+             */
+            instruction: null,
+            /** 
+             * flag to indicate weather this line should be ignored (not run).
+             * @type {Boolean}
+             */
             ignore: true, 
+            /**
+             * The comment (if any) that this line of code contained
+             * @type {String}
+             */
             comment: '', 
-            label: null, 
+            /**
+             * The label for this line of code
+             * @type {String}
+             */
+            label: '', 
+            /**
+             * Error when running this line of code (if any)
+             * @type {String}
+             */
             error: null
         };
 
