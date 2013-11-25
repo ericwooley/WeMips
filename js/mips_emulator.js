@@ -86,7 +86,7 @@ function mips_emulator(mips_args){
          * Set an Onchange function for a register
          * @param  {String} reg
          * @param  {Function} func
-         * @return {Null}
+         * @return {null}
          */
         onChange: function(reg, func){
             registers[reg].onChange = func;
@@ -122,11 +122,11 @@ function mips_emulator(mips_args){
         /**
          * Run an individual line
          * @param  {String} input_line 
-         * @return {None}
+         * @return {null}
          */
         runLine: function(input_line) {
             var line = new mips_line(input_line);
-            runLine(line);
+            run_line(line);
         },
     };
 
@@ -160,7 +160,7 @@ function mips_emulator(mips_args){
      * Run an individual line
      * @return {null}
      */
-    runLine = function(line) {
+    run_line = function(line) {
         if (line.ignore || line.error) { return line.error; };// returns error if there is one or null if not.
         // we can assume that we parsed successfully at this point.
         runMethods[line.instruction](line);
@@ -209,7 +209,7 @@ function mips_emulator(mips_args){
     /**
      * Turns a string into a mips line object which contains a mips line of code and metadata needed to run it
      * @param  {String} line
-     * @return {[type]}
+     * @return {Object}
      */
     function mips_line(line){
 
