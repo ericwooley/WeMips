@@ -1,3 +1,7 @@
+/**
+ * Stack public methods
+ * @class Stack
+ */
 function Stack(stack_args){
     _.default(stack_args, {onError: null, debug: false, onChange: null, onMove: null});
     var stack_pointer = 0;
@@ -6,11 +10,10 @@ function Stack(stack_args){
     // so we keep track of the offset. 
     var word_offset = 0;
     var word_size = 32;
-    /**
-     * Stack public methods
-     * @type {Object}
-     */
-     var STACK = {
+    
+    
+    
+     var stack = {
         get_stack_pointer: function(){
             return stack_pointer;
         },
@@ -70,4 +73,5 @@ function Stack(stack_args){
         if(stack_args.onError) stack_args.onError(err);
         else alert(err);
     }
+    return stack;
 };
