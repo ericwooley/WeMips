@@ -216,7 +216,7 @@ function mips_emulator(mips_args){
      * @private
      * @return {null}
      */
-    run_line = function(line) {
+    function run_line(line) {
         if (line.ignore || line.error) { return line.error; };// returns error if there is one or null if not.
         // we can assume that we parsed successfully at this point.
         runMethods[line.instruction](line);
@@ -230,7 +230,7 @@ function mips_emulator(mips_args){
      * @param  {Object} reg
      * @return {register}
      */
-    var create_register = function(reg){
+    function create_register(reg){
         /**
          * @class register
          * contains register information.
