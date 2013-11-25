@@ -158,7 +158,7 @@ function mips_emulator(mips_args){
     };
     /**
      * Run an individual line
-     * @return {[type]}
+     * @return {null}
      */
     runLine = function(line) {
         if (line.ignore || line.error) { return line.error; };// returns error if there is one or null if not.
@@ -207,7 +207,6 @@ function mips_emulator(mips_args){
 
 
     /**
-     * @class mips_line 
      * Turns a string into a mips line object which contains a mips line of code and metadata needed to run it
      * @param  {String} line
      * @return {[type]}
@@ -283,6 +282,7 @@ function mips_emulator(mips_args){
         if(debug) console.log("Finished parsing line: " + JSON.stringify(LINE));
         return LINE;
     }
+
     // Set the starting code if there was any.
     if(mips_args.starting_code) ME.setCode(mips_args.starting_code);
     return ME;
