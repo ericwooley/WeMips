@@ -17,7 +17,8 @@
 <body onload="prettyPrint(); highlight();">
   <pre class="prettyprint lang-js">
 function Stack(stack_args){
-    _.default(stack_args, {
+    stack_args = stack_args || {};
+    _.defaults(stack_args, {
 <span id='Stack-property-onError'>        /**
 </span>         * Method to call on error, should accept 1 string argument, which contains the error
          * @member Stack
@@ -42,14 +43,35 @@ function Stack(stack_args){
          * @member Stack
          * @type {Function}
          */
-        onMove: null
+        onMove: null,
+<span id='Stack-property-wordsize'>        /**
+</span>         * The wordsize for the stack
+         * @property
+         * @member Stack
+         * @type {Number}
+         */
+        wordsize: 32
     });
+<span id='Stack-property-stack_pointer'>    /**
+</span>     * Which word the stack is pointing at. 
+     * @property
+     * @private
+     * @member Stack
+     * @type {Number}
+     */
     var stack_pointer = 0;
+<span id='Stack-property-stack'>    /**
+</span>     * Array which holds words sequentially
+     * @member Stack
+     * @property
+     * @type {Array}
+     */
     var stack = [];
     // if the user moves the stack that is not a wordsize it will be between two positions in the arry
     // so we keep track of the offset. 
     var word_offset = 0;
-    var word_size = 32;
+    
+    var word_size = stack_args.wordsize;
     
     
 <span id='Stack'>    /**
@@ -91,7 +113,7 @@ function Stack(stack_args){
             num = Number(num); // Just ensure we are workign with a number.
             
             // Save binary representation and decimal
-            num = {binary: num.toString(2), decimal: num.toString(10)};
+            num = create_word(num);
             // Don&#39;t want any overflows.
             if(String(num.binary).length &gt; word_size) return error();
             // set the word that we are currently pointing too
@@ -138,6 +160,39 @@ function Stack(stack_args){
             // return the result
             return word;
         }
+    };
+
+    
+    function create_word(w){
+        w = w || 0;
+<span id='Word'>        /**
+</span>         * Word contains a Number in both binary (as a string) and as a Number
+         * @class Word
+         */
+        var word = {
+<span id='Word-property-binary'>            /**
+</span>             * Binary representation of the value in this Word.
+             * @member Word
+             * @property
+             * @type {String}
+             */
+            binary: num.toString(2),
+<span id='Word-property-decimal'>            /**
+</span>             * Decimal representation of this Word.
+             * @member Word
+             * @property
+             * @type {Number}
+             */
+            decimal: num.toString(10),
+<span id='Word-property-word_size'>            /**
+</span>             * The number of bits this word takes up.
+             * @member Word
+             * @property
+             * @type {Number}
+             */
+            word_size: word_size
+        };
+        return word;
     };
 
     ///////////////////////////////////
