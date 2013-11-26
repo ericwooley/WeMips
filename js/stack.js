@@ -1,6 +1,7 @@
 
 function Stack(stack_args){
-    _.default(stack_args, {
+    stack_args = stack_args || {};
+    _.defaults(stack_args, {
         /**
          * Method to call on error, should accept 1 string argument, which contains the error
          * @member Stack
@@ -25,14 +26,35 @@ function Stack(stack_args){
          * @member Stack
          * @type {Function}
          */
-        onMove: null
+        onMove: null,
+        /**
+         * The wordsize for the stack
+         * @property
+         * @member Stack
+         * @type {Number}
+         */
+        wordsize: 32
     });
+    /**
+     * Which word the stack is pointing at. 
+     * @property
+     * @private
+     * @member Stack
+     * @type {Number}
+     */
     var stack_pointer = 0;
+    /**
+     * Array which holds words sequentially
+     * @member Stack
+     * @property
+     * @type {Array}
+     */
     var stack = [];
     // if the user moves the stack that is not a wordsize it will be between two positions in the arry
     // so we keep track of the offset. 
     var word_offset = 0;
-    var word_size = 32;
+    
+    var word_size = stack_args.wordsize;
     
     
     /**
@@ -74,7 +96,7 @@ function Stack(stack_args){
             num = Number(num); // Just ensure we are workign with a number.
             
             // Save binary representation and decimal
-            num = {binary: num.toString(2), decimal: num.toString(10)};
+            num = create_word(num);
             // Don't want any overflows.
             if(String(num.binary).length > word_size) return error();
             // set the word that we are currently pointing too
@@ -121,6 +143,39 @@ function Stack(stack_args){
             // return the result
             return word;
         }
+    };
+
+    
+    function create_word(w){
+        w = w || 0;
+        /**
+         * Word contains a Number in both binary (as a string) and as a Number
+         * @class Word
+         */
+        var word = {
+            /**
+             * Binary representation of the value in this Word.
+             * @member Word
+             * @property
+             * @type {String}
+             */
+            binary: num.toString(2),
+            /**
+             * Decimal representation of this Word.
+             * @member Word
+             * @property
+             * @type {Number}
+             */
+            decimal: num.toString(10),
+            /**
+             * The number of bits this word takes up.
+             * @member Word
+             * @property
+             * @type {Number}
+             */
+            word_size: word_size
+        };
+        return word;
     };
 
     ///////////////////////////////////
