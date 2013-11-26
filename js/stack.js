@@ -1,6 +1,32 @@
 
 function Stack(stack_args){
-    _.default(stack_args, {onError: null, debug: false, onChange: null, onMove: null});
+    _.default(stack_args, {
+        /**
+         * Method to call on error, should accept 1 string argument, which contains the error
+         * @member Stack
+         * @type {Function}
+         */
+        onError: null,
+        /**
+         * Print debug statements
+         * @property
+         * @member Stack
+         * @type {Boolean}
+         */
+        debug: false,
+        /**
+         * function to call when the stack changes.
+         * @member Stack
+         * @type {Function}
+         */
+        onChange: null,
+        /**
+         * Function to call when the stack pointer moves.
+         * @member Stack
+         * @type {Function}
+         */
+        onMove: null
+    });
     var stack_pointer = 0;
     var stack = [];
     // if the user moves the stack that is not a wordsize it will be between two positions in the arry
@@ -37,6 +63,7 @@ function Stack(stack_args){
             // if the user moves by something thats not a multiple of the wordsize, we need to 
             // keep that information.
             word_offset = movement % wordsize;
+            debug("Stack Pointer Moved\nstack_pointer: " + stack_pointer + "\noffset: "+ offset +"\nword_size: " + word_size)
             return stack_pointer + word_offset
         },
         /**
@@ -99,9 +126,19 @@ function Stack(stack_args){
     ///////////////////////////////////
     // Private Methods
     ///////////////////////////////////
+    /**
+     * If stack_args.debug is true, this will print debug messages
+     * @private
+     * @member Stack
+     * @param  {String} message the debug message to be printed
+     * @return {null}
+     */
+    function debug(message){
+        if(stack_args.debug) console.log(message);
+    };
     function error(err){
         if(stack_args.onError) stack_args.onError(err);
         else alert(err);
-    }
+    };
     return stack;
 };
