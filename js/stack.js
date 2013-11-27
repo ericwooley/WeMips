@@ -177,7 +177,10 @@ function Stack(stack_args){
              * @property
              * @type {String}
              */
-            binary: w.toString(2),
+            // TODO: This bitshift forces them to be 32bit unsigned ints,
+            //       if the wordsize is not 32, then we need to sign extend
+            //       this out to the word size or shrink it.
+            binary: (w >>> 0).toString(2),
             /**
              * Decimal representation of this Word.
              * @member Word
@@ -196,6 +199,16 @@ function Stack(stack_args){
         debug("Created word: " + JSON.stringify(word));
         return word;
     };
+
+    /**
+     * Sign extend a binary string
+     * @param  {String} bins Binary string as created by Number().toString(2) which will represent negative binary numbers with a -
+     * @param {Number} size
+     * @return {String}
+     */
+    function sign_extend(bins, size){
+
+    }
     /**
      * If stack_args.debug is true, this will print debug messages
      * @private
