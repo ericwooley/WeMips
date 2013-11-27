@@ -12,7 +12,8 @@ ADD $s1, $s2, $s3 # testing it out\n\
 Bad code that doesn't work cause it's written in english";
 // console.log("Input:");
 // console.log(test_string);
-var ME = new mips_emulator({debug: true});
+var ME = new mips_emulator({debug: false});
+var stack = new Stack({debug: true});
 // ME.setCode(test_string);
 
 // function isValidLine(string) {
@@ -108,3 +109,14 @@ test("OnChange called", function() {
 	ok(!onChangeCalled, "Should have removed the on change handler.");	
 });
 
+module("STACK");
+
+test("move pointer", function(){
+    ok(stack.get_stack_pointer() ===  0, "The stack should initialize to 0");
+    stack.move_pointer(32);
+    stack.set_word(10);
+    ok(stack.get_word(), 10, "The stack should be set to 10" );
+    stack.move_pointer(-32);
+    ok(stack.get_word() === 0, "After moving back to position zero, the stack pointer should be 0");
+    ok(stack.get_word_at(32), 10, "The stack should grab 10 from 32 bits ahead of it.");
+});
