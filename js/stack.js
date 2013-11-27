@@ -116,8 +116,13 @@ function Stack(stack_args){
         get_word: function(args){
             args = args || {};
             _.defaults(args, {base: 10, offset: word_offset}); // Set the default base to 10
+            // If this hasn't been initialized, return crap data
+            if(!stack_data[stack_pointer]){
+                stack_data[stack_pointer] = create_word(Math.floor((Math.random()*1000)));
+                debug("Uninitialized word, initialized to: " + stack_data[stack_pointer].decimal);
+            } 
             if(args.offset == 0){
-                
+
                 debug("get_word at "+stack_pointer+" : " + JSON.stringify(stack_data[stack_pointer]));
                 // If the base is 10, return it as a number
                 if(args.base == 10) return stack_data[stack_pointer].decimal;
