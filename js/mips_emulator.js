@@ -121,7 +121,7 @@ function mips_emulator(mips_args){
          */
         setRegister: function(reg, value){
             if(reg.charAt(0) != '$'){
-                console.log("register passed without $, ")
+                if(debug) console.log("register passed without $, ")
                 reg = '$' + reg;
 
             }
@@ -272,7 +272,7 @@ function mips_emulator(mips_args){
     var runMethods = {
         'ADD': function(line) {
             //reg[line.rd] = reg[line.rs] + reg[line.rt];
-            console.log("running add: " + JSON.stringify(line));
+            if(debug) console.log("running add: " + JSON.stringify(line));
             if(debug) console.log(line.rs.val + " + " + line.rt.val + " = " + (line.rs.val + line.rt.val) + " Saved to: "+ line.rd.reg_name);
             ME.setRegister(line.rd.reg_name, line.rs.val + line.rt.val);
         },
