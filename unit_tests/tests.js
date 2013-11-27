@@ -111,16 +111,25 @@ test("OnChange called", function() {
 
 module("STACK");
 
-test("move pointer", function(){
-    ok(stack.get_stack_pointer() ===  0, "The stack should initialize to 0");
-    stack.move_pointer(32);
-    stack.set_word(10);
-    ok(stack.get_word(), 10, "The stack should be set to 10" );
-    stack.move_pointer(-32);
-    ok(stack.get_word() === 0, "After moving back to position zero, the stack pointer should be 0");
-    ok(stack.get_word_at(32), 10, "The stack should grab 10 from 32 bits ahead of it.");
-    stack.move_pointer(64); // Move it to an uninitialized location
-    ok(typeof stack.get_word() == "number", "This should be an uninitialized portion on the stack, so garbage should be returned");
-    stack.set_word(-10);
-    ok( stack.get_word() == -10 , "Setting negative numbers should have no effect");
+test("Save/load from stack", function(){
+	var stack = new Stack();
+	var stackPointer = stack.pointerToBottomOfStack();
+	stackPointer -= 1;
+	stack.setByte(stackPointer, Stack.stringToNumber('A'));
+	stackPointer -= 1;
+	stack.setByte(stackPointer, Stack.stringToNumber('B'));
+	ok(Stack.numberToString(stack.getHalfword(stackPointer)), 'BA');
 });
+
+// TODO: make similar tests with the new stack?
+// test("move pointer", function(){
+//     ok(stack.get_stack_pointer() ===  0, "The stack should initialize to 0");
+//     stack.move_pointer(32);
+//     stack.set_word(10);
+//     ok(stack.get_word(), 10, "The stack should be set to 10" );
+//     stack.move_pointer(-32);
+//     ok(stack.get_word() === 0, "After moving back to position zero, the stack pointer should be 0");
+//     ok(stack.get_word_at(32), 10, "The stack should grab 10 from 32 bits ahead of it.");
+//     stack.move_pointer(64); // Move it to an uninitialized location
+//     ok(typeof stack.get_word() == "number", "This should be an uninitialized portion on the stack, so garbage should be returned");
+// });
