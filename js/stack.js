@@ -49,14 +49,16 @@ function Stack(stack_args){
      * @property
      * @type {Array}
      */
-    var stack = [];
+    var stack_data = Array(create_word(0));
     // if the user moves the stack that is not a wordsize it will be between two positions in the arry
     // so we keep track of the offset. 
     var word_offset = 0;
     
     var word_size = stack_args.wordsize;
     
-    
+    ///////////////////////////////////
+    // Public Methods
+    ///////////////////////////////////
     /**
      * Emulates a stack
      * @class Stack
@@ -68,6 +70,7 @@ function Stack(stack_args){
          * @return {Number}
          */
         get_stack_pointer: function(){
+            debug("stack_pointer: " + stack_pointer);
             return stack_pointer;
         },
         /**
@@ -79,13 +82,13 @@ function Stack(stack_args){
         move_pointer: function(movement){
             // If wordsize is 32, and you ask for 64 bits, we just want to move it 2 words
             // because each index in the array represents 1 word
-            stack_pointer = stack_pointer + floor(movement / word_size);
+            stack_pointer = stack_pointer + Math.floor(movement / word_size);
 
             // if the user moves by a multiple of wordsize then the offset should be zero.
             // if the user moves by something thats not a multiple of the wordsize, we need to 
             // keep that information.
-            word_offset = movement % wordsize;
-            debug("Stack Pointer Moved\nstack_pointer: " + stack_pointer + "\noffset: "+ offset +"\nword_size: " + word_size)
+            word_offset = movement % word_size;
+            debug("Stack Pointer Moved\n\tstack_pointer: " + stack_pointer + "\n\toffset: "+ word_offset +"\n\tword_size: " + word_size)
             return stack_pointer + word_offset
         },
         /**
@@ -100,7 +103,7 @@ function Stack(stack_args){
             // Don't want any overflows.
             if(String(num.binary).length > word_size) return error();
             // set the word that we are currently pointing too
-            stack[stack_pointer] = num;
+            stack_data[stack_pointer] = num;
             // TODO: Handle the case where there is an offset
         },
         /**
@@ -111,14 +114,17 @@ function Stack(stack_args){
          * @return {Number/String} Returns a number if you requested base 10, or a string if you requeseted something else.
          */
         get_word: function(args){
-            _.default(args, {base: 10, offset: word_offset}); // Set the default base to 10
+            args = args || {};
+            _.defaults(args, {base: 10, offset: word_offset}); // Set the default base to 10
             if(args.offset == 0){
+                
+                debug("get_word at "+stack_pointer+" : " + JSON.stringify(stack_data[stack_pointer]));
                 // If the base is 10, return it as a number
-                if(args.base == 10) return stack[stack_pointer].decimal;
+                if(args.base == 10) return stack_data[stack_pointer].decimal;
                 // If the base is 2, return the binary representation
-                if(args.base == 2) return stack[stack_pointer].binary;
+                if(args.base == 2) return stack_data[stack_pointer].binary;
                 // return the requested base.
-                return stack[stack_pointer].decimal.toString(args.base).toUpperCase();
+                return stack_data[stack_pointer].decimal.toString(args.base).toUpperCase();
             } else {
                 // TODO: because the offset is not zero, we need the current word + the offset
                 //       concatinated with first (wordsize - offset) characters of the next word.
@@ -135,9 +141,9 @@ function Stack(stack_args){
             // save our stack pointer;
             var saved_sp = stack_pointer;
             // add the offset
-            stack_pointer += offset;
+            stack.move_pointer(offset);
             // get the word at the new temporary stack_point position
-            var word = STACK.get_word(args);
+            var word = stack.get_word(args);
             // reset the stack pointer
             stack_pointer = saved_sp;
             // return the result
@@ -145,7 +151,14 @@ function Stack(stack_args){
         }
     };
 
-    
+    ///////////////////////////////////
+    // Private Methods
+    ///////////////////////////////////
+    /**
+     * Creates a word object
+     * @param  {Number} w a number which will be turned into a word.
+     * @return {Word}
+     */
     function create_word(w){
         w = w || 0;
         /**
@@ -159,14 +172,14 @@ function Stack(stack_args){
              * @property
              * @type {String}
              */
-            binary: num.toString(2),
+            binary: w.toString(2),
             /**
              * Decimal representation of this Word.
              * @member Word
              * @property
              * @type {Number}
              */
-            decimal: num.toString(10),
+            decimal: w,
             /**
              * The number of bits this word takes up.
              * @member Word
@@ -175,12 +188,9 @@ function Stack(stack_args){
              */
             word_size: word_size
         };
+        debug("Created word: " + JSON.stringify(word));
         return word;
     };
-
-    ///////////////////////////////////
-    // Private Methods
-    ///////////////////////////////////
     /**
      * If stack_args.debug is true, this will print debug messages
      * @private
@@ -191,6 +201,13 @@ function Stack(stack_args){
     function debug(message){
         if(stack_args.debug) console.log(message);
     };
+    /**
+     * If there is a user defined error function call it, if not just use an alert;
+     * @param  {String} err The error message
+     * @member stack
+     * @private
+     * @return {null}
+     */
     function error(err){
         if(stack_args.onError) stack_args.onError(err);
         else alert(err);
