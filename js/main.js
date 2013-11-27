@@ -1,4 +1,5 @@
 $(document).ready(function(){
+    var active_line = 0;
     var me = mips_emulator();
     // The next time we go to step or run, we need to reset the code from the text editor.
     me.valid = true; 
@@ -19,9 +20,12 @@ $(document).ready(function(){
             editor.save();
             me.setCode($("#editor").val());
             me.valid = true;
-        } 
+        }
+        $(".active_line").removeClass('active_line');
+        editor.markText({line: active_line, ch: 0}, {line: active_line+1, ch: 0}, {className: 'active_line'});
+        active_line++;
       // TODO: hook this up to a mips engine
-      alert("Step through function here");
+      //alert("Step through function here");
     });
     $("#run").click(function(){
         // if this code is no longer valid, reanalyze.
@@ -33,6 +37,7 @@ $(document).ready(function(){
       // TODO: hook this up to a mips engine
       alert("Run Fucntion here");
     });
+
 });
 
 // TODO: these should probably be moved to a UI related file
