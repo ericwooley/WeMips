@@ -119,4 +119,6 @@ test("move pointer", function(){
     stack.move_pointer(-32);
     ok(stack.get_word() === 0, "After moving back to position zero, the stack pointer should be 0");
     ok(stack.get_word_at(32), 10, "The stack should grab 10 from 32 bits ahead of it.");
+    stack.move_pointer(64); // Move it to an uninitialized location
+    ok(typeof stack.get_word() == "number", "This should be an uninitialized portion on the stack, so garbage should be returned");
 });
