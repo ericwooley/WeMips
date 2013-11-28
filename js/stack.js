@@ -48,7 +48,7 @@ function Stack(options) {
         // 1. Assume a base address of 100.
         // 2. The first accessible address is 99, which will be stored in 0.
         // 3. The next accessible address is 98, which will be stored in 1.
-        var index = (that.baseAddress - 1) - address;
+        var index = (options.baseAddress - 1) - address;
 
         // ensure this index is accessible
         var numElementsToAdd = index - data.length + 1;
@@ -62,7 +62,6 @@ function Stack(options) {
 
     // Public variables
 
-    this.baseAddress = options.baseAddress;
     this.MIN_BYTE_VALUE = 0;
     this.MAX_BYTE_VALUE = 255;
     this.BITS_PER_BYTE = 8;
@@ -102,6 +101,10 @@ function Stack(options) {
     this.reset = function() {
         data = [];
     };
+    this.pointerToBottomOfStack = function () {
+        // the initial value of the stack pointer. before you read or write to it, you must decrement the stack pointer.
+        return options.baseAddress;
+    };
 }
 
 // Public functions
@@ -140,11 +143,6 @@ Stack.prototype.setHalfword = function (pointer, data) {
 
 Stack.prototype.setWord = function (pointer, data) {
     this.setDataAtAddress(pointer, this.BYTES_PER_WORD, data);
-};
-
-Stack.prototype.pointerToBottomOfStack = function () {
-    // the initial value of the stack. before you read or write to it, you must decrement the stack pointer.
-    return this.baseAddress;
 };
 
 // Public Helper functions

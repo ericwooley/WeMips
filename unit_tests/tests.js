@@ -237,10 +237,10 @@ test("Save/load integers to stack", function() {
 });
 
 test("Address to Index", function() {
-	stack.baseAddress = 100;
-	stackPointer = stack.pointerToBottomOfStack();
+	var stack2 = new Stack({baseAddress: 100});
+	stackPointer = stack2.pointerToBottomOfStack();
 	stackPointer -= 1;
 	equal(stackPointer, 99, "99 should be the first accessible address.");
-	stack.setByte(stackPointer, 123);
-	equal(stack.getByte(stackPointer), 123);
+	stack2.setByte(stackPointer, 123);
+	equal(stack2.getByte(stackPointer), 123);
 });
