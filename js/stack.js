@@ -1,12 +1,17 @@
+function StackError(message) {
+    this.name = StackError.exceptionName();
+    this.message = message;
+}
+StackError.exceptionName = function() {
+    return 'Stack Error';
+}
+StackError.prototype.toString = function() {
+    return '{0}: {1}'.format(this.name, this.message);
+}
+
 function Stack(options) {
     options = options || {};
     _.defaults(options, {
-        /**
-         * Method to call on error, should accept 1 string argument, which contains the error
-         * @member Stack
-         * @type {Function}
-         */
-        onError: null, // TODO: use this somewhere?
         /**
          * Function to call when the stack changes. (e.g. onChange(indexNumber))
          * @member Stack
@@ -42,7 +47,11 @@ function Stack(options) {
     function indexForAddress(address) {
         // get the index into the data array which corresponds to a specific address
         assert(typeof address == "number");
-        assert(0 <= address && address < that.pointerToBottomOfStack(), "We are never allowed to access an address above the initial stack address.");
+        var minValidAddress = 0;
+        var maxValidAddress = that.pointerToBottomOfStack() - 1;
+        if (address < minValidAddress || maxValidAddress < address) {
+            throw new StackError('Invalid stack address ({0}). Valid stack addresses are between {1} and {2}.'.format(address, minValidAddress, maxValidAddress));
+        }
 
         // Conversion to index:
         // 1. Assume a base address of 100.
@@ -91,7 +100,11 @@ function Stack(options) {
         if (data < 0) {
             data = Stack.signedNumberToUnsignedNumber(data, byteCount * this.BITS_PER_BYTE);
         }
-        assert(0 <= data && data <= (Math.pow(256, byteCount) - 1), "Out of range.");
+        var minValidValue = 0;
+        var maxValidValue = (Math.pow(256, byteCount) - 1);
+        if (data < minValidValue || maxValidValue < data) {
+            throw new StackError('Unable to store out-of-range value ({0}). Valid values are {1} through {2}.'.format(data, minValidValue, maxValidValue));
+        };
         for (var i = byteCount - 1; i >= 0; i--) {
             var rightMostByte = data & this.MAX_BYTE_VALUE;
             setByteAtAddress(address + i, rightMostByte);
@@ -228,7 +241,11 @@ Stack.signedNumberToUnsignedNumber = function (number, bits/*=32*/) {
     assert(typeof number === "number");
     bits = bits || 32;
     assert(typeof bits === "number");
-    assert(-Math.pow(2, bits-1) <= number && number < Math.pow(2, bits), "Out of range.");
+    var minValidValue = -Math.pow(2, bits-1);
+    var maxValidValue = Math.pow(2, bits) - 1;
+    if (number < minValidValue || maxValidValue < number) {
+        throw new StackError("Out of range value ({0}) for conversion of signed to unsigned number. The value must be between {1) and {2}.".format(number, minValidValue, maxValidValue));
+    };
 
     if (0 <= number) {
         return number;
@@ -244,3 +261,15 @@ function assert(condition, message) {
         throw message || "Assertion failed";
     }
 }
+
+String.prototype.format = function() {
+    // 'Added {0} by {1} to your collection'.format(title, artist)
+    // http://stackoverflow.com/a/2648463
+    var s = this,
+        i = arguments.length;
+
+    while (i--) {
+        s = s.replace(new RegExp('\\{' + i + '\\}', 'gm'), arguments[i]);
+    }
+    return s;
+};

@@ -234,9 +234,22 @@ test("Save/load integers to stack", function() {
 	equal(stack.getByte(stackPointer + 2), 0, 			" 00000000  00000000 [00000000] 10000000 ");
 	equal(stack.getByte(stackPointer + 3), -128, 		" 00000000  00000000  00000000 [10000000]");
 	equal(stack.getUnsignedByte(stackPointer + 3), 128, " 00000000  00000000  00000000 [10000000]");
+
+	stackPointer -= 1;
+	throws(function() { stack.setByte(stackPointer, -129); }, StackError, "Out of range.");
+	stack.setByte(stackPointer, -128);
+	stack.setByte(stackPointer, 0);
+	stack.setByte(stackPointer, 127);
+	stack.setByte(stackPointer, 255);
+	throws(function() { stack.setByte(stackPointer, 256); }, StackError, "Out of range.");
 });
 
-test("Address to Index", function() {
+test("Addresses", function() {
+	throws(function() { stack.getByte(stackPointer); }, StackError, "Accessing the top of the stack should throw an error.");
+	ok(stack.getByte(0), "Accessing address 0 is valid.");
+	throws(function() { stack.getByte(-1); }, StackError, "Accessing anything below 0 is invalid.");
+	throws(function() { stack.getByte(stackPointer + 20); }, StackError, "Accessing anything above the top of the stack should throw an error.");
+
 	var stack2 = new Stack({baseAddress: 100});
 	stackPointer = stack2.pointerToBottomOfStack();
 	stackPointer -= 1;
