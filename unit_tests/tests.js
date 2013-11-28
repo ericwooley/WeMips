@@ -245,15 +245,17 @@ test("Save/load integers to stack", function() {
 });
 
 test("Addresses", function() {
+	// use our own stack, since we don't want to deal with random addresses that the official stack gets, nor the extremely high values it might start at (e.g. if it starts at 10000 and we access address 0, it is going to create 10000 elements for us.)
+	var stack = new Stack({baseAddress: 100});
+	stackPointer = stack.pointerToBottomOfStack();
+
 	throws(function() { stack.getByte(stackPointer); }, StackError, "Accessing the top of the stack should throw an error.");
-	ok(stack.getByte(0), "Accessing address 0 is valid.");
+	stack.getByte(0); // "Accessing address 0 is valid.";
 	throws(function() { stack.getByte(-1); }, StackError, "Accessing anything below 0 is invalid.");
 	throws(function() { stack.getByte(stackPointer + 20); }, StackError, "Accessing anything above the top of the stack should throw an error.");
 
-	var stack2 = new Stack({baseAddress: 100});
-	stackPointer = stack2.pointerToBottomOfStack();
 	stackPointer -= 1;
 	equal(stackPointer, 99, "99 should be the first accessible address.");
-	stack2.setByte(stackPointer, 123);
-	equal(stack2.getByte(stackPointer), 123);
+	stack.setByte(stackPointer, 123);
+	equal(stack.getByte(stackPointer), 123);
 });
