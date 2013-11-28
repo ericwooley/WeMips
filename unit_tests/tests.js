@@ -196,35 +196,51 @@ test("Save/load integers to stack", function() {
 	stack.setByte(stackPointer, -1);
 	equal(stack.getByte(stackPointer), -1);
 	equal(stack.getUnsignedByte(stackPointer), 255);
+	stack.setByte(stackPointer, 255);
+	equal(stack.getByte(stackPointer), -1);
+	equal(stack.getUnsignedByte(stackPointer), 255);
 
 	checkNumber(0);
 	checkNumber(1);
 	checkNumber(255);
 	checkNumber(257);
 	checkNumber(Math.pow(2, 31) - 1);
+
+
+	// try moving the stack pointer forward
+	stackPointer -= 4;
+	stack.setWord(stackPointer, 123);
+	stackPointer -= 4;
+	stack.setWord(stackPointer, 345);
 	stackPointer += 4;
-	equal(stack.getWord(stackPointer), 257, "after moving stack back, it should read the same value");
-	// stores 257 as [0, 0, 1, 1] = 256 * 1 + 1 * 1 = 257
-	equal(stack.getByte(stackPointer + 0), 0);
-	equal(stack.getByte(stackPointer + 1), 0);
-	equal(stack.getByte(stackPointer + 2), 1);
-	equal(stack.getByte(stackPointer + 3), 1);
-	// storeByte(255) -> 1111 1111
-	// storeByte(-1) ->  1111 1111
-	// loadUnsignedByte(255) -> 255
-	// loadByte(255) -> -1
-	// to store -1 in a byte, we have 1111 1111, when storing in a 
+	equal(stack.getWord(stackPointer), 123, "Moving the stack pointer forward should access the previous value which was stored.");
+
+	// read individual bytes: stores 257 as [0, 0, 1, 1] = 256 * 1 + 1 * 1 = 257
+	stackPointer -= 4;
+	stack.setWord(stackPointer, 257);
+	equal(stack.getByte(stackPointer + 0), 0, "[00000000] 00000000  00000001  00000001");
+	equal(stack.getByte(stackPointer + 1), 0, " 00000000 [00000000] 00000001  00000001");
+	equal(stack.getByte(stackPointer + 2), 1, " 00000000  00000000 [00000001] 00000001");
+	equal(stack.getByte(stackPointer + 3), 1, " 00000000  00000000  00000001 [00000001]");
+
+	stackPointer -= 4;
+	stack.setWord(stackPointer, 128);
+	equal(stack.getWord(stackPointer), 128, 			"[00000000  00000000  00000000  10000000]");
+	equal(stack.getHalfword(stackPointer + 0), 0, 		"[00000000  00000000] 00000000  10000000 ");
+	equal(stack.getHalfword(stackPointer + 1), 0, 		" 00000000 [00000000  00000000] 10000000 ");
+	equal(stack.getHalfword(stackPointer + 2), 128, 	" 00000000  00000000 [00000000  10000000]");
+	equal(stack.getByte(stackPointer + 0), 0, 			"[00000000] 00000000  00000000  10000000 ");
+	equal(stack.getByte(stackPointer + 1), 0, 			" 00000000 [00000000] 00000000  10000000 ");
+	equal(stack.getByte(stackPointer + 2), 0, 			" 00000000  00000000 [00000000] 10000000 ");
+	equal(stack.getByte(stackPointer + 3), -128, 		" 00000000  00000000  00000000 [10000000]");
+	equal(stack.getUnsignedByte(stackPointer + 3), 128, " 00000000  00000000  00000000 [10000000]");
 });
 
-// TODO: make similar tests with the new stack?
-// test("move pointer", function(){
-//     ok(stack.get_stack_pointer() ===  0, "The stack should initialize to 0");
-//     stack.move_pointer(32);
-//     stack.set_word(10);
-//     ok(stack.get_word(), 10, "The stack should be set to 10" );
-//     stack.move_pointer(-32);
-//     ok(stack.get_word() === 0, "After moving back to position zero, the stack pointer should be 0");
-//     ok(stack.get_word_at(32), 10, "The stack should grab 10 from 32 bits ahead of it.");
-//     stack.move_pointer(64); // Move it to an uninitialized location
-//     ok(typeof stack.get_word() == "number", "This should be an uninitialized portion on the stack, so garbage should be returned");
-// });
+test("Address to Index", function() {
+	stack.baseAddress = 100;
+	stackPointer = stack.pointerToBottomOfStack();
+	stackPointer -= 1;
+	equal(stackPointer, 99, "99 should be the first accessible address.");
+	stack.setByte(stackPointer, 123);
+	equal(stack.getByte(stackPointer), 123);
+});

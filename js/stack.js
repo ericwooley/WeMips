@@ -18,7 +18,8 @@ function Stack(options) {
          * @member Stack
          * @type {Function}
          */
-        onAdd: null
+        onAdd: null,
+        baseAddress: Math.floor((Math.random()*999999)) + 10000
     });
 
     // Private memebers
@@ -41,9 +42,13 @@ function Stack(options) {
     function indexForAddress(address) {
         // get the index into the data array which corresponds to a specific address
         assert(typeof address == "number");
-        assert(address < that.pointerToBottomOfStack(), "We are never allowed to access an address above the initial stack address.");
+        assert(0 <= address && address < that.pointerToBottomOfStack(), "We are never allowed to access an address above the initial stack address.");
 
-        var index = -address; // e.g. -1 is stored at address 1
+        // Conversion to index:
+        // 1. Assume a base address of 100.
+        // 2. The first accessible address is 99, which will be stored in 0.
+        // 3. The next accessible address is 98, which will be stored in 1.
+        var index = (that.baseAddress - 1) - address;
 
         // ensure this index is accessible
         var numElementsToAdd = index - data.length + 1;
@@ -57,6 +62,7 @@ function Stack(options) {
 
     // Public variables
 
+    this.baseAddress = options.baseAddress;
     this.MIN_BYTE_VALUE = 0;
     this.MAX_BYTE_VALUE = 255;
     this.BITS_PER_BYTE = 8;
@@ -112,8 +118,16 @@ Stack.prototype.getHalfword = function (pointer) {
     return this.getDataAtAddress(pointer, this.BYTES_PER_HALFWORD);
 };
 
+Stack.prototype.getUnsignedHalfword = function (pointer) {
+    return this.getDataAtAddress(pointer, this.BYTES_PER_HALFWORD, true);
+};
+
 Stack.prototype.getWord = function (pointer) {
     return this.getDataAtAddress(pointer, this.BYTES_PER_WORD);
+};
+
+Stack.prototype.getUnsignedWord = function (pointer) {
+    return this.getDataAtAddress(pointer, this.BYTES_PER_WORD, true);
 };
 
 Stack.prototype.setByte = function (pointer, data) {
@@ -130,7 +144,7 @@ Stack.prototype.setWord = function (pointer, data) {
 
 Stack.prototype.pointerToBottomOfStack = function () {
     // the initial value of the stack. before you read or write to it, you must decrement the stack pointer.
-    return 1;
+    return this.baseAddress;
 };
 
 // Public Helper functions
