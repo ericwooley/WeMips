@@ -57,30 +57,44 @@ function Stack(options) {
 
     // Public variables
 
+    this.MIN_BYTE_VALUE = 0;
+    this.MAX_BYTE_VALUE = 255;
+    this.BITS_PER_BYTE = 8;
     this.BYTES_PER_BYTE = 1;
     this.BYTES_PER_HALFWORD = 2;
     this.BYTES_PER_WORD = 4;
 
     // Privileged methods
 
-    this.getDataAtAddress = function (address, byteCount) {
+    this.getDataAtAddress = function (address, byteCount, asUnsigned) {
+        asUnsigned = asUnsigned || false;
         var result = 0;
         for (var i = 0; i < byteCount; i++) {
             var value = getByteAtAddress(address + i);
-            assert(0 <= value && value <= 255);
-            result = result << 8;
+            assert(this.MIN_BYTE_VALUE <= value && value <= this.MAX_BYTE_VALUE);
+            result = result << this.BITS_PER_BYTE;
             result += value;
         };
-        return result;
+        if (asUnsigned) {
+            return result;
+        } else {
+            return Stack.unsignedNumberToSignedNumber(result, byteCount * this.BITS_PER_BYTE);
+        }
     };
     this.setDataAtAddress = function(address, byteCount, data) {
-        assert(typeof data === "number", "Only number supported for now.");
-        assert(0 <= data && data <= (Math.pow(256, byteCount) - 1));
+        assert(typeof data === "number", "Only numbers supported for now.");
+        if (data < 0) {
+            data = Stack.signedNumberToUnsignedNumber(data, byteCount * this.BITS_PER_BYTE);
+        }
+        assert(0 <= data && data <= (Math.pow(256, byteCount) - 1), "Out of range.");
         for (var i = byteCount - 1; i >= 0; i--) {
-            var rightMostByte = data & 255;
+            var rightMostByte = data & this.MAX_BYTE_VALUE;
             setByteAtAddress(address + i, rightMostByte);
-            data = data >> 8;
+            data = data >> this.BITS_PER_BYTE;
         };
+    };
+    this.reset = function() {
+        data = [];
     };
 }
 
@@ -90,8 +104,16 @@ Stack.prototype.getByte = function (pointer) {
     return this.getDataAtAddress(pointer, this.BYTES_PER_BYTE);
 };
 
+Stack.prototype.getUnsignedByte = function (pointer) {
+    return this.getDataAtAddress(pointer, this.BYTES_PER_BYTE, true);
+};
+
 Stack.prototype.getHalfword = function (pointer) {
     return this.getDataAtAddress(pointer, this.BYTES_PER_HALFWORD);
+};
+
+Stack.prototype.getWord = function (pointer) {
+    return this.getDataAtAddress(pointer, this.BYTES_PER_WORD);
 };
 
 Stack.prototype.setByte = function (pointer, data) {
@@ -100,6 +122,10 @@ Stack.prototype.setByte = function (pointer, data) {
 
 Stack.prototype.setHalfword = function (pointer, data) {
     this.setDataAtAddress(pointer, this.BYTES_PER_HALFWORD, data);
+};
+
+Stack.prototype.setWord = function (pointer, data) {
+    this.setDataAtAddress(pointer, this.BYTES_PER_WORD, data);
 };
 
 Stack.prototype.pointerToBottomOfStack = function () {
@@ -129,6 +155,76 @@ Stack.numberToString = function (number) {
     return string;
 };
 
+Stack.numberToBinaryString = function (number, bits/*=32*/) {
+    // returns a binary representation of a string.
+    assert(typeof number === "number");
+
+    bits = bits || 32;
+    assert(typeof bits === "number");
+
+    if (number < 0) {
+        // convert to the corresponding unsigned number (e.g. when we are using single bytes, then -2 would correspond to 254, since the two are represented the same in binary)
+        number = Math.pow(2, bits) + number;
+    }
+
+    var result = number.toString(2);
+    var zeroPadding = (new Array(bits - result.length + 1)).join('0');
+    return zeroPadding + result;
+}
+
+Stack.binaryStringToNumber = function (binaryString) {
+    assert(typeof binaryString == "string");
+
+    var unsignedNumber = Stack.binaryStringToUnsignedNumber(binaryString);
+    if (binaryString[0] === "0") {
+        // this is a positive number
+        return unsignedNumber;
+    }
+
+    assert(binaryString[0] === "1", "This should be a negative number.");
+    return Stack.unsignedNumberToSignedNumber(unsignedNumber, binaryString.length); // unsignedNumber - Math.pow(2, binaryString.length);
+}
+
+Stack.binaryStringToUnsignedNumber = function (binaryString) {
+    assert(typeof binaryString == "string");
+    return parseInt(binaryString, 2);
+}
+
+Stack.unsignedNumberToSignedNumber = function (number, bits/*=32*/) {
+    assert(typeof number === "number");
+    bits = bits || 32;
+    assert(typeof bits === "number");
+    assert(0 <= number && number < Math.pow(2, bits), "Out of range.");
+    if (number < Math.pow(2, bits - 1)) {
+        // e.g. f(3, 8) -> 3, since 0000 0011 in signed and unsigned is always 3
+        return number;
+    };
+
+    // e.g. f(255, 8) -> -1, since -1 and 255 (1111 1111) represent the same value in binary
+    // e.g. f(254, 8) -> -2, since they represent the same number in binary (1111 1110)
+    return number - Math.pow(2, bits);
+}
+
+
+Stack.signedNumberToUnsignedNumber = function (number, bits/*=32*/) {
+    // e.g. f(-128, 8) -> 128 (1000 0000)
+    // e.g. f(-1, 8) -> 255   (1111 1111)
+    // e.g. f(-2, 8) -> 254   (1111 1110)
+    // e.g. f(127, 8) -> 127  (0111 1111)
+    // e.g. f(255, 8) -> 255  (1111 1111)
+    // e.g. f(3, 8) -> 3      (0000 0011)
+    assert(typeof number === "number");
+    bits = bits || 32;
+    assert(typeof bits === "number");
+    assert(-Math.pow(2, bits-1) <= number && number < Math.pow(2, bits), "Out of range.");
+
+    if (0 <= number) {
+        return number;
+    }
+
+    // negative number
+    return number + Math.pow(2, bits);
+}
 
 // TODO: move this elsewhere
 function assert(condition, message) {

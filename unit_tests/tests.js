@@ -109,16 +109,111 @@ test("OnChange called", function() {
 	ok(!onChangeCalled, "Should have removed the on change handler.");	
 });
 
-module("STACK");
+module("LIBRARY");
 
-test("Save/load from stack", function(){
-	var stack = new Stack();
-	var stackPointer = stack.pointerToBottomOfStack();
+test("Signed/Unsigned conversions", function() {
+	equal(Stack.signedNumberToUnsignedNumber(-128, 8), 128, "(1000 0000)");
+	equal(Stack.signedNumberToUnsignedNumber(-1, 8), 255, "(1111 1111)");
+	equal(Stack.signedNumberToUnsignedNumber(-2, 8), 254, "(1111 1110)");
+	equal(Stack.signedNumberToUnsignedNumber(127, 8), 127, "(0111 1111)");
+	equal(Stack.signedNumberToUnsignedNumber(255, 8), 255, "(1111 1111)");
+	equal(Stack.signedNumberToUnsignedNumber(3, 8), 3, "(0000 0011)");
+	equal(Stack.signedNumberToUnsignedNumber(-1), Math.pow(2, 32) - 1, "11111111111111111111111111111111");
+
+	equal(Stack.unsignedNumberToSignedNumber(3, 8), 3, "(0000 0011)");
+	equal(Stack.unsignedNumberToSignedNumber(255, 8), -1, "(1111 1111)");
+	equal(Stack.unsignedNumberToSignedNumber(254, 8), -2, "(1111 1110)");
+	equal(Stack.unsignedNumberToSignedNumber(Math.pow(2, 32) - 1), -1, "11111111111111111111111111111111");
+});
+
+test("Binary Methods", function() {
+	equal(Stack.numberToBinaryString(-1),  "11111111111111111111111111111111");
+	equal(Stack.numberToBinaryString(0),   "00000000000000000000000000000000");
+	equal(Stack.numberToBinaryString(1),   "00000000000000000000000000000001");
+	equal(Stack.numberToBinaryString(33),  "00000000000000000000000000100001");
+	equal(Stack.numberToBinaryString(-33), "11111111111111111111111111011111");
+	equal(Stack.numberToBinaryString(255), "00000000000000000000000011111111");
+	equal(Stack.numberToBinaryString(256), "00000000000000000000000100000000");
+	equal(Stack.numberToBinaryString(257), "00000000000000000000000100000001");
+	equal(Stack.numberToBinaryString(Math.pow(2, 31) - 1), "01111111111111111111111111111111");
+	equal(Stack.numberToBinaryString(Math.pow(2, 32) - 1), "11111111111111111111111111111111");
+
+	equal(Stack.binaryStringToUnsignedNumber("11111111111111111111111111111111"), Math.pow(2, 32) - 1);
+	equal(Stack.binaryStringToUnsignedNumber("00000000000000000000000000000000"), 0);
+	equal(Stack.binaryStringToUnsignedNumber("00000000000000000000000000000011"), 3);
+	equal(Stack.binaryStringToUnsignedNumber("11"), 3, "We can ommit leading zeros.");
+	equal(Stack.binaryStringToUnsignedNumber("00000000000000000000000000100001"), 33);
+
+	equal(Stack.binaryStringToNumber("00000000000000000000000000000001"), 1);
+	equal(Stack.binaryStringToNumber("11111111111111111111111111111111"), -1);
+	equal(Stack.binaryStringToNumber("11111111111111111111111111011111"), -33);
+	equal(Stack.binaryStringToNumber("00000000000000000000000000100001"), 33);
+	equal(Stack.binaryStringToNumber("11"), -1, "The string length is used to determine the power of two.");
+	equal(Stack.binaryStringToNumber("011"), 3, "Same as above.");
+	equal(Stack.binaryStringToNumber("10"), -2);
+});
+
+
+var stack = new Stack();
+var stackPointer = stack.pointerToBottomOfStack();
+
+module("STACK", {
+	setup: function() {
+		stack.reset();
+		stackPointer = stack.pointerToBottomOfStack();
+	}
+});
+
+test("Save/load strings to stack", function(){
 	stackPointer -= 1;
 	stack.setByte(stackPointer, Stack.stringToNumber('A'));
 	stackPointer -= 1;
 	stack.setByte(stackPointer, Stack.stringToNumber('B'));
-	ok(Stack.numberToString(stack.getHalfword(stackPointer)), 'BA');
+	equal(Stack.numberToString(stack.getHalfword(stackPointer)), 'BA');
+	stackPointer -= 4;
+	stack.setByte(stackPointer + 0, Stack.stringToNumber('a'));
+	stack.setByte(stackPointer + 1, Stack.stringToNumber('b'));
+	stack.setByte(stackPointer + 2, Stack.stringToNumber('c'));
+	stack.setByte(stackPointer + 3, Stack.stringToNumber('d'));
+	equal(Stack.numberToString(stack.getWord(stackPointer)), 'abcd');
+	stackPointer -= 4;
+	stack.setWord(stackPointer, Stack.stringToNumber('wxyz'));
+	equal(Stack.numberToString(stack.getWord(stackPointer)), 'wxyz');
+});
+
+test("Save/load integers to stack", function() {
+	function checkNumber(number) {
+		stackPointer -= 4;
+		stack.setWord(stackPointer, number);
+		equal(stack.getWord(stackPointer), number);
+	}
+	stackPointer -= 1;
+
+	stack.setByte(stackPointer, 0);
+	equal(stack.getByte(stackPointer), 0);
+	stack.setByte(stackPointer, 20);
+	equal(stack.getByte(stackPointer), 20);
+	stack.setByte(stackPointer, -1);
+	equal(stack.getByte(stackPointer), -1);
+	equal(stack.getUnsignedByte(stackPointer), 255);
+
+	checkNumber(0);
+	checkNumber(1);
+	checkNumber(255);
+	checkNumber(257);
+	checkNumber(Math.pow(2, 31) - 1);
+	stackPointer += 4;
+	equal(stack.getWord(stackPointer), 257, "after moving stack back, it should read the same value");
+	// stores 257 as [0, 0, 1, 1] = 256 * 1 + 1 * 1 = 257
+	equal(stack.getByte(stackPointer + 0), 0);
+	equal(stack.getByte(stackPointer + 1), 0);
+	equal(stack.getByte(stackPointer + 2), 1);
+	equal(stack.getByte(stackPointer + 3), 1);
+	// storeByte(255) -> 1111 1111
+	// storeByte(-1) ->  1111 1111
+	// loadUnsignedByte(255) -> 255
+	// loadByte(255) -> -1
+	// to store -1 in a byte, we have 1111 1111, when storing in a 
 });
 
 // TODO: make similar tests with the new stack?
