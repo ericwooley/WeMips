@@ -112,6 +112,7 @@ function mips_emulator(mips_args){
         getRegister: function(reg){
             if(reg.charAt(0) != '$') reg = '$' + reg;
             if(!registers[reg]) return false;
+            if(!registers[reg].val)
             return registers[reg].val;
         },
         /**
@@ -258,7 +259,8 @@ function mips_emulator(mips_args){
              */
             reg_name: null
         };
-        return _.defaults(reg, registers);
+        _.defaults(reg, register);
+        return reg;
     };
     // these will be called after the parse method has been called
     // the goal is to make these methods look as close to the MIPS cheat sheet as possible.
