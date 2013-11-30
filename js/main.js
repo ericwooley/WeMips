@@ -1,8 +1,14 @@
 $(document).ready(function(){
-    var active_line = 0;
-    var me = mips_emulator();
+
+    // Code Mirror setup
+    var me = mips_emulator({
+        debug: true,
+        onRegisterChange: function(reg_name, value){
+            $("#" + reg_name.replace('$', '') + " .reg_spacer").html(value);
+        }
+    });
     // The next time we go to step or run, we need to reset the code from the text editor.
-    me.valid = true; 
+    me.valid = false; 
     var editor = CodeMirror.fromTextArea(
         document.getElementById("editor"),{
           lineNumbers: true,
@@ -14,6 +20,35 @@ $(document).ready(function(){
         
         me.valid = false;
     });
+
+    // Mips emulator setup.
+    $(".registers-container li").each(function(index){
+        var reg = $(this);
+        var reg_name = reg.attr('id');
+        reg.html(
+            "<b>"+reg_name +":</b> " 
+            + "<span class='reg_spacer' id='"+reg_name+"-val' contenteditable='true'>"
+            + me.getRegister(reg_name)
+            + "</span>"
+        );
+    });
+    $('.reg_spacer').on('input', function(e){
+        var new_val = $(e.target).html();
+        var target =  $(e.target);
+        if(new_val.search(/[\D\s]/) >= 0){
+            target.html(new_val.replace(/[\D\s]/g, ''));
+            alert("You cannot enter in characters into registers");
+        }
+        if(new_val.length > 11){
+            target.html(new_val.substring(0, 11));
+            alert("The 32 bit integers can only be 11 digits long.");
+
+        }
+    });
+    // Step throught emulator function
+    var active_line;
+    var next_line;
+    var active_marker, next_marker;
     $("#step").click(function(){
         // if this code is no longer valid, reanalyze.
         if(!me.valid){
@@ -21,12 +56,32 @@ $(document).ready(function(){
             me.setCode($("#editor").val());
             me.valid = true;
         }
-        $(".active_line").removeClass('active_line');
-        editor.markText({line: active_line, ch: 0}, {line: active_line+1, ch: 0}, {className: 'active_line'});
-        active_line++;
-      // TODO: hook this up to a mips engine
-      //alert("Step through function here");
+
+        line_result = me.step();
+        if(line_result){
+            active_line = line_result.line_ran;
+            next_line = line_result.next_line;
+            console.log("Active line: " + active_line);
+            console.log("Next line: " + next_line);
+            
+            //$(".active_line").removeClass('active_line');
+            //$(".next_line").removeClass('next_line');
+            if(active_marker) active_marker.clear();
+            active_marker = editor.markText(
+                {line: active_line-1, ch: 0},
+                {line: active_line, ch: 0},
+                {title: "last line ran", className: 'active_line'}
+            );
+            if(next_marker) next_marker.clear();
+            next_marker = editor.markText(
+                {line: next_line-1, ch: 0},
+                {line: next_line, ch: 0},
+                {title: "Next line to be run", className: 'next_line'}
+            );
+        }
     });
+
+    // Run code non-stop function
     $("#run").click(function(){
         // if this code is no longer valid, reanalyze.
         if(!me.valid){
@@ -40,77 +95,24 @@ $(document).ready(function(){
 
 });
 
-// TODO: these should probably be moved to a UI related file
-function generateRegNames(prefix, startIndex, endIndex) {
-    var result = [];
-    for (var i = startIndex; i <= endIndex; i++) {
-        result.push(prefix + i);
-    }   
-    return result;
+
+function setEndOfContenteditable(contentEditableElement)
+{
+    var range,selection;
+    if(document.createRange)//Firefox, Chrome, Opera, Safari, IE 9+
+    {
+        range = document.createRange();//Create a range (a range is a like the selection but invisible)
+        range.selectNodeContents(contentEditableElement);//Select the entire contents of the element with the range
+        range.collapse(false);//collapse the range to the end point. false means collapse to end rather than the start
+        selection = window.getSelection();//get the selection object (allows you to change selection)
+        selection.removeAllRanges();//remove any selections already made
+        selection.addRange(range);//make the range you have just created the visible selection
+    }
+    else if(document.selection)//IE 8 and lower
+    { 
+        range = document.body.createTextRange();//Create a range (a range is a like the selection but invisible)
+        range.moveToElementText(contentEditableElement);//Select the entire contents of the element with the range
+        range.collapse(false);//collapse the range to the end point. false means collapse to end rather than the start
+        range.select();//Select the range (make it the visible selection
+    }
 }
-
-function buildRegisterColumn(columns) {
-    var result = [];
-    for (var i = 0; i < columns.length; i++) {
-        var column = columns[i];
-        if (typeof column === 'string') {
-            result.push(column);
-        } else {
-            // column is an array
-            for (var j = 0; j < column.length; j++) {
-                result.push(column[j]);
-            };
-        }
-    };
-    return result;
-}
-
-function buildRegistersTable() {
-    // each column should have 8 registers. 0, 8, 16, 24
-    var rows = [];
-    rows.push(buildRegisterColumn([
-        'zero', 
-        'at',
-        generateRegNames('v', 0, 1),
-        generateRegNames('a', 0, 3), 
-    ]));
-    rows.push(buildRegisterColumn([
-        generateRegNames('t', 0, 7)
-    ]));
-    rows.push(buildRegisterColumn([
-        generateRegNames('s', 0, 7),
-    ]));
-    rows.push(buildRegisterColumn([
-        generateRegNames('t', 8, 9), 
-        generateRegNames('k', 0, 1),
-        'gp',
-        'sp',
-        'fp',
-        'ra'
-    ]));
-
-    // rows contains an array of arrays of strings
-    $table = $('<table>');
-    var rowLength = rows[0].length;
-    for (var c = 0; c < rowLength; c++) {
-        //var col = row[c]; // string
-        $tr = $('<tr>');
-
-        for (var r = 0; r < rows.length; r++) {
-            var regName = rows[r][c]; // array
-            $th = $('<th>');
-            $th.text(regName);
-            $th.appendTo($tr);
-
-            $td = $('<td>');
-            $td.text('0');
-            $td.appendTo($tr);
-        };
-
-        $tr.appendTo($table);
-    };
-    $('#registers').empty();
-    $table.appendTo('#registers');
-}
-
-buildRegistersTable();
