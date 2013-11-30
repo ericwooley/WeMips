@@ -16,7 +16,7 @@ function mips_emulator(mips_args){
 
         },
         onFinish: function(){
-            alert("Finished running emulation");
+            alert("Finished running emulation, resetting $sp to line 1");
         }
     });
     var debug = mips_args.debug
@@ -24,7 +24,7 @@ function mips_emulator(mips_args){
     // Private Variables / Setup
     //////////////////////////////////
     
-    var stack = new Stack();
+   var stack = new Stack();
 
     /**
      * Hash table of registers
@@ -120,6 +120,7 @@ function mips_emulator(mips_args){
     var ME = {
         /**
          * Returns a specified registers value
+         * @member mips_emulator
          * @param  {String} reg
          * @return {String} 
          */
@@ -133,10 +134,12 @@ function mips_emulator(mips_args){
         },
         /**
          * Set a register value, and call onChange function for that register
+         * @member mips_emulator
          * @param {String} reg
          * @param {Number} value
          */
-        setRegister: function(reg, value){
+        setRegister: function(reg, value, enable_callback){
+            enable_callback = enable_callback || true;
             if(reg.charAt(0) != '$'){
                 reg = '$' + reg;
 
@@ -145,15 +148,16 @@ function mips_emulator(mips_args){
 
             if(!registers[reg]) return false;
             // TODO: ensure the register name does not exist in readonlyRegs (or better yet, ensure it exists in the readwriteRegs)
-            if(registers[reg].onChange) registers[reg].onChange();
+            if(registers[reg].onChange && enable_callback) registers[reg].onChange();
                 registers[reg].val = value;
-            if(mips_args.onRegisterChange)
+            if(mips_args.onRegisterChange && enable_callback)
                 mips_args.onRegisterChange(reg, value);
             if(debug) console.log("----> New value: "+ ME.getRegister(reg));
 
         },
         /**
          * Set an Onchange function for a register
+         * @member mips_emulator
          * @param  {String} reg
          * @param  {Function} func
          * @return {null}
@@ -162,7 +166,22 @@ function mips_emulator(mips_args){
             registers[reg].onChange = func;
         },
         /**
+         * Set which line to run next.
+         * @member mips_emulator
+         * @param {Number} line_no
+         * @return {Number} Returns the number the line was set too.
+         */
+        setLine: function(line_no){
+            var line = mips_code.code[line_no];
+            if(debug) console.log("setting line: "+ line_no + " - " + JSON.stringify(line));
+            if(!line) return false;
+            current_line = line_no;
+            if(line.ignore) increment_line();
+            return current_line;
+        },
+        /**
          * Checks if a register is a valid register
+         * @member mips_emulator
          * @param  {String}  reg
          * @return {Boolean}
          */
@@ -171,6 +190,7 @@ function mips_emulator(mips_args){
         },
         /**
          * Checks if a string is a valid mips line
+         * @member mips_emulator
          * @param  {String}  line
          * @return {Boolean}
          */
@@ -179,6 +199,7 @@ function mips_emulator(mips_args){
         },
         /**
          * Set code to be emulated
+         * @member mips_emulator
          * @param {String} mc
          */
         setCode: function(mc){   
@@ -193,6 +214,7 @@ function mips_emulator(mips_args){
         },
         /**
          * Run an individual line
+         * @member mips_emulator
          * @param  {String} input_line 
          * @return {null}
          */
@@ -200,6 +222,13 @@ function mips_emulator(mips_args){
             var line = new mips_line(input_line);
             run_line(line);
         },
+        /**
+         * execute the line $sp is pointing at.
+         * @member mips_emulator
+         * @return {object}
+         * returns object.line_ran which is the line that was just run
+         * and object.next_line which is the line that is about to be run.
+         */
         step: function(){
             if(debug) console.log("Running line: " + current_line + " - " + mips_code.code[current_line]);
             var ret = {
@@ -208,8 +237,15 @@ function mips_emulator(mips_args){
 
             run_line(mips_code.code[current_line]);
             ret.next_line = current_line;
-            if(current_line > mips_code.code.length) return mips_args.onFinish();
+            if(current_line > mips_code.code.length) return finish_emulation();
             else return ret;
+        },
+        /**
+         * Returns the current line number (the next to be run)
+         * @return {Number}
+         */
+        get_line_number: function(){
+            return current_line;
         }
     };
 
@@ -217,6 +253,11 @@ function mips_emulator(mips_args){
     ////////////////////////////////////////////////
     // Private Methods
     ////////////////////////////////////////////////
+    function finish_emulation(){
+        mips_args.onFinish();
+        if(debug) console.log("Emulation finished. Returning to line: " + ME.setLine(1));
+        else ME.setLine(1);
+    }
     /**
      * Verifies that an operation can use these registers
      * @member mips_emulator
@@ -242,6 +283,10 @@ function mips_emulator(mips_args){
             return line.rt && line.rs && line.imm;
         }
     };
+    /**
+     * Increments the current line to the next line which is not ignored.
+     * @return {[type]}
+     */
     function increment_line(){
         current_line++;
         while(mips_code.code[current_line]
