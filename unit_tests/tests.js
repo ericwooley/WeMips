@@ -109,27 +109,153 @@ test("OnChange called", function() {
 	ok(!onChangeCalled, "Should have removed the on change handler.");	
 });
 
-module("STACK");
+module("LIBRARY");
 
-test("Save/load from stack", function(){
-	var stack = new Stack();
-	var stackPointer = stack.pointerToBottomOfStack();
+test("Signed/Unsigned conversions", function() {
+	equal(Stack.signedNumberToUnsignedNumber(-128, 8), 128, "(1000 0000)");
+	equal(Stack.signedNumberToUnsignedNumber(-1, 8), 255, "(1111 1111)");
+	equal(Stack.signedNumberToUnsignedNumber(-2, 8), 254, "(1111 1110)");
+	equal(Stack.signedNumberToUnsignedNumber(127, 8), 127, "(0111 1111)");
+	equal(Stack.signedNumberToUnsignedNumber(255, 8), 255, "(1111 1111)");
+	equal(Stack.signedNumberToUnsignedNumber(3, 8), 3, "(0000 0011)");
+	equal(Stack.signedNumberToUnsignedNumber(-1), Math.pow(2, 32) - 1, "11111111111111111111111111111111");
+
+	equal(Stack.unsignedNumberToSignedNumber(3, 8), 3, "(0000 0011)");
+	equal(Stack.unsignedNumberToSignedNumber(255, 8), -1, "(1111 1111)");
+	equal(Stack.unsignedNumberToSignedNumber(254, 8), -2, "(1111 1110)");
+	equal(Stack.unsignedNumberToSignedNumber(Math.pow(2, 32) - 1), -1, "11111111111111111111111111111111");
+});
+
+test("Binary Methods", function() {
+	equal(Stack.numberToBinaryString(-1),  "11111111111111111111111111111111");
+	equal(Stack.numberToBinaryString(0),   "00000000000000000000000000000000");
+	equal(Stack.numberToBinaryString(1),   "00000000000000000000000000000001");
+	equal(Stack.numberToBinaryString(33),  "00000000000000000000000000100001");
+	equal(Stack.numberToBinaryString(-33), "11111111111111111111111111011111");
+	equal(Stack.numberToBinaryString(255), "00000000000000000000000011111111");
+	equal(Stack.numberToBinaryString(256), "00000000000000000000000100000000");
+	equal(Stack.numberToBinaryString(257), "00000000000000000000000100000001");
+	equal(Stack.numberToBinaryString(Math.pow(2, 31) - 1), "01111111111111111111111111111111");
+	equal(Stack.numberToBinaryString(Math.pow(2, 32) - 1), "11111111111111111111111111111111");
+
+	equal(Stack.binaryStringToUnsignedNumber("11111111111111111111111111111111"), Math.pow(2, 32) - 1);
+	equal(Stack.binaryStringToUnsignedNumber("00000000000000000000000000000000"), 0);
+	equal(Stack.binaryStringToUnsignedNumber("00000000000000000000000000000011"), 3);
+	equal(Stack.binaryStringToUnsignedNumber("11"), 3, "We can ommit leading zeros.");
+	equal(Stack.binaryStringToUnsignedNumber("00000000000000000000000000100001"), 33);
+
+	equal(Stack.binaryStringToNumber("00000000000000000000000000000001"), 1);
+	equal(Stack.binaryStringToNumber("11111111111111111111111111111111"), -1);
+	equal(Stack.binaryStringToNumber("11111111111111111111111111011111"), -33);
+	equal(Stack.binaryStringToNumber("00000000000000000000000000100001"), 33);
+	equal(Stack.binaryStringToNumber("11"), -1, "The string length is used to determine the power of two.");
+	equal(Stack.binaryStringToNumber("011"), 3, "Same as above.");
+	equal(Stack.binaryStringToNumber("10"), -2);
+});
+
+
+var stack = new Stack();
+var stackPointer = stack.pointerToBottomOfStack();
+
+module("STACK", {
+	setup: function() {
+		stack.reset();
+		stackPointer = stack.pointerToBottomOfStack();
+	}
+});
+
+test("Save/load strings to stack", function(){
 	stackPointer -= 1;
 	stack.setByte(stackPointer, Stack.stringToNumber('A'));
 	stackPointer -= 1;
 	stack.setByte(stackPointer, Stack.stringToNumber('B'));
-	ok(Stack.numberToString(stack.getHalfword(stackPointer)), 'BA');
+	equal(Stack.numberToString(stack.getHalfword(stackPointer)), 'BA');
+	stackPointer -= 4;
+	stack.setByte(stackPointer + 0, Stack.stringToNumber('a'));
+	stack.setByte(stackPointer + 1, Stack.stringToNumber('b'));
+	stack.setByte(stackPointer + 2, Stack.stringToNumber('c'));
+	stack.setByte(stackPointer + 3, Stack.stringToNumber('d'));
+	equal(Stack.numberToString(stack.getWord(stackPointer)), 'abcd');
+	stackPointer -= 4;
+	stack.setWord(stackPointer, Stack.stringToNumber('wxyz'));
+	equal(Stack.numberToString(stack.getWord(stackPointer)), 'wxyz');
 });
 
-// TODO: make similar tests with the new stack?
-// test("move pointer", function(){
-//     ok(stack.get_stack_pointer() ===  0, "The stack should initialize to 0");
-//     stack.move_pointer(32);
-//     stack.set_word(10);
-//     ok(stack.get_word(), 10, "The stack should be set to 10" );
-//     stack.move_pointer(-32);
-//     ok(stack.get_word() === 0, "After moving back to position zero, the stack pointer should be 0");
-//     ok(stack.get_word_at(32), 10, "The stack should grab 10 from 32 bits ahead of it.");
-//     stack.move_pointer(64); // Move it to an uninitialized location
-//     ok(typeof stack.get_word() == "number", "This should be an uninitialized portion on the stack, so garbage should be returned");
-// });
+test("Save/load integers to stack", function() {
+	function checkNumber(number) {
+		stackPointer -= 4;
+		stack.setWord(stackPointer, number);
+		equal(stack.getWord(stackPointer), number);
+	}
+	stackPointer -= 1;
+
+	stack.setByte(stackPointer, 0);
+	equal(stack.getByte(stackPointer), 0);
+	stack.setByte(stackPointer, 20);
+	equal(stack.getByte(stackPointer), 20);
+	stack.setByte(stackPointer, -1);
+	equal(stack.getByte(stackPointer), -1);
+	equal(stack.getUnsignedByte(stackPointer), 255);
+	stack.setByte(stackPointer, 255);
+	equal(stack.getByte(stackPointer), -1);
+	equal(stack.getUnsignedByte(stackPointer), 255);
+
+	checkNumber(0);
+	checkNumber(1);
+	checkNumber(255);
+	checkNumber(257);
+	checkNumber(Math.pow(2, 31) - 1);
+
+
+	// try moving the stack pointer forward
+	stackPointer -= 4;
+	stack.setWord(stackPointer, 123);
+	stackPointer -= 4;
+	stack.setWord(stackPointer, 345);
+	stackPointer += 4;
+	equal(stack.getWord(stackPointer), 123, "Moving the stack pointer forward should access the previous value which was stored.");
+
+	// read individual bytes: stores 257 as [0, 0, 1, 1] = 256 * 1 + 1 * 1 = 257
+	stackPointer -= 4;
+	stack.setWord(stackPointer, 257);
+	equal(stack.getByte(stackPointer + 0), 0, "[00000000] 00000000  00000001  00000001");
+	equal(stack.getByte(stackPointer + 1), 0, " 00000000 [00000000] 00000001  00000001");
+	equal(stack.getByte(stackPointer + 2), 1, " 00000000  00000000 [00000001] 00000001");
+	equal(stack.getByte(stackPointer + 3), 1, " 00000000  00000000  00000001 [00000001]");
+
+	stackPointer -= 4;
+	stack.setWord(stackPointer, 128);
+	equal(stack.getWord(stackPointer), 128, 			"[00000000  00000000  00000000  10000000]");
+	equal(stack.getHalfword(stackPointer + 0), 0, 		"[00000000  00000000] 00000000  10000000 ");
+	equal(stack.getHalfword(stackPointer + 1), 0, 		" 00000000 [00000000  00000000] 10000000 ");
+	equal(stack.getHalfword(stackPointer + 2), 128, 	" 00000000  00000000 [00000000  10000000]");
+	equal(stack.getByte(stackPointer + 0), 0, 			"[00000000] 00000000  00000000  10000000 ");
+	equal(stack.getByte(stackPointer + 1), 0, 			" 00000000 [00000000] 00000000  10000000 ");
+	equal(stack.getByte(stackPointer + 2), 0, 			" 00000000  00000000 [00000000] 10000000 ");
+	equal(stack.getByte(stackPointer + 3), -128, 		" 00000000  00000000  00000000 [10000000]");
+	equal(stack.getUnsignedByte(stackPointer + 3), 128, " 00000000  00000000  00000000 [10000000]");
+
+	stackPointer -= 1;
+	throws(function() { stack.setByte(stackPointer, -129); }, StackError, "Out of range.");
+	stack.setByte(stackPointer, -128);
+	stack.setByte(stackPointer, 0);
+	stack.setByte(stackPointer, 127);
+	stack.setByte(stackPointer, 255);
+	throws(function() { stack.setByte(stackPointer, 256); }, StackError, "Out of range.");
+});
+
+test("Addresses", function() {
+	// use our own stack, since we don't want to deal with random addresses that the official stack gets, nor the extremely high values it might start at (e.g. if it starts at 10000 and we access address 0, it is going to create 10000 elements for us.)
+	var stack = new Stack({baseAddress: 100});
+	stackPointer = stack.pointerToBottomOfStack();
+
+	throws(function() { stack.getByte(stackPointer); }, StackError, "Accessing the top of the stack should throw an error.");
+	stack.getByte(0); // "Accessing address 0 is valid.";
+	throws(function() { stack.getByte(-1); }, StackError, "Accessing anything below 0 is invalid.");
+	throws(function() { stack.getByte(stackPointer + 20); }, StackError, "Accessing anything above the top of the stack should throw an error.");
+
+	stackPointer -= 1;
+	equal(stackPointer, 99, "99 should be the first accessible address.");
+	stack.setByte(stackPointer, 123);
+	equal(stack.getByte(stackPointer), 123);
+});

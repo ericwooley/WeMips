@@ -24,6 +24,8 @@ function mips_emulator(mips_args){
     // Private Variables / Setup
     //////////////////////////////////
     
+    var stack = new Stack();
+
     /**
      * Hash table of registers
      * @property registers
@@ -43,7 +45,8 @@ function mips_emulator(mips_args){
         '$s0', '$s1', '$s2', '$s3', '$s4', '$s5', '$s6', '$s7',
         '$t0', '$t1', '$t2', '$t3', '$t4', '$t5', '$t6', '$t7', '$t8', '$t9',
         '$v0', '$v1',
-        '$a0', '$a1', '$a2', '$a3'
+        '$a0', '$a1', '$a2', '$a3',
+        '$sp'
     ];
 
     /**
@@ -56,7 +59,7 @@ function mips_emulator(mips_args){
     var readonlyRegs = [
         '$zero', '$at',
         '$k0', '$k1',
-        '$gp', '$sp', '$fp', '$ra'
+        '$gp', '$fp', '$ra'
     ];
     // The intial line where we start the emulation.
     /**
@@ -82,7 +85,8 @@ function mips_emulator(mips_args){
             reg_name: readonlyRegs[i]
         });
     };
-    registers.zero = create_register({val:0, writable: false, reg_name: '$zero'});
+    registers.$zero.val = 0;
+    registers.$sp.val = stack.pointerToBottomOfStack();
 
     // Object that will contain analyzed code information
     /**
