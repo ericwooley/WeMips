@@ -16,9 +16,28 @@
 </head>
 <body onload="prettyPrint(); highlight();">
   <pre class="prettyprint lang-js">$(document).ready(function(){
-    var me = mips_emulator();
+
+    // Code Mirror setup
+    var me = mips_emulator({
+        debug: true,
+        onRegisterChange: function(reg_name, value){
+            var reg = $(&quot;#&quot; + reg_name.replace(&#39;$&#39;, &#39;&#39;) + &quot; .reg_spacer&quot;);
+            $(&quot;.last_reg_changed&quot;).removeClass(&#39;last_reg_changed&#39;);
+            reg.html(value);
+            reg.addClass(&#39;last_reg_changed&#39;);
+            // change to correct tab
+            var reg_letter = reg_name.replace(&#39;$&#39;, &#39;&#39;).replace(/\s/, &#39;&#39;).charAt(0);
+            $(&#39;#registers a[href=&quot;#&#39;+reg_letter+&#39;-registers&quot;]&#39;).tab(&#39;show&#39;)
+        },
+        onFinish: function(){
+            alert(&quot;Emulation complete, returning to line 1&quot;);
+            me.setLine(1);
+            set_highlights({line_ran: active_line, next_line: me.get_line_number()})
+        },
+        starting_code: $(&quot;#editor&quot;).val()
+    });
     // The next time we go to step or run, we need to reset the code from the text editor.
-    me.valid = true; 
+    me.valid = false; 
     var editor = CodeMirror.fromTextArea(
         document.getElementById(&quot;editor&quot;),{
           lineNumbers: true,
@@ -27,19 +46,101 @@
       //viewportMargin: &#39;Infinity&#39;
     });
     editor.on(&#39;change&#39;, function(){
-        
         me.valid = false;
     });
+
+    // Mips emulator setup.
+    $(&quot;.registers-container li&quot;).each(function(index){
+        var reg = $(this);
+        var reg_name = reg.attr(&#39;id&#39;);
+        reg.html(
+            &quot;&lt;b&gt;&quot;+reg_name +&quot;:&lt;/b&gt; &quot; 
+            + &quot;&lt;span class=&#39;reg_spacer&#39; reg=&#39;&quot;+reg_name+&quot;&#39; id=&#39;&quot;+reg_name+&quot;-val&#39; contenteditable=&#39;true&#39;&gt;&quot;
+            + me.getRegister(reg_name)
+            + &quot;&lt;/span&gt;&quot;
+        );
+    });
+    $(&#39;.reg_spacer&#39;).on(&#39;input&#39;, function(e){
+        var new_val = $(e.target).html();
+        var target =  $(e.target);
+        var reg_name = target.attr(&quot;reg&quot;);
+        if(new_val.search(/[\D\s]/) &gt;= 0){
+            target.html(new_val.replace(/[\D\s]/g, &#39;&#39;));
+            alert(&quot;You cannot enter in characters into registers&quot;);
+        }
+        if(new_val.length &gt; 11){
+            target.html(new_val.substring(0, 11));
+            alert(&quot;The 32 bit integers can only be 11 digits long.&quot;);
+        }
+        
+        return true;
+    });
+    $(&#39;.reg_spacer&#39;).on(&#39;blur&#39;, function(e){
+        var new_val = $(e.target).html();
+        var target =  $(e.target);
+        var reg_name = target.attr(&quot;reg&quot;);
+        me.setRegister(reg_name, Number(new_val), false);
+    });
+    $(&#39;#code_loaders button&#39;).on(&#39;click&#39;, function(e){
+        var target = $(e.target);
+        var load_target = target.attr(&#39;load&#39;);
+        var new_content = $(load_target).html();
+        editor.setValue(new_content);
+        me.valid = false;
+    });
+    // Step throught emulator function 
     $(&quot;#step&quot;).click(function(){
         // if this code is no longer valid, reanalyze.
         if(!me.valid){
             editor.save();
             me.setCode($(&quot;#editor&quot;).val());
             me.valid = true;
-        } 
-      // TODO: hook this up to a mips engine
-      alert(&quot;Step through function here&quot;);
+        }
+
+        line_result = me.step();
+        if(line_result){
+           set_highlights(line_result);
+        }
     });
+    $(&quot;#go_to_line_button&quot;).on(&#39;click&#39;, function(){
+        var new_line = $(&quot;#current_line_input&quot;).val();
+        console.log(&quot;Setting new line: &quot;+ new_line);
+        me.setLine(Number(new_line));
+        console.log(&quot;next_line&quot;+ me.get_line_number());
+        set_highlights({line_ran: null, next_line: me.get_line_number()})
+        return false;
+    });
+    var active_line;
+    var next_line;
+    var active_marker
+    var next_marker = editor.markText(
+        {line: 0, ch: 0},
+        {line: 1, ch: 0},
+        {title: &quot;Next line to be run&quot;, className: &#39;next_line&#39;}
+    );
+    function set_highlights(lines){
+        active_line = lines.line_ran;
+        next_line = lines.next_line;
+        console.log(&quot;Active line: &quot; + active_line);
+        console.log(&quot;Next line: &quot; + next_line);
+        $(&quot;#current_line_input&quot;).val(next_line);
+        //$(&quot;.active_line&quot;).removeClass(&#39;active_line&#39;);
+        //$(&quot;.next_line&quot;).removeClass(&#39;next_line&#39;);
+        if(active_marker) active_marker.clear();
+        active_marker = editor.markText(
+            {line: active_line-1, ch: 0},
+            {line: active_line, ch: 0},
+            {title: &quot;last line ran&quot;, className: &#39;active_line&#39;}
+        );
+        if(next_marker) next_marker.clear();
+        next_marker = editor.markText(
+            {line: next_line-1, ch: 0},
+            {line: next_line, ch: 0},
+            {title: &quot;Next line to be run&quot;, className: &#39;next_line&#39;}
+        );
+
+    }
+    // Run code non-stop function
     $(&quot;#run&quot;).click(function(){
         // if this code is no longer valid, reanalyze.
         if(!me.valid){
@@ -50,82 +151,7 @@
       // TODO: hook this up to a mips engine
       alert(&quot;Run Fucntion here&quot;);
     });
-});
 
-// TODO: these should probably be moved to a UI related file
-function generateRegNames(prefix, startIndex, endIndex) {
-    var result = [];
-    for (var i = startIndex; i &lt;= endIndex; i++) {
-        result.push(prefix + i);
-    }   
-    return result;
-}
-
-function buildRegisterColumn(columns) {
-    var result = [];
-    for (var i = 0; i &lt; columns.length; i++) {
-        var column = columns[i];
-        if (typeof column === &#39;string&#39;) {
-            result.push(column);
-        } else {
-            // column is an array
-            for (var j = 0; j &lt; column.length; j++) {
-                result.push(column[j]);
-            };
-        }
-    };
-    return result;
-}
-
-function buildRegistersTable() {
-    // each column should have 8 registers. 0, 8, 16, 24
-    var rows = [];
-    rows.push(buildRegisterColumn([
-        &#39;zero&#39;, 
-        &#39;at&#39;,
-        generateRegNames(&#39;v&#39;, 0, 1),
-        generateRegNames(&#39;a&#39;, 0, 3), 
-    ]));
-    rows.push(buildRegisterColumn([
-        generateRegNames(&#39;t&#39;, 0, 7)
-    ]));
-    rows.push(buildRegisterColumn([
-        generateRegNames(&#39;s&#39;, 0, 7),
-    ]));
-    rows.push(buildRegisterColumn([
-        generateRegNames(&#39;t&#39;, 8, 9), 
-        generateRegNames(&#39;k&#39;, 0, 1),
-        &#39;gp&#39;,
-        &#39;sp&#39;,
-        &#39;fp&#39;,
-        &#39;ra&#39;
-    ]));
-
-    // rows contains an array of arrays of strings
-    $table = $(&#39;&lt;table&gt;&#39;);
-    var rowLength = rows[0].length;
-    for (var c = 0; c &lt; rowLength; c++) {
-        //var col = row[c]; // string
-        $tr = $(&#39;&lt;tr&gt;&#39;);
-
-        for (var r = 0; r &lt; rows.length; r++) {
-            var regName = rows[r][c]; // array
-            $th = $(&#39;&lt;th&gt;&#39;);
-            $th.text(regName);
-            $th.appendTo($tr);
-
-            $td = $(&#39;&lt;td&gt;&#39;);
-            $td.text(&#39;0&#39;);
-            $td.appendTo($tr);
-        };
-
-        $tr.appendTo($table);
-    };
-    $(&#39;#registers&#39;).empty();
-    $table.appendTo(&#39;#registers&#39;);
-}
-
-buildRegistersTable();
-</pre>
+});</pre>
 </body>
 </html>
