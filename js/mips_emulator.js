@@ -225,7 +225,7 @@ function mips_emulator(mips_args){
         /**
          * execute the line $sp is pointing at.
          * @member mips_emulator
-         * @return {object}
+         * @return {Object}
          * returns object.line_ran which is the line that was just run
          * and object.next_line which is the line that is about to be run.
          */
@@ -285,7 +285,7 @@ function mips_emulator(mips_args){
     };
     /**
      * Increments the current line to the next line which is not ignored.
-     * @return {[type]}
+     * @return {null}
      */
     function increment_line(){
         current_line++;
