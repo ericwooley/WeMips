@@ -11,7 +11,9 @@ function mips_emulator(mips_args){
     mips_args = _.defaults(mips_args, {
         starting_code: null,
         debug: false,
-        onError: function(line, error){alert(error)},
+        onError: function(message, line_number){
+            alert(message)
+        },
         onRegisterChange: function(reg_name, new_value) {
 
         },
@@ -205,12 +207,17 @@ function mips_emulator(mips_args){
         setCode: function(mc){   
             console.log("Analyzing...");
             mips_code.code = [null];
+            current_line = 1;
             $.each(mc.split('\n'), function(index, val){
                 var line = new mips_line(val);
                 line.line_no = mips_code.code.length; // save the line number
                 console.log(JSON.stringify(line));
                 mips_code.code.push(line);
             });
+            if(mips_code.code[current_line] && mips_code.code[current_line].ignore){
+                increment_line();
+                if(debug) console.log("First line is to be ignored, first line set to: " + current_line);
+            }
         },
         /**
          * Run an individual line
@@ -230,6 +237,14 @@ function mips_emulator(mips_args){
          * and object.next_line which is the line that is about to be run.
          */
         step: function(){
+            console.log("current_line: " + current_line);
+            console.log("number of lines: " + mips_code.code.length);
+            // check if we are finished with the emulation
+            if(current_line > mips_code.code.length - 1) return finish_emulation();
+            if(!mips_code.code[current_line]) return error("Line " + current_line + " could not be read", current_line);
+            if(mips_code.code[current_line].ignore) increment_line();
+            // we need to check again, because the remainder of the lines could have been comments or blank.
+            if(current_line > mips_code.code.length - 1) return finish_emulation();
             if(debug) console.log("Running line: " + current_line + " - " + mips_code.code[current_line]);
             var ret = {
                 line_ran: Number(current_line)
@@ -237,8 +252,8 @@ function mips_emulator(mips_args){
 
             run_line(mips_code.code[current_line]);
             ret.next_line = current_line;
-            if(current_line > mips_code.code.length) return finish_emulation();
-            else return ret;
+            
+            return ret;
         },
         /**
          * Returns the current line number (the next to be run)
@@ -398,7 +413,17 @@ function mips_emulator(mips_args){
     function isImmediate(arg) {
         return /^[-+]?\d+$/.test(arg);
     };
-
+    /**
+     * If the user defined an an_error message, use that, if not, alert the message
+     * @param  {String} message
+     * @param  {Number} line_no
+     * @return {null}
+     */
+    function error(message, line_no){
+        console.error("Error being sent");
+        console.error("--->" + message);
+        mips_args.onError(message, line_no);
+    }
 
     /**
      * Turns a string into a mips line object which contains a mips line of code and metadata needed to run it
