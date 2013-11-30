@@ -107,13 +107,18 @@ $(document).ready(function(){
         var new_val = $(e.target).html();
         var target =  $(e.target);
         var reg_name = target.attr("reg");
-        if(new_val.search(/[\D\s]/) >= 0){
+        if(new_val.search(/[^-\d]/) >= 0){
             target.html(new_val.replace(/[\D\s]/g, ''));
             alert("You cannot enter in characters into registers");
         }
         if(new_val.length > 11){
-            target.html(new_val.substring(0, 11));
-            alert("The 32 bit integers can only be 11 digits long.");
+            if(new_val.length == 12 && new_val.charAt(0) == '-'){
+                return true;
+            } else {
+                target.html(new_val.substring(0, 11));
+                alert("The 32 bit integers can only be 11 digits long.");    
+            }
+            
         }
         
         return true;
@@ -170,4 +175,7 @@ $(document).ready(function(){
         editor.save();
         return $("#editor").val();
     };
+    function unsign_int(num){
+        return (num << 31) >>> 0;
+    }
 });
