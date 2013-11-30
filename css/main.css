@@ -8,6 +8,7 @@ li{
 #main {
     margin-top: 20px
 }
+.row {margin-top: 5px; margin-bottom: 5px}
 .reg_spacer{
     margin: 0px 10px 0px 10px;
     width: 100px;
@@ -22,5 +23,5 @@ li{
     overflow-y: hidden;
     overflow-x: auto;
 }
-.active_line {background-color:#61FA9C; }
+.active_line, .last_reg_changed {background-color:#61FA9C; }
 .next_line {background-color:#dadae3; }
