@@ -272,7 +272,68 @@ function mips_emulator(mips_args){
         mips_args.onFinish();
         if(debug) console.log("Emulation finished. Returning to line: " + ME.setLine(1));
         else ME.setLine(1);
-    }
+    };
+
+
+    function v_wri_reg_reg(line){
+        // Grab each register from the registers
+        line.rd = registers[line.args[0]];
+        line.rs = registers[line.args[1]];
+        line.rt = registers[line.args[2]];
+        // $rd must be writable
+        if(line.rd && !line.rd.writable) line.error = "Register " + line.rd + " is not writable";
+        if(line.error) console.warn("Error parsing line: " +line.error +"\n" + JSON.stringify(line));
+        return line.error || (line.rd && line.rs && line.rt);
+    };
+    function v_wri_reg_imm(line){
+        line.rt = registers[line.args[0]];
+        line.rs = registers[line.args[1]];
+        line.imm = getImmediate(line.args[2]);
+
+        return line.rt && line.rs && line.imm;
+    };
+    function v_wri_imm(line){
+        line.rt = registers[line.args[0]];
+        line.imm = getImmediate(line.args[1]);
+        return _.isString(line.rt) && _.isNumber(line.imm) && line.rt.writable;
+    };
+    function v_wri_shamt(line){
+        line.rt = registers[line.args[0]];
+        line.imm = getImmediate(line.args[1]);
+        return _.isString(line.rt) && _.isNumber(line.imm) && line.imm < 33;
+    };
+    function v_reg_reg_label(line){
+        line.rs = registers[line.args[0]];
+        line.rt = registers[line.args[1]];
+        if(labels[line.args[2]])
+            line.label_jump_line = labels[line.args[2]].line;
+        return _.isString(line.rs) && _.isString(line.rt) && _.isNumber(line.label_jump_line);
+    };
+    function v_label(line){
+        if(labels[line.args[0]])
+            line.label_jump_line = labels[line.args[0]].line;
+        return _.isNumber(line.label_jump_line);
+    };
+    function v_reg(line){
+        line.rs = registers[line.args[0]];
+        return _.isString(line.rs);
+    };
+    function v_reg_p_imm(line){
+        // ^\s*(\d+)\s?\(\s*(\$[a-zA-Z]+\d*)\s*\)
+        line.rt = registers[line.args[0]];
+        var second_param = line.args[1].mathc(/^\s*(\d+)\s?\(\s*(\$[a-zA-Z]+\d*)\s*\)/);
+        line.imm = second_param[0];
+        line.rs = second_param[2];
+        console.log("testing regex: " + JSON.stringify(second_param));
+        return _.isString(line.rt) && _.isNumber(line.imm) && _.isString(line.rt);
+    };
+    function v_wri_p_imm(line){
+        return v_reg_p_imm(line) && line.rt.writable;
+    };
+    function check_reg_plus_imm(test_string){
+        return test_string.search(/^\s*\d+\s?\(\s*\$[a-zA-Z]+\d*\s*\)/g) >= 0;
+    };
+
     /**
      * Verifies that an operation can use these registers
      * @member mips_emulator
@@ -280,23 +341,45 @@ function mips_emulator(mips_args){
      * @type {Object}
      */
     var parseMethods = {
-        'ADD': function(line) {
-            // Grab each register from the registers
-            line.rd = registers[line.args[0]];
-            line.rs = registers[line.args[1]];
-            line.rt = registers[line.args[2]];
-            // $rd must be writable
-            if(line.rd && !line.rd.writable) line.error = "Register " + line.rd + " is not writable";
-            if(line.error) console.warn("Error parsing line: " +line.error +"\n" + JSON.stringify(line));
-            return line.error || (line.rd && line.rs && line.rt);
-        },
-        'ADDI': function(line) {
-            line.rt = registers[line.args[0]];
-            line.rs = registers[line.args[1]];
-            line.imm = getImmediate(line.args[2]);
-
-            return line.rt && line.rs && line.imm;
-        }
+        /////////////////////////////////////////////
+        // Mips Arithmetic Instructions
+        /////////////////////////////////////////////
+        'ADD': v_wri_reg_reg,
+        'ADDI': v_wri_reg_imm,
+        'ADDU': v_wri_reg_reg,
+        'ADDIU': v_wri_reg_imm,
+        'SUB': v_wri_reg_reg,
+        'SUBU': v_wri_reg_reg,
+        'LUI': v_wri_imm,
+        /////////////////////////////////////////////
+        // Mips Logical Instructions
+        /////////////////////////////////////////////
+        'AND': v_wri_reg_reg,
+        'ANDI': v_wri_reg_imm,
+        'NOR': v_wri_reg_reg,
+        'OR': v_wri_reg_reg,
+        'ORI': v_wri_reg_imm,
+        'SLL': v_wri_shamt,
+        'SRL': v_wri_shamt,
+        /////////////////////////////////////////////
+        // Mips Branch and Jump Instructions
+        /////////////////////////////////////////////
+        'BEQ': v_reg_reg_label,
+        'BNE': v_reg_reg_label,
+        'J': v_label,
+        'JAL': v_label,
+        'JR': v_reg,
+        /////////////////////////////////////////////
+        // Mips Memory Access Instructions
+        /////////////////////////////////////////////
+        'LW': v_wri_p_imm,
+        'SW': v_reg_p_imm,
+        'LH': v_wri_p_imm,
+        'LHU': v_wri_p_imm,
+        'SH': v_reg_p_imm,
+        'LB': v_wri_p_imm,
+        'LBU': v_wri_p_imm,
+        'SB': v_reg_p_imm
     };
     /**
      * Increments the current line to the next line which is not ignored.
@@ -388,7 +471,91 @@ function mips_emulator(mips_args){
             //reg[line.rt] = reg[line.rs] + line.imm;
             ME.setRegister(line.rt.reg_name, line.rs.val + line.imm);
             increment_line();
-        }   
+        },
+        'ADDU': function(line){
+
+        },
+        'ADDIU': function(line){
+
+        },
+        'SUB': function(line){
+
+        },
+        'SUBU': function(line){
+
+        },
+        'LUI': function(line){
+
+        },
+        /////////////////////////////////////////////
+        // Mips Logical Instructions
+        /////////////////////////////////////////////
+        'AND': function(line){
+
+        },
+        'ANDI': function(line){
+
+        },
+        'NOR': function(line){
+
+        },
+        'OR': function(line){
+
+        },
+        'ORI': function(line){
+
+        },
+        'SLL': function(line){
+
+        },
+        'SRL': function(line){
+
+        },
+        /////////////////////////////////////////////
+        // Mips Branch and Jump Instructions
+        /////////////////////////////////////////////
+        'BEQ': function(line){
+
+        },
+        'BNE': function(line){
+
+        },
+        'J': function(line){
+
+        },
+        'JAL': function(line){
+
+        },
+        'JR': function(line){
+
+        },
+        /////////////////////////////////////////////
+        // Mips Memory Access Instructions
+        /////////////////////////////////////////////
+        'LW': function(line){
+
+        },
+        'SW': function(line){
+
+        },
+        'LH': function(line){
+
+        },
+        'LHU': function(line){
+
+        },
+        'SH': function(line){
+
+        },
+        'LB': function(line){
+
+        },
+        'LBU': function(line){
+
+        },
+        'SB': function(line){
+
+        }
     };
     /**
      * check if argument is an immediate, parse, and return the results.
