@@ -8,7 +8,17 @@
  */
 function mips_emulator(mips_args){
     mips_args = mips_args || {};
-    mips_args = _.defaults(mips_args, {starting_code: null, debug: false});
+    mips_args = _.defaults(mips_args, {
+        starting_code: null,
+        debug: false,
+        onError: function(line, error){alert(error)},
+        onRegisterChange: function(reg_name, new_value) {
+
+        },
+        onFinish: function(){
+            alert("Finished running emulation");
+        }
+    });
     var debug = mips_args.debug
     //////////////////////////////////
     // Private Variables / Setup
@@ -56,7 +66,7 @@ function mips_emulator(mips_args){
      * @member mips_emulator
      * @type {Number}
      */
-    var current_line = 0;
+    var current_line = 1;
     // populate registers with all the read and write registers and set their inital values to random
     for (var i = 0; i < readwriteRegs.length; i++) {
         registers[readwriteRegs[i]] = create_register({
@@ -110,10 +120,12 @@ function mips_emulator(mips_args){
          * @return {String} 
          */
         getRegister: function(reg){
-            if(reg.charAt(0) != '$') reg = '$' + reg;
+            if(reg.charAt(0) != '$'){
+                reg = '$' + reg;
+            }
             if(!registers[reg]) return false;
-            if(!registers[reg].val)
-            return registers[reg].val;
+            return registers[reg].val;    
+            
         },
         /**
          * Set a register value, and call onChange function for that register
@@ -122,7 +134,6 @@ function mips_emulator(mips_args){
          */
         setRegister: function(reg, value){
             if(reg.charAt(0) != '$'){
-                if(debug) console.log("register passed without $, ")
                 reg = '$' + reg;
 
             }
@@ -132,6 +143,8 @@ function mips_emulator(mips_args){
             // TODO: ensure the register name does not exist in readonlyRegs (or better yet, ensure it exists in the readwriteRegs)
             if(registers[reg].onChange) registers[reg].onChange();
                 registers[reg].val = value;
+            if(mips_args.onRegisterChange)
+                mips_args.onRegisterChange(reg, value);
             if(debug) console.log("----> New value: "+ ME.getRegister(reg));
 
         },
@@ -166,8 +179,10 @@ function mips_emulator(mips_args){
          */
         setCode: function(mc){   
             console.log("Analyzing...");
+            mips_code.code = [null];
             $.each(mc.split('\n'), function(index, val){
                 var line = new mips_line(val);
+                line.line_no = mips_code.code.length; // save the line number
                 console.log(JSON.stringify(line));
                 mips_code.code.push(line);
             });
@@ -181,6 +196,17 @@ function mips_emulator(mips_args){
             var line = new mips_line(input_line);
             run_line(line);
         },
+        step: function(){
+            if(debug) console.log("Running line: " + current_line + " - " + mips_code.code[current_line]);
+            var ret = {
+                line_ran: Number(current_line)
+            };
+
+            run_line(mips_code.code[current_line]);
+            ret.next_line = current_line;
+            if(current_line > mips_code.code.length) return mips_args.onFinish();
+            else return ret;
+        }
     };
 
 
@@ -208,9 +234,20 @@ function mips_emulator(mips_args){
             line.rt = registers[line.args[0]];
             line.rs = registers[line.args[1]];
             line.imm = getImmediate(line.args[2]);
+
             return line.rt && line.rs && line.imm;
         }
     };
+    function increment_line(){
+        current_line++;
+        while(mips_code.code[current_line]
+                && current_line <= mips_code.code.length
+                && mips_code.code[current_line].ignore != false
+        ){
+            if(debug) console.log("ignoring line: " + current_line);
+            current_line++;
+        }
+    }
     /**
      * Run an individual line
      * @member mips_emulator
@@ -218,7 +255,11 @@ function mips_emulator(mips_args){
      * @return {null}
      */
     function run_line(line) {
-        if (line.ignore || line.error) { return line.error; };// returns error if there is one or null if not.
+        if (!line || line.ignore || line.error) {
+            current_line++;
+            if(!line) return "Line is null";
+            return line.error; // returns error if there is one or null if not.
+        }
         // we can assume that we parsed successfully at this point.
         runMethods[line.instruction](line);
 
@@ -277,10 +318,12 @@ function mips_emulator(mips_args){
             if(debug) console.log("running add: " + JSON.stringify(line));
             if(debug) console.log(line.rs.val + " + " + line.rt.val + " = " + (line.rs.val + line.rt.val) + " Saved to: "+ line.rd.reg_name);
             ME.setRegister(line.rd.reg_name, line.rs.val + line.rt.val);
+            increment_line();
         },
         'ADDI': function(line) {
             //reg[line.rt] = reg[line.rs] + line.imm;
             ME.setRegister(line.rt.reg_name, line.rs.val + line.imm);
+            increment_line();
         }   
     };
     /**
@@ -414,7 +457,7 @@ function mips_emulator(mips_args){
             LINE.error = "Error parsing line: "+ (index+1);
             console.log("----> No matches");
         }
-        if(debug) console.log("Finished parsing line: " + JSON.stringify(LINE));
+        //if(debug) console.log("Finished parsing line: " + JSON.stringify(LINE));
         return LINE;
     }
 
