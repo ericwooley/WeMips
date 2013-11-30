@@ -4,8 +4,20 @@ $(document).ready(function(){
     var me = mips_emulator({
         debug: true,
         onRegisterChange: function(reg_name, value){
-            $("#" + reg_name.replace('$', '') + " .reg_spacer").html(value);
-        }
+            var reg = $("#" + reg_name.replace('$', '') + " .reg_spacer");
+            $(".last_reg_changed").removeClass('last_reg_changed');
+            reg.html(value);
+            reg.addClass('last_reg_changed');
+            // change to correct tab
+            var reg_letter = reg_name.replace('$', '').replace(/\s/, '').charAt(0);
+            $('#registers a[href="#'+reg_letter+'-registers"]').tab('show')
+        },
+        onFinish: function(){
+            alert("Emulation complete, returning to line 1");
+            me.setLine(1);
+            set_highlights({line_ran: active_line, next_line: me.get_line_number()})
+        },
+        starting_code: $("#editor").val()
     });
     // The next time we go to step or run, we need to reset the code from the text editor.
     me.valid = false; 
@@ -17,7 +29,6 @@ $(document).ready(function(){
       //viewportMargin: 'Infinity'
     });
     editor.on('change', function(){
-        
         me.valid = false;
     });
 
@@ -27,7 +38,7 @@ $(document).ready(function(){
         var reg_name = reg.attr('id');
         reg.html(
             "<b>"+reg_name +":</b> " 
-            + "<span class='reg_spacer' id='"+reg_name+"-val' contenteditable='true'>"
+            + "<span class='reg_spacer' reg='"+reg_name+"' id='"+reg_name+"-val' contenteditable='true'>"
             + me.getRegister(reg_name)
             + "</span>"
         );
@@ -35,6 +46,7 @@ $(document).ready(function(){
     $('.reg_spacer').on('input', function(e){
         var new_val = $(e.target).html();
         var target =  $(e.target);
+        var reg_name = target.attr("reg");
         if(new_val.search(/[\D\s]/) >= 0){
             target.html(new_val.replace(/[\D\s]/g, ''));
             alert("You cannot enter in characters into registers");
@@ -42,13 +54,24 @@ $(document).ready(function(){
         if(new_val.length > 11){
             target.html(new_val.substring(0, 11));
             alert("The 32 bit integers can only be 11 digits long.");
-
         }
+        
+        return true;
     });
-    // Step throught emulator function
-    var active_line;
-    var next_line;
-    var active_marker, next_marker;
+    $('.reg_spacer').on('blur', function(e){
+        var new_val = $(e.target).html();
+        var target =  $(e.target);
+        var reg_name = target.attr("reg");
+        me.setRegister(reg_name, Number(new_val), false);
+    });
+    $('#code_loaders button').on('click', function(e){
+        var target = $(e.target);
+        var load_target = target.attr('load');
+        var new_content = $(load_target).html();
+        editor.setValue(new_content);
+        me.valid = false;
+    });
+    // Step throught emulator function 
     $("#step").click(function(){
         // if this code is no longer valid, reanalyze.
         if(!me.valid){
@@ -59,28 +82,47 @@ $(document).ready(function(){
 
         line_result = me.step();
         if(line_result){
-            active_line = line_result.line_ran;
-            next_line = line_result.next_line;
-            console.log("Active line: " + active_line);
-            console.log("Next line: " + next_line);
-            
-            //$(".active_line").removeClass('active_line');
-            //$(".next_line").removeClass('next_line');
-            if(active_marker) active_marker.clear();
-            active_marker = editor.markText(
-                {line: active_line-1, ch: 0},
-                {line: active_line, ch: 0},
-                {title: "last line ran", className: 'active_line'}
-            );
-            if(next_marker) next_marker.clear();
-            next_marker = editor.markText(
-                {line: next_line-1, ch: 0},
-                {line: next_line, ch: 0},
-                {title: "Next line to be run", className: 'next_line'}
-            );
+           set_highlights(line_result);
         }
     });
+    $("#go_to_line_button").on('click', function(){
+        var new_line = $("#current_line_input").val();
+        console.log("Setting new line: "+ new_line);
+        me.setLine(Number(new_line));
+        console.log("next_line"+ me.get_line_number());
+        set_highlights({line_ran: null, next_line: me.get_line_number()})
+        return false;
+    });
+    var active_line;
+    var next_line;
+    var active_marker
+    var next_marker = editor.markText(
+        {line: 0, ch: 0},
+        {line: 1, ch: 0},
+        {title: "Next line to be run", className: 'next_line'}
+    );
+    function set_highlights(lines){
+        active_line = lines.line_ran;
+        next_line = lines.next_line;
+        console.log("Active line: " + active_line);
+        console.log("Next line: " + next_line);
+        $("#current_line_input").val(next_line);
+        //$(".active_line").removeClass('active_line');
+        //$(".next_line").removeClass('next_line');
+        if(active_marker) active_marker.clear();
+        active_marker = editor.markText(
+            {line: active_line-1, ch: 0},
+            {line: active_line, ch: 0},
+            {title: "last line ran", className: 'active_line'}
+        );
+        if(next_marker) next_marker.clear();
+        next_marker = editor.markText(
+            {line: next_line-1, ch: 0},
+            {line: next_line, ch: 0},
+            {title: "Next line to be run", className: 'next_line'}
+        );
 
+    }
     // Run code non-stop function
     $("#run").click(function(){
         // if this code is no longer valid, reanalyze.
@@ -94,25 +136,3 @@ $(document).ready(function(){
     });
 
 });
-
-
-function setEndOfContenteditable(contentEditableElement)
-{
-    var range,selection;
-    if(document.createRange)//Firefox, Chrome, Opera, Safari, IE 9+
-    {
-        range = document.createRange();//Create a range (a range is a like the selection but invisible)
-        range.selectNodeContents(contentEditableElement);//Select the entire contents of the element with the range
-        range.collapse(false);//collapse the range to the end point. false means collapse to end rather than the start
-        selection = window.getSelection();//get the selection object (allows you to change selection)
-        selection.removeAllRanges();//remove any selections already made
-        selection.addRange(range);//make the range you have just created the visible selection
-    }
-    else if(document.selection)//IE 8 and lower
-    { 
-        range = document.body.createTextRange();//Create a range (a range is a like the selection but invisible)
-        range.moveToElementText(contentEditableElement);//Select the entire contents of the element with the range
-        range.collapse(false);//collapse the range to the end point. false means collapse to end rather than the start
-        range.select();//Select the range (make it the visible selection
-    }
-}
