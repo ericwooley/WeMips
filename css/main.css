@@ -1,3 +1,19 @@
+h3{
+    margin: 0
+}
+li{
+    list-style: none;
+    margin:2px 0 2px 0; 
+}
+#main {
+    margin-top: 20px
+}
+.reg_spacer{
+    margin: 0px 10px 0px 10px;
+    width: 100px;
+    text-align: right;
+    display:  inline-block;
+}
 .CodeMirror {
     border: 1px solid #eee;
     height: auto !important; 
@@ -6,3 +22,5 @@
     overflow-y: hidden;
     overflow-x: auto;
 }
+.active_line {background-color:#61FA9C; }
+.next_line {background-color:#dadae3; }
