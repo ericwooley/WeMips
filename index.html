@@ -22,18 +22,60 @@
     <script src="js/lib/jquery.min.js"></script>
     <script src="js/lib/underscore-min.js"></script>
     <script src="js/mips_emulator.js"></script>
+    <script src="js/stack.js"></script>
     <script src="js/main.js"></script>
   </head>
   <body>
+    <div style='display: none'>
+      <div id='addition_doubler'>ADDI $s0, $zero, 2 # set s0 to 2
+ADD $s0, $s0, $s0 # double s0 by adding it to itself, should be 4
+ADD $s0, $s0, $s0 # double s0 by adding it to itself, should be 8
+ADD $s0, $s0, $s0 # double s0 by adding it to itself, should be 16
+ADD $s0, $s0, $s0 # double s0 by adding it to itself, should be 32
+ADD $s0, $s0, $s0 # double s0 by adding it to itself, should be 64
+ADD $s0, $s0, $s0 # double s0 by adding it to itself, should be 128
+ADD $s0, $s0, $s0 # double s0 by adding it to itself, should be 256
+ADD $s0, $s0, $s0 # double s0 by adding it to itself, should be 512
+ADD $s0, $s0, $s0 # double s0 by adding it to itself, should be 1024
+ADD $s0, $s0, $s0 # double s0 by adding it to itself, should be 2048
+ADD $s0, $s0, $s0 # double s0 by adding it to itself, should be 4096
+      </div>
+    </div>
     <div id="main" class="container">
+      <div class='row'>
+        <div class='col-lg-2'>
+          <div class="input-group input-group-sm">
+            <span class="input-group-addon">Line: </span>
+            <input type="text" id="current_line_input" class="form-control" value='1'>
+            <span class="input-group-btn">
+              <button class="btn btn-default" id="go_to_line_button" type="button">Go!</button>
+            </span>
+          </div><!-- /input-group -->
+        </div>
+        <div class='col-lg-10'>
+          Load Demos: 
+          <div class="btn-group" id="code_loaders">
+            <button type="button" load="#addition_doubler" class="btn btn-default">Addition Doubler</button>
+            <button type="button" load="#stav" class="btn btn-default">STAV</button>
+            <button type="button" load="#looper" class="btn btn-default">Looper</button>
+          </div>
+        </div>
+      </div>
       <div class="row">
         <div class="col-lg-8">
           <div id="editor_container" class="CodeMirror">
-            <textarea id="editor" >ADDI $s1, $s2, 16
-# ignore this line
-ADD $s1, $s2, $s3 #testing it out
-ADD $s1, $s2, $s3 # testing it out
-# This is just a comment</textarea>
+            <textarea id="editor" >ADDI $s0, $zero, 2 # set s0 to 2
+ADD $s0, $s0, $s0 # double s0 by adding it to itself, should be 4
+ADD $s0, $s0, $s0 # double s0 by adding it to itself, should be 8
+ADD $s0, $s0, $s0 # double s0 by adding it to itself, should be 16
+ADD $s0, $s0, $s0 # double s0 by adding it to itself, should be 32
+ADD $s0, $s0, $s0 # double s0 by adding it to itself, should be 64
+ADD $s0, $s0, $s0 # double s0 by adding it to itself, should be 128
+ADD $s0, $s0, $s0 # double s0 by adding it to itself, should be 256
+ADD $s0, $s0, $s0 # double s0 by adding it to itself, should be 512
+ADD $s0, $s0, $s0 # double s0 by adding it to itself, should be 1024
+ADD $s0, $s0, $s0 # double s0 by adding it to itself, should be 2048
+ADD $s0, $s0, $s0 # double s0 by adding it to itself, should be 4096</textarea>
           </div>
           <button id="step"> Step </button>
           <button id="run"> Run </button>
@@ -50,7 +92,7 @@ ADD $s1, $s2, $s3 # testing it out
           </ul>
 
           <!-- Tab panes -->
-          <div class="tab-content">
+          <div id="data_tabs" class="tab-content">
             <div class="tab-pane active" id="s-registers">
               <ul class='registers-container' id="registers-s">
                 <li id="s0"></li>
