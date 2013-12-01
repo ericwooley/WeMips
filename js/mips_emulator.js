@@ -12,7 +12,11 @@ function mips_emulator(mips_args){
         starting_code: null,
         debug: false,
         onError: function(message, line_number){
-            alert(message)
+            alert(message);
+            return false;
+        },
+        onWarning: function(message, line_number){
+            alert(message);
         },
         onRegisterChange: function(reg_name, new_value) {
 
@@ -144,11 +148,10 @@ function mips_emulator(mips_args){
             enable_callback = enable_callback || true;
             if(reg.charAt(0) != '$'){
                 reg = '$' + reg;
-
             }
             if(debug) console.log("Setting register " + reg + " to " + value);
 
-            if(!registers[reg]) return false;
+            if(!registers[reg]) return error("Line " + current_line + " register: '" + reg + "' does not exist", current_line);
             // TODO: ensure the register name does not exist in readonlyRegs (or better yet, ensure it exists in the readwriteRegs)
             if(registers[reg].onChange && enable_callback) registers[reg].onChange();
                 registers[reg].val = value;
@@ -209,7 +212,7 @@ function mips_emulator(mips_args){
             mips_code.code = [null];
             current_line = 1;
             $.each(mc.split('\n'), function(index, val){
-                var line = new mips_line(val);
+                var line = new mips_line(val, mips_code.code.length);
                 line.line_no = mips_code.code.length; // save the line number
                 console.log(JSON.stringify(line));
                 mips_code.code.push(line);
@@ -274,7 +277,6 @@ function mips_emulator(mips_args){
         else ME.setLine(1);
     };
 
-
     function v_wri_reg_reg(line){
         // Grab each register from the registers
         line.rd = registers[line.args[0]];
@@ -290,24 +292,24 @@ function mips_emulator(mips_args){
         line.rs = registers[line.args[1]];
         line.imm = getImmediate(line.args[2]);
 
-        return line.rt && line.rs && line.imm;
+        return line.rt && line.rs && _.isNumber(line.imm);
     };
     function v_wri_imm(line){
         line.rt = registers[line.args[0]];
         line.imm = getImmediate(line.args[1]);
-        return _.isString(line.rt) && _.isNumber(line.imm) && line.rt.writable;
+        return line.rt && _.isNumber(line.imm) && line.rt.writable;
     };
     function v_wri_shamt(line){
         line.rt = registers[line.args[0]];
         line.imm = getImmediate(line.args[1]);
-        return _.isString(line.rt) && _.isNumber(line.imm) && line.imm < 33;
+        return line.rt && _.isNumber(line.imm) && line.imm < 33;
     };
     function v_reg_reg_label(line){
         line.rs = registers[line.args[0]];
         line.rt = registers[line.args[1]];
         if(labels[line.args[2]])
             line.label_jump_line = labels[line.args[2]].line;
-        return _.isString(line.rs) && _.isString(line.rt) && _.isNumber(line.label_jump_line);
+        return line.rs && line.rt && _.isNumber(line.label_jump_line);
     };
     function v_label(line){
         if(labels[line.args[0]])
@@ -316,7 +318,7 @@ function mips_emulator(mips_args){
     };
     function v_reg(line){
         line.rs = registers[line.args[0]];
-        return _.isString(line.rs);
+        return line.rs;
     };
     function v_reg_p_imm(line){
         // ^\s*(\d+)\s?\(\s*(\$[a-zA-Z]+\d*)\s*\)
@@ -325,7 +327,7 @@ function mips_emulator(mips_args){
         line.imm = second_param[0];
         line.rs = second_param[2];
         console.log("testing regex: " + JSON.stringify(second_param));
-        return _.isString(line.rt) && _.isNumber(line.imm) && _.isString(line.rt);
+        return line.rt && _.isNumber(line.imm) && line.rt;
     };
     function v_wri_p_imm(line){
         return v_reg_p_imm(line) && line.rt.writable;
@@ -405,7 +407,7 @@ function mips_emulator(mips_args){
         if (!line || line.ignore || line.error) {
             current_line++;
             if(!line) return "Line is null";
-            return line.error; // returns error if there is one or null if not.
+            return error(line.error); // returns error if there is one or null if not.
         }
         // we can assume that we parsed successfully at this point.
         runMethods[line.instruction](line);
@@ -599,7 +601,7 @@ function mips_emulator(mips_args){
      * @param  {String} line
      * @return {Object}
      */
-    function mips_line(line){
+    function mips_line(line, line_no){
 
         // Object that will save information about a line of code.
         /**
@@ -639,7 +641,8 @@ function mips_emulator(mips_args){
              * Error when running this line of code (if any)
              * @type {String}
              */
-            error: null
+            error: null,
+            line_no: line_no || null
         };
 
 
@@ -686,9 +689,9 @@ function mips_emulator(mips_args){
                 // an instruction was found, so try to parse it
                 var parseMethod = parseMethods[LINE.instruction];
                 if (!parseMethod) {
-                    LINE.error = "Error. Unknown instruction: " + LINE.instruction;
+                    LINE.error = "Error: " +line.line_no+ " Unknown instruction: " + LINE.instruction;
                 } else if (!parseMethod(LINE)) {
-                    LINE.error = "Error. Invalid arguments: " + LINE.args;
+                    LINE.error = "Error: " +line.line_no+ " Invalid arguments: " + LINE.args;
                 }
             };
 
