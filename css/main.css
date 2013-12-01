@@ -9,7 +9,7 @@ li{
     margin-top: 20px
 }
 .row {margin-top: 5px; margin-bottom: 5px}
-.reg_spacer{
+.regSpacer{
     margin: 0px 10px 0px 10px;
     width: 100px;
     text-align: right;
@@ -23,6 +23,6 @@ li{
     overflow-y: hidden;
     overflow-x: auto;
 }
-.active_line, .last_reg_changed {background-color:#61FA9C; }
-.next_line {background-color:#dadae3; }
-.error_line{background-color: red;}
+.lastLineNoRun, .lastRegChanged {background-color:#61FA9C; }
+.nextLine {background-color:#dadae3; }
+.errorLine{background-color: red;}
