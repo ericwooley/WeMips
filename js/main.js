@@ -20,7 +20,14 @@ $(document).ready(function(){
             set_highlights({line_ran: active_line, next_line: me.get_line_number()})
         },
         onError: function(message, line_number){
-            alert("Line: "+ line_number+ " " + message);
+            //alert("Line: "+ line_number+ " " + message);
+            if(!_.isNumber(line_number)) return false;
+            if(error_markers[line_number]) error_markers[line_number].clear();
+            error_markers[line_number] = editor.markText(
+                {line: line_number-1, ch: 0},
+                {line: line_number, ch: 0},
+                {title: message, className: 'error_line', clearOnEnter: true}
+            );
         },
         starting_code: $("#editor").val()
     });
@@ -137,16 +144,17 @@ $(document).ready(function(){
         //$(".active_line").removeClass('active_line');
         //$(".next_line").removeClass('next_line');
         if(last_run_marker) last_run_marker.clear();
-        last_run_marker = editor.markText(
-            {line: active_line-1, ch: 0},
-            {line: active_line, ch: 0},
-            {title: "last line ran", className: 'active_line'}
-        );
+        if(active_line)
+            last_run_marker = editor.markText(
+                {line: active_line-1, ch: 0},
+                {line: active_line, ch: 0},
+                {title: "last line ran", className: 'active_line', clearOnEnter: true}
+            );
         if(next_marker) next_marker.clear();
         next_marker = editor.markText(
             {line: next_line-1, ch: 0},
             {line: next_line, ch: 0},
-            {title: "Next line to be run", className: 'next_line'}
+            {title: "Next line to be run", className: 'next_line', clearOnEnter: true}
         );
 
     };
