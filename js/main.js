@@ -1,39 +1,60 @@
+// replace snake case with camel case
+// _([a-zA-Z])[a-zA-Z]*
+// \U$1\L$2 
+
+
 $(document).ready(function(){
 
     ///////////////////////////////////////////////////
     // Mips Emulator Setup
     ///////////////////////////////////////////////////
     var me = mips_emulator({
-        debug: true,
-        onRegisterChange: function(reg_name, value){
-            var reg = $("#" + reg_name.replace('$', '') + " .reg_spacer");
-            $(".last_reg_changed").removeClass('last_reg_changed');
+        debug: false,
+        /*
+         * Changes the registers visual representation when the mips emulator changes its value
+         * @param  {String} regName the register name
+         * @param  {String/Number} value    The new value of the register
+         * @return {null}
+         */
+        onRegisterChange: function(regName, value){
+            var reg = $("#" + regName.replace('$', '') + " .regSpacer");
+            $(".lastRegChanged").removeClass('lastRegChanged');
             reg.html(value);
-            reg.addClass('last_reg_changed');
+            reg.addClass('lastRegChanged');
             // change to correct tab
-            var reg_letter = reg_name.replace('$', '').replace(/\s/, '').charAt(0);
-            $('#registers a[href="#'+reg_letter+'-registers"]').tab('show')
+            var regLetter = regName.replace('$', '').replace(/\s/, '').charAt(0);
+            $('#registers a[href="#'+regLetter+'-registers"]').tab('show')
         },
+        /*
+         * runs when the emulator has pushed past the last line
+         * @return {null}
+         */
         onFinish: function(){
             alert("Emulation complete, returning to line 1");
             me.setLine(1);
-            set_highlights({line_ran: active_line, next_line: me.get_line_number()})
+            setHighlights({lineRan: lastLineNoRun, nextLine: me.get_line_number()})
         },
-        onError: function(message, line_number){
-            //alert("Line: "+ line_number+ " " + message);
-            if(!_.isNumber(line_number)) return false;
-            if(error_markers[line_number]) error_markers[line_number].clear();
-            error_markers[line_number] = editor.markText(
-                {line: line_number-1, ch: 0},
-                {line: line_number, ch: 0},
-                {title: message, className: 'error_line', clearOnEnter: true}
+        /*
+         * This is run when *the users* program encounters a mips error. 
+         * @param  {String} message     The error message
+         * @param  {Number} lineNumber Which line the error occured on
+         * @return {null}
+         */
+        onError: function(message, lineNumber){
+            //alert("Line: "+ lineNumber+ " " + message);
+            if(!_.isNumber(lineNumber)) return false;
+            editor.markText(
+                {line: lineNumber-1, ch: 0},
+                {line: lineNumber, ch: 0},
+                {title: message, className: 'errorLine', clearOnEnter: true}
             );
         },
+        // Set the starting code to be the defualt in the editor.
         starting_code: $("#editor").val()
     });
-    var active_line;
-    var next_line;
-    var error_markers = [];
+    // the active line, is the one whose results are being examined.
+    var lastLineNoRun;
+    var nextLine;
     
     ///////////////////////////////////////////////////
     // Code Mirror Setup
@@ -50,83 +71,83 @@ $(document).ready(function(){
 
     // When the editor changes, we need to mark it as invalid
     // so it will be reanalyzed upon a step or run
-    editor.on('change', mark_editor_as_invalid);
+    editor.on('change', markEditorAsInvalid);
     
     // Keeps track of the last line we ran. To start with we want it
     // to be null becuase we have not run anything yet.
-    var last_run_marker;
+    var lastRunMarker;
     // Keeps track of the next line we will run, we want to set it to the 
     // first valid line.
-    var next_marker = editor.markText(
+    var nextMarker = editor.markText(
         {line: me.get_line_number()-1, ch: 0},
         {line: me.get_line_number(), ch: 0},
-        {title: "Next line to be run", className: 'next_line'}
+        {title: "Next line to be run", className: 'nextLine'}
     );
 
     ///////////////////////////////////////////////////
     // Event Handlers setup
     ///////////////////////////////////////////////////
-    $(".registers-container li").each(setup_registers);
-    $('.reg_spacer').on('input', manual_registry_validate);
-    $('.reg_spacer').on('blur', manual_registry_edit_save);
-    $('#code_loaders button').on('click', load_custom_code);
+    $(".registers-container li").each(setupRegisters);
+    $('.regSpacer').on('input', manualRegistryValidate);
+    $('.regSpacer').on('blur', manualRegistryEditSave);
+    $('#codeLoaders button').on('click', loadCustomCode);
     $("#step").click(step);
-    $("#go_to_line_button").on('click', set_line);
+    $("#goToLineButton").on('click', setLine);
     $("#run").click(run);
 
     // Functions to respond to events.
-    function set_line(){
-        var new_line = $("#current_line_input").val();
-        console.log("Setting new line: "+ new_line);
-        me.setLine(Number(new_line));
-        console.log("next_line"+ me.get_line_number());
-        set_highlights({line_ran: null, next_line: me.get_line_number()})
+    function setLine(){
+        var newLine = $("#currentLineInput").val();
+        // if(debug) console.log("Setting new line: "+ newLine);
+        me.setLine(Number(newLine));
+        // if(debug) console.log("nextLine"+ me.getLineNumber());
+        setHighlights({lineRan: null, nextLine: me.get_line_number()})
         return false;
     };
-    function mark_editor_as_invalid(){
+    function markEditorAsInvalid(){
         me.valid = false;
     };
     function step(){
         // if this code is no longer valid, reanalyze.
         if(!me.valid){
-            mips_analyze();
+            mipsAnalyze();
         }
 
-        line_result = me.step();
-        if(line_result){
-           set_highlights(line_result);
+        lineResult = me.step();
+        if(lineResult){
+           setHighlights(lineResult);
         }
     };
-    function load_custom_code(e){
+    function loadCustomCode(e){
         if(!confirm("This will erase what is in the code editor, are you sure?")) return;
         var target = $(e.target);
-        var load_target = target.attr('load');
-        var new_content = $(load_target).html();
-        new_content = new_content.replace(/^\s+|\s+$/g, '');
-        new_content = new_content.replace(/\n\s+/g, '\n');
-        editor.setValue(new_content);
-        mips_analyze();
-        set_highlights();
+        var loadTarget = target.attr('load');
+        var newContent = $(loadTarget).html();
+        newContent = newContent.replace(/^\s+|\s+$/g, '');
+        newContent = newContent.replace(/\n\s+/g, '\n');
+        editor.setValue(newContent);
+        mipsAnalyze();
+        setHighlights();
     };
-    function manual_registry_edit_save(e){
-        var new_val = $(e.target).html();
+    function manualRegistryEditSave(e){
+        var newVal = $(e.target).html();
         var target =  $(e.target);
-        var reg_name = target.attr("reg");
-        me.setRegister(reg_name, Number(new_val), false);
+        var regName = target.attr("reg");
+        me.setRegister(regName, Number(newVal), false);
     };
-    function manual_registry_validate(e){
-        var new_val = $(e.target).html();
+    function manualRegistryValidate(e){
+        var newVal = $(e.target).html();
         var target =  $(e.target);
-        var reg_name = target.attr("reg");
-        if(new_val.search(/[^-\d]/) >= 0){
-            target.html(new_val.replace(/[\D\s]/g, ''));
+        var regName = target.attr("reg");
+        if(newVal.search(/[^-\d]/) >= 0){
+            target.html(newVal.replace(/[\D\s]/g, ''));
             alert("You cannot enter in characters into registers");
         }
-        if(new_val.length > 11){
-            if(new_val.length == 12 && new_val.charAt(0) == '-'){
+        if(newVal.length > 11){
+            if(newVal.length == 12 && newVal.charAt(0) == '-'){
                 return true;
             } else {
-                target.html(new_val.substring(0, 11));
+                target.html(newVal.substring(0, 11));
                 alert("The 32 bit integers can only be 11 digits long.");    
             }
             
@@ -134,37 +155,35 @@ $(document).ready(function(){
         
         return true;
     };
-    function set_highlights(lines){
+    function setHighlights(lines){
         lines = lines || {};
-        active_line = lines.line_ran || null;
-        next_line = lines.next_line || me.get_line_number();
-        console.log("Active line: " + active_line);
-        console.log("Next line: " + next_line);
-        $("#current_line_input").val(next_line);
-        //$(".active_line").removeClass('active_line');
-        //$(".next_line").removeClass('next_line');
-        if(last_run_marker) last_run_marker.clear();
-        if(active_line)
-            last_run_marker = editor.markText(
-                {line: active_line-1, ch: 0},
-                {line: active_line, ch: 0},
-                {title: "last line ran", className: 'active_line', clearOnEnter: true}
+        lastLineNoRun = lines.line_ran || null;
+        nextLine = lines.nextLine || me.get_line_number();
+        // if(debug) console.log("Active line: " + lastLineNoRun);
+        // if(debug) console.log("Next line: " + nextLine);
+        $("#currentLineInput").val(nextLine);
+        if(lastRunMarker) lastRunMarker.clear();
+        if(lastLineNoRun)
+            lastRunMarker = editor.markText(
+                {line: lastLineNoRun-1, ch: 0},
+                {line: lastLineNoRun, ch: 0},
+                {title: "last line ran", className: 'lastLineNoRun', clearOnEnter: true}
             );
-        if(next_marker) next_marker.clear();
-        next_marker = editor.markText(
-            {line: next_line-1, ch: 0},
-            {line: next_line, ch: 0},
-            {title: "Next line to be run", className: 'next_line', clearOnEnter: true}
+        if(nextMarker) nextMarker.clear();
+        nextMarker = editor.markText(
+            {line: nextLine-1, ch: 0},
+            {line: nextLine, ch: 0},
+            {title: "Next line to be run", className: 'nextLine', clearOnEnter: true}
         );
 
     };
-    function setup_registers(index){
+    function setupRegisters(index){
         var reg = $(this);
-        var reg_name = reg.attr('id');
+        var regName = reg.attr('id');
         reg.html(
-            "<b>"+reg_name +":</b> " 
-            + "<span class='reg_spacer' reg='"+reg_name+"' id='"+reg_name+"-val' contenteditable='true'>"
-            + me.getRegister(reg_name)
+            "<b>"+regName +":</b> " 
+            + "<span class='regSpacer' reg='"+regName+"' id='"+regName+"-val' contenteditable='true'>"
+            + me.getRegister(regName)
             + "</span>"
         );
     }
@@ -178,16 +197,16 @@ $(document).ready(function(){
         // TODO: hook this up to a mips engine
         alert("Run Fucntion here");
     };
-    function mips_analyze(){
+    function mipsAnalyze(){
         editor.save();
         me.setCode($("#editor").val());
         me.valid = true;
     };
-    function get_code_as_string(){
+    function getCodeAsString(){
         editor.save();
         return $("#editor").val();
     };
-    function unsign_int(num){
+    function unsignInt(num){
         return (num << 31) >>> 0;
     }
 });
