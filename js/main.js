@@ -19,10 +19,14 @@ $(document).ready(function(){
             me.setLine(1);
             set_highlights({line_ran: active_line, next_line: me.get_line_number()})
         },
+        onError: function(message, line_number){
+            alert("Line: "+ line_number+ " " + message);
+        },
         starting_code: $("#editor").val()
     });
     var active_line;
     var next_line;
+    var error_markers = [];
     
     ///////////////////////////////////////////////////
     // Code Mirror Setup
