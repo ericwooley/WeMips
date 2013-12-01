@@ -25,3 +25,4 @@ li{
 }
 .active_line, .last_reg_changed {background-color:#61FA9C; }
 .next_line {background-color:#dadae3; }
+.error_line{background-color: red;}
