@@ -405,9 +405,10 @@ function mips_emulator(mips_args){
      */
     function run_line(line) {
         if (!line || line.ignore || line.error) {
-            current_line++;
-            if(!line) return "Line is null";
-            return error(line.error); // returns error if there is one or null if not.
+            if(!line) error("Line is null");
+            else error(line.error, current_line); // returns error if there is one or null if not.
+            increment_line();
+            return false;
         }
         // we can assume that we parsed successfully at this point.
         runMethods[line.instruction](line);
@@ -591,6 +592,7 @@ function mips_emulator(mips_args){
     function error(message, line_no){
         console.error("Error being sent");
         console.error("--->" + message);
+        line_no = line_no || current_line;
         mips_args.onError(message, line_no);
     }
 
@@ -602,6 +604,7 @@ function mips_emulator(mips_args){
      * @return {Object}
      */
     function mips_line(line, line_no){
+        line_no = line_no || null
 
         // Object that will save information about a line of code.
         /**
@@ -642,7 +645,7 @@ function mips_emulator(mips_args){
              * @type {String}
              */
             error: null,
-            line_no: line_no || null
+            line_no: line_no
         };
 
 
