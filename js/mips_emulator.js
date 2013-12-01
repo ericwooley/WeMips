@@ -208,13 +208,13 @@ function mips_emulator(mips_args){
          * @param {String} mc
          */
         setCode: function(mc){   
-            console.log("Analyzing...");
+            if(debug) console.log("Analyzing...");
             mips_code.code = [null];
             current_line = 1;
             $.each(mc.split('\n'), function(index, val){
                 var line = new mips_line(val, mips_code.code.length);
                 line.line_no = mips_code.code.length; // save the line number
-                console.log(JSON.stringify(line));
+                // if(debug) console.log(JSON.stringify(line));
                 mips_code.code.push(line);
             });
             if(mips_code.code[current_line] && mips_code.code[current_line].ignore){
@@ -240,8 +240,6 @@ function mips_emulator(mips_args){
          * and object.next_line which is the line that is about to be run.
          */
         step: function(){
-            console.log("current_line: " + current_line);
-            console.log("number of lines: " + mips_code.code.length);
             // check if we are finished with the emulation
             if(current_line > mips_code.code.length - 1) return finish_emulation();
             if(!mips_code.code[current_line]) return error("Line " + current_line + " could not be read", current_line);
@@ -326,7 +324,7 @@ function mips_emulator(mips_args){
         var second_param = line.args[1].mathc(/^\s*(\d+)\s?\(\s*(\$[a-zA-Z]+\d*)\s*\)/);
         line.imm = second_param[0];
         line.rs = second_param[2];
-        console.log("testing regex: " + JSON.stringify(second_param));
+        if(debug) console.log("testing regex: " + JSON.stringify(second_param));
         return line.rt && _.isNumber(line.imm) && line.rt;
     };
     function v_wri_p_imm(line){
@@ -590,8 +588,8 @@ function mips_emulator(mips_args){
      * @return {null}
      */
     function error(message, line_no){
-        console.error("Error being sent");
-        console.error("--->" + message);
+        if(debug) console.error("Error being sent");
+        if(debug) console.error("--->" + message);
         line_no = line_no || current_line;
         mips_args.onError(message, line_no);
     }
@@ -702,7 +700,7 @@ function mips_emulator(mips_args){
         } else {
             // TODO: check for special cases
             LINE.error = "Error parsing line: "+ (index+1);
-            console.log("----> No matches");
+            if(debug) console.log("----> No matches");
         }
         //if(debug) console.log("Finished parsing line: " + JSON.stringify(LINE));
         return LINE;
