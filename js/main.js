@@ -131,6 +131,7 @@ $(document).ready(function(){
         editor.setValue(newContent);
         mipsAnalyze();
         me.setLine(1);
+        lastLineNoRun = null;
         setHighlights();
     };
     function manualRegistryEditSave(e){
