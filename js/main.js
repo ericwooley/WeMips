@@ -1,10 +1,12 @@
 // replace snake case with camel case
-// _([a-zA-Z])[a-zA-Z]*
+// _([a-zA-Z])([a-zA-Z]*)
 // \U$1\L$2 
 
 
 $(document).ready(function(){
-
+    // If we ever host this, we can enable sharing this way,
+    // as long as the code is short enough to fit in a url.
+    var urlParams = getURLParameters();
     ///////////////////////////////////////////////////
     // Mips Emulator Setup
     ///////////////////////////////////////////////////
@@ -32,7 +34,8 @@ $(document).ready(function(){
         onFinish: function(){
             alert("Emulation complete, returning to line 1");
             me.setLine(1);
-            setHighlights({lineRan: lastLineNoRun, nextLine: me.get_line_number()})
+            setHighlights({lineRan: lastLineNoRun, nextLine: me.get_line_number()});
+            running = false;
         },
         /*
          * This is run when *the users* program encounters a mips error. 
@@ -41,7 +44,6 @@ $(document).ready(function(){
          * @return {null}
          */
         onError: function(message, lineNumber){
-            //alert("Line: "+ lineNumber+ " " + message);
             if(!_.isNumber(lineNumber)) return false;
             editor.markText(
                 {line: lineNumber-1, ch: 0},
@@ -52,6 +54,7 @@ $(document).ready(function(){
         // Set the starting code to be the defualt in the editor.
         starting_code: $("#editor").val()
     });
+    var running = false;
     // the active line, is the one whose results are being examined.
     var lastLineNoRun;
     var nextLine;
@@ -124,9 +127,10 @@ $(document).ready(function(){
         var loadTarget = target.attr('load');
         var newContent = $(loadTarget).html();
         newContent = newContent.replace(/^\s+|\s+$/g, '');
-        newContent = newContent.replace(/\n\s+/g, '\n');
+        //newContent = newContent.replace(/\n\s+/g, '\n');
         editor.setValue(newContent);
         mipsAnalyze();
+        setLine(1);
         setHighlights();
     };
     function manualRegistryEditSave(e){
@@ -193,9 +197,11 @@ $(document).ready(function(){
             editor.save();
             me.setCode($("#editor").val());
             me.valid = true;
-        } 
+        }
+        running = true;
+        while(running) step();
         // TODO: hook this up to a mips engine
-        alert("Run Fucntion here");
+        
     };
     function mipsAnalyze(){
         editor.save();
@@ -209,4 +215,27 @@ $(document).ready(function(){
     function unsignInt(num){
         return (num << 31) >>> 0;
     }
+
 });
+// from http://stackoverflow.com/questions/979975/how-to-get-the-value-from-url-parameter
+// Could be improved on.
+function getURLParameters() 
+{
+    var sURL = window.document.URL.toString(); 
+    var params = {};
+    if (sURL.indexOf("?") > 0)
+    {
+        var arrParams = sURL.split("?");         
+        var arrURLParams = arrParams[1].split("&");        
+        for (var i=0;i<arrURLParams.length;i++)
+        {
+            var sParam =  arrURLParams[i].split("=");
+            if (sParam[1] != "")
+                params[sParam[0]] = unescape(sParam[1]);
+            else
+                params[sParam[0]] = null;
+        }
+    }
+    return params;
+
+}
