@@ -20,6 +20,9 @@ $(document).ready(function(){
          * @return {null}
          */
         onRegisterChange: function(regName, value){
+            if(regName == "$sp"){
+                return setSP(value);
+            }
             var reg = $("#" + regName.replace('$', '') + " .regSpacer");
             $(".lastRegChanged").removeClass('lastRegChanged');
             reg.html(value);
@@ -93,12 +96,13 @@ $(document).ready(function(){
     // Event Handlers setup
     ///////////////////////////////////////////////////
     $(".registers-container li").each(setupRegisters);
-    $('.regSpacer').on('input', manualRegistryValidate);
-    $('.regSpacer').on('blur', manualRegistryEditSave);
+    $('.regSpacer').on('input', manualRegistryEdit);
+    //$('.regSpacer').on('blur', manualRegistryEditSave);
     $('#codeLoaders button').on('click', loadCustomCode);
     $("#step").click(step);
     $("#goToLineButton").on('click', setLine);
     $("#run").click(run);
+    $("#optionShowRelative").change(switchAddressMode);
 
     // Functions to respond to events.
     function setLine(){
@@ -149,6 +153,14 @@ $(document).ready(function(){
         var target =  $(e.target);
         var regName = target.attr("reg");
         me.setRegisterVal(regName, Number(newVal), false);
+    };
+    function manualRegistryEdit(e){
+        var newVal = $(e.target).html();
+        var target =  $(e.target);
+        var regName = target.attr("reg");
+        newVal = parseInt(newVal);
+        me.setRegisterVal(regName, newVal, false);
+        target.html(me.getRegisterVal(regName));
     };
     function manualRegistryValidate(e){
         var newVal = $(e.target).html();
@@ -226,42 +238,89 @@ $(document).ready(function(){
     function unsignInt(num){
         return (num << 31) >>> 0;
     };
-    var stackLow = me.stack.pointerToBottomOfStack();
-    var stackEnd = me.stack.pointerToBottomOfStack();
-    function addStackAddress(address, val){
+    function setSP(address){
+        addStackAddress(address, '', false);
+        $(".glyphicon-arrow-right").removeClass("glyphicon-arrow-right");
+        $("#stackEntry-" + address + " .glyphicon").addClass("glyphicon-arrow-right lastRegChanged");
         $('#registers a[href="#stack-container-div"]').tab('show');
+            };
+    var colorizeAddrBG = false;
+    function addStackAddress(address, val, visualize){
+        if(!val || val == '') val = me.stack.getByte(address);
+        if(typeof visualize == 'undefined')
+            visualize = true;
         console.log("address: " + address + "\nStackLow: " + stackLow + "\nVal: " + val );
+        showAddReal = '';
+            showAddRelative = 'style="display: none"';
+        if(showRelative){
+            showAddReal = 'style="display: none"';
+            showAddRelative = '';
+        }
         while(address <= stackLow){
-            
+            var bgColorClass = '';
+            if(colorizeAddrBG) bgColorClass = 'lightGreyBG';
+            colorizeAddrBG = !colorizeAddrBG;
             $("#stackRep").prepend(
                 "<div id='stackEntry-" + stackLow + "' >"
-                    + "<span id='stackAddr-"+stackLow+"'>"
-                        + stackLow + ": "
+                + "<span class='glyphicon'></span>&nbsp"
+                    + "<span class='"+bgColorClass+"'>"
+                        + "<span class='stackAddrReal' "+ showAddReal +" id='stackAddr-"+stackLow+"'>"
+                            + stackLow + ": "
+                        + "</span>"
+                        + "<span class='stackAddrRelative' "+ showAddRelative +" id='stackAddrRelative-"+stackLow+"'>"
+                            + (stackLow - stackEnd) + ": "
+                        + "</span>"
+                        + "<span class='regSpacer' id='stackVal-"+stackLow+"'>"+
+                            + me.stack.getByte(stackLow)
+                        +"</span>"
                     + "</span>"
-                    + "<span id='stackVal-"+stackLow+"'></span>"
                 + "</div>"
             );
             stackLow--;
         }
         console.log("stack Change: " + address + " - " + val);
+        
         $("#stackVal-"+address).html(val);
+        if(visualize){
+            $('#registers a[href="#stack-container-div"]').tab('show');
+            $(".lastRegChanged").removeClass('lastRegChanged');
+            $("#stackVal-"+address).addClass('lastRegChanged');
+        }
     };
+    var stackLow = me.stack.pointerToBottomOfStack()-1;
+    var stackEnd = me.stack.pointerToBottomOfStack();
+    addStackAddress(stackLow, me.stack.getByte(stackLow), false);
+    //setSP(stackEnd);
     function setupTests(){
         // <div id='additionDoubler'></div>
         // <button type="button" load="#additionDoubler" class="btn btn-default">Addition Doubler</button>
         $.each(examples, function(index, func){
             index = index.replace('Example', '');
             indexNice = index.replace(/([A-Z])/g, " \$1");
-            
+            indexNice = indexNice.charAt(0).toUpperCase() + indexNice.slice(1);;
+
             $("#exampleHolder").append(
                 "<div id='"+index+"'>"
                 + func().join('\n')
                 + "</div>"
             );
             $("#codeLoaders").append(
-                '<button type="button" load="#' + index + '" class="btn btn-default">' + indexNice + '</button>'
+                '<button type="button" load="#' 
+                + index + '" class="btn btn-default">' 
+                + indexNice + '</button>'
             );
         });
     };
+    var showRelative;
+    function switchAddressMode(e){
+        showRelative = $(e.target).is(':checked');
+        if(showRelative){
+            $('.stackAddrRelative').show();
+            $('.stackAddrReal').hide();
+        } else {
+            $('.stackAddrRelative').hide();
+            $('.stackAddrReal').show();
+        }
+    }
 
 });
