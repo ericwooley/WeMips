@@ -102,7 +102,7 @@ $(document).ready(function(){
     function setLine(){
         var newLine = $("#currentLineInput").val();
         // if(debug) console.log("Setting new line: "+ newLine);
-        me.setLine(Number(newLine));
+        if(!_.isNumber(me.setLine(Number(newLine)))) console.error("Error setting line: " + newLine);
         // if(debug) console.log("nextLine"+ me.getLineNumber());
         setHighlights({lineRan: null, nextLine: me.getLineNumber()})
         return false;
@@ -130,7 +130,7 @@ $(document).ready(function(){
         //newContent = newContent.replace(/\n\s+/g, '\n');
         editor.setValue(newContent);
         mipsAnalyze();
-        setLine(1);
+        me.setLine(1);
         setHighlights();
     };
     function manualRegistryEditSave(e){
@@ -161,7 +161,7 @@ $(document).ready(function(){
     };
     function setHighlights(lines){
         lines = lines || {};
-        lastLineNoRun = lines.lineRan || null;
+        lastLineNoRun = lines.lineRan || lastLineNoRun || null;
         nextLine = lines.nextLine || me.getLineNumber();
         // if(debug) console.log("Active line: " + lastLineNoRun);
         // if(debug) console.log("Next line: " + nextLine);
