@@ -350,7 +350,7 @@ test("BNE", function() {
 module("Examples");
 
 test("additionDoublerExample", function() {
-	var example = additionDoublerExample();
+	var example = examples.additionDoublerExample();
 	ME.runLines(example);
 	equal(ME.getRegisterVal('$s0'), 2);
 	equal(ME.getRegisterVal('$s1'), 4);
