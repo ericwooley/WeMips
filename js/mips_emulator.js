@@ -267,6 +267,16 @@ function mipsEmulator(mipsArgs){
         },
         incerementPC: function() {
             incrementLine();
+        },
+        goToLabel: function(label){
+            var line = mipsCode.labels[label];
+            console.warn(JSON.stringify(mipsCode.labels));
+            if(debug) console.log("Getting label: "+ label + " - " +JSON.stringify(line) );
+            if(line){
+                ME.setLine(line.lineNo);
+                return currentLine;
+            }
+            return false;
         }
     };
 
@@ -439,6 +449,8 @@ function mipsEmulator(mipsArgs){
             // if we have a label, save it to the hashtable and save it to line
             if(ar[1] && ar[1].length > 0){
                 LINE.label = ar[1];
+                console.log("found label: "+ LINE.label)
+                mipsCode.labels[LINE.label] = LINE;
                 // TODO: mipsCode.labels[ar[1]] = line;
             }
 
