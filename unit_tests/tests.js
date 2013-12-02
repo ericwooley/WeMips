@@ -1,4 +1,4 @@
-var ME = new mips_emulator({debug: false});
+var ME = new mipsEmulator({debug: false});
 var stack = new Stack({debug: true});
 
 module("LIBRARY");

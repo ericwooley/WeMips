@@ -30,7 +30,7 @@ function mipsEmulator(mipsArgs){
             alert("Finished running emulation, resetting $sp to line 1");
         }
     });
-    var debug = mipsArgs.debug
+    var debug = mipsArgs.debug;
     //////////////////////////////////
     // Private Variables / Setup
     //////////////////////////////////

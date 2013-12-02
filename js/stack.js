@@ -230,7 +230,6 @@ Stack.unsignedNumberToSignedNumber = function (number, bits/*=32*/) {
     return number - Math.pow(2, bits);
 }
 
-
 Stack.signedNumberToUnsignedNumber = function (number, bits/*=32*/) {
     // e.g. f(-128, 8) -> 128 (1000 0000)
     // e.g. f(-1, 8) -> 255   (1111 1111)
@@ -254,22 +253,3 @@ Stack.signedNumberToUnsignedNumber = function (number, bits/*=32*/) {
     // negative number
     return number + Math.pow(2, bits);
 }
-
-// TODO: move this elsewhere
-function assert(condition, message) {
-    if (!condition) {
-        throw message || "Assertion failed";
-    }
-}
-
-String.prototype.format = function() {
-    // 'Added {0} by {1} to your collection'.format(title, artist)
-    // http://stackoverflow.com/a/2648463
-    var s = this,
-        i = arguments.length;
-
-    while (i--) {
-        s = s.replace(new RegExp('\\{' + i + '\\}', 'gm'), arguments[i]);
-    }
-    return s;
-};
