@@ -81,7 +81,9 @@ function mipsInstructionExecutor(ME) {
         },
         'J': {
             parseMethod: parse_label,
-            runMethod: null
+            runMethod: function(namedArgs){
+                ME.goToLabel(namedArgs.label);
+            }
         },
         'JAL': {
             parseMethod: parse_label,
@@ -304,7 +306,7 @@ function mipsInstructionExecutor(ME) {
 	    runInstruction: function(instructionName, args) {
 	    	var namedArgs = {};
 	    	var parsed = this.parseInstruction(instructionName, args, namedArgs, null);
-	    	assert(parsed);
+	    	assert(parsed, "Instruction did not parse correctly");
 
 	    	var runMethod = instructions[instructionName].runMethod;
 	    	assert(runMethod);
