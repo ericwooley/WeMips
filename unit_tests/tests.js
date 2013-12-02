@@ -253,15 +253,16 @@ test("J", function() {
 
 	throws(function() {
 		ME.runLines([
+			"J end"
+		]);
+	}, JumpError, "There is no end label. Ensure that it doesn't take the end label from a previous run.");
+
+	throws(function() {
+		ME.runLines([
 			"J foo"
 		]);
 	}, JumpError, "There is no foo label.");
 
-	throws(function() {
-		ME.runLines([
-			"J end"
-		]);
-	}, JumpError, "There is no end label. Ensure that it doesn't take the end label from a previous run.");
 
 	// TODO: detect infinite loops, and either raise an error, or ask the user if they want to contiune (e.g. "foo: J foo")
 
@@ -279,6 +280,62 @@ test("J", function() {
 		"end:"
 	]);
 	equal(ME.getRegisterVal('$t2'), 102);
+});
+
+test("BEQ", function() {
+	throws(function() {
+		ME.runLines([
+			"BEQ $t0, $t0, foo"
+		]);
+	}, JumpError, "There is no foo label.");
+
+	ME.runLines([
+		"ADDI $t9, $zero, 6 # stop at the 6th iteration",
+		"ADDI $t0, $zero, 0 # loop index",
+		"ADDI $t1, $zero, 1",
+		"ADDI $t2, $zero, 1",
+		"continue:#---------",
+		"BEQ $t0, $t9, break",
+		"ADDI $t3, $t2, 0 	# store t2's old value temporarily",
+		"ADD $t2, $t2, $t1 	# t2 = t2 + t1",
+		"ADDI $t1, $t3, 0 	# t1 = old t2",
+		"ADDI $t0, $t0, 1 	# i++",
+		"J continue",
+		"#------------",
+		"break:"
+	]);
+	// index:     0, 1, 2, 3, 4,  5,  6
+	// number: 1, 1, 2, 3, 5, 8, 13, 21
+	equal(ME.getRegisterVal('$t2'), 21, "Fibonnaci's 6th number is 21.");
+});
+
+test("BNE", function() {
+	throws(function() {
+		ME.runLines([
+			"BNE $t0, $t1, foo"
+		]);
+	}, JumpError, "There is no foo label.");
+
+	ME.runLines([
+		"ADDI $t9, $zero, 6 # stop at the 6th iteration",
+		"ADDI $t0, $zero, 0 # loop index",
+		"ADDI $t1, $zero, 1",
+		"ADDI $t2, $zero, 1",
+		"continue:#---------",
+		"BNE $t0, $t9, loop_body",
+		"J break",
+		"loop_body:",
+		"ADDI $t3, $t2, 0 	# store t2's old value temporarily",
+		"ADD $t2, $t2, $t1 	# t2 = t2 + t1",
+		"ADDI $t1, $t3, 0 	# t1 = old t2",
+		"ADDI $t0, $t0, 1 	# i++",
+		"J continue",
+		"#------------",
+		"break:"
+	]);
+	// index:     0, 1, 2, 3, 4,  5,  6
+	// number: 1, 1, 2, 3, 5, 8, 13, 21
+	equal(ME.getRegisterVal('$t2'), 21, "Fibonnaci's 6th number is 21.");
 });
 
 

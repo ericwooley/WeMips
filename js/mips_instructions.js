@@ -19,102 +19,112 @@ function mipsInstructionExecutor(ME) {
         },
         'ADDU': {
             parseMethod: parse_$RD_$rs_$rt,
-            runMethod: null
+            runMethod: null // TODO: implement this and make some tests
         },
         'ADDIU': {
             parseMethod: parse_$RT_$rs_imm,
-            runMethod: null
+            runMethod: null // TODO: implement this and make some tests
         },
         'SUB': {
             parseMethod: parse_$RD_$rs_$rt,
-            runMethod: null
+            runMethod: null // TODO: implement this and make some tests
         },
         'SUBU': {
             parseMethod: parse_$RD_$rs_$rt,
-            runMethod: null
+            runMethod: null // TODO: implement this and make some tests
         },
         'LUI': {
             parseMethod: parse_$RT_imm,
-            runMethod: null
+            runMethod: null // TODO: implement this and make some tests
         },
         /////////////////////////////////////////////
         // Mips Logical Instructions
         /////////////////////////////////////////////
         'AND': {
             parseMethod: parse_$RD_$rs_$rt,
-            runMethod: null
+            runMethod: null // TODO: implement this and make some tests
         },
         'ANDI': {
             parseMethod: parse_$RT_$rs_imm,
-            runMethod: null
+            runMethod: null // TODO: implement this and make some tests
         },
         'NOR': {
             parseMethod: parse_$RD_$rs_$rt,
-            runMethod: null
+            runMethod: null // TODO: implement this and make some tests
         },
         'OR': {
             parseMethod: parse_$RD_$rs_$rt,
-            runMethod: null
+            runMethod: null // TODO: implement this and make some tests
         },
         'ORI': {
             parseMethod: parse_$RT_$rs_imm,
-            runMethod: null
+            runMethod: null // TODO: implement this and make some tests
         },
         'SLL': {
             parseMethod: parse_$RD_$rt_shamt,
-            runMethod: null
+            runMethod: null // TODO: implement this and make some tests
         },
         'SRL': {
             parseMethod: parse_$RD_$rt_shamt,
-            runMethod: null
+            runMethod: null // TODO: implement this and make some tests
         },
         /////////////////////////////////////////////
         // Mips Branch and Jump Instructions
         /////////////////////////////////////////////
         'BEQ': {
             parseMethod: parse_$rs_$rt_label,
-            runMethod: null
+            runMethod: function(namedArgs) {
+                if (ME.getRegisterVal(namedArgs.$rs) === ME.getRegisterVal(namedArgs.$rt))
+                    ME.goToLabel(namedArgs.label);
+                else
+                    ME.incerementPC();
+            }
         },
         'BNE': {
             parseMethod: parse_$rs_$rt_label,
-            runMethod: null
+            runMethod: function(namedArgs) {
+                if (ME.getRegisterVal(namedArgs.$rs) !== ME.getRegisterVal(namedArgs.$rt))
+                    ME.goToLabel(namedArgs.label);
+                else
+                    ME.incerementPC();
+            }
         },
         'J': {
             parseMethod: parse_label,
-            runMethod: function(namedArgs){
+            runMethod: function(namedArgs) {
                 ME.goToLabel(namedArgs.label);
             }
         },
         'JAL': {
             parseMethod: parse_label,
-            runMethod: null
+            runMethod: null // TODO: implement this and make some tests
         },
         'JR': {
             parseMethod: parse_$rs,
-            runMethod: null
+            runMethod: null // TODO: implement this and make some tests
         },
         /////////////////////////////////////////////
         // Mips Memory Access Instructions
         /////////////////////////////////////////////
         'LW': {
             parseMethod: parse_$RT_imm_$rs,
-            runMethod: null
+            runMethod: null // TODO: implement this and make some tests
         },
         'SW': {
             parseMethod: parse_$rt_imm_$rs,
-            runMethod: null
+            runMethod: null // TODO: implement this and make some tests
         },
         'LH': {
             parseMethod: parse_$RT_imm_$rs,
-            runMethod: null
+            runMethod: null // TODO: implement this and make some tests
         },
         'LHU': {
             parseMethod: parse_$RT_imm_$rs,
-            runMethod: null
+            runMethod: null // TODO: implement this and make some tests
         },
         'SH': {
             parseMethod: parse_$rt_imm_$rs,
-            runMethod: null
+            runMethod: null // TODO: implement this and make some tests
         },
         'LB': {
             parseMethod: parse_$RT_imm_$rs,
