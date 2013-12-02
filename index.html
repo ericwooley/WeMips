@@ -7,7 +7,7 @@
     <link href="css/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
     <link href="css/main.css" rel="stylesheet" >
     <style>
-    
+
     </style>
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -16,11 +16,12 @@
       <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
     <![endif]-->
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-    
+
     <link rel="stylesheet" href="css/codemirror.css">
     <script src="js/lib/codemirror.js"></script>
     <script src="js/lib/jquery.min.js"></script>
     <script src="js/lib/underscore-min.js"></script>
+    <script src="js/mips_instructions.js"></script>
     <script src="js/mips_emulator.js"></script>
     <script src="js/stack.js"></script>
     <script src="js/main.js"></script>
@@ -71,6 +72,7 @@ ADDI $s6, $zero, 6
 ADDI $s7, $zero, 7 
 ADDI $s8, $zero, 8 # This should generate an error
 ADDI $s9, $zero, 9 # This should generate an error
+
 
 # change the t registers
 ADD $t0, $zero, $zero
@@ -198,10 +200,10 @@ ADD $s0, $s0, $s0 # double s0 by adding it to itself, should be 4096</textarea>
               </ul>
             </div>
           </div>
-        </div> 
+        </div>
       </div>
     </div>
-    
+
     <!--<script src="js/main.js"></script>-->
     <!-- Include all compiled plugins (below), or include individual files as needed -->
    <!-- <script src="css/bootstrap/js/bootstrap.min.js"></script>-->

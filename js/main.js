@@ -38,7 +38,7 @@ $(document).ready(function(){
             running = false;
         },
         /*
-         * This is run when *the users* program encounters a mips error. 
+         * This is run when *the users* program encounters a mips error.
          * @param  {String} message     The error message
          * @param  {Number} lineNumber Which line the error occured on
          * @return {null}
@@ -58,11 +58,11 @@ $(document).ready(function(){
     // the active line, is the one whose results are being examined.
     var lastLineNoRun;
     var nextLine;
-    
+
     ///////////////////////////////////////////////////
     // Code Mirror Setup
     ///////////////////////////////////////////////////
-    
+
     // Code Mirror lines do not match with displayed line number
     // they start at zero and so are off by  -1
     var editor = CodeMirror.fromTextArea(
@@ -75,11 +75,11 @@ $(document).ready(function(){
     // When the editor changes, we need to mark it as invalid
     // so it will be reanalyzed upon a step or run
     editor.on('change', markEditorAsInvalid);
-    
+
     // Keeps track of the last line we ran. To start with we want it
     // to be null becuase we have not run anything yet.
     var lastRunMarker;
-    // Keeps track of the next line we will run, we want to set it to the 
+    // Keeps track of the next line we will run, we want to set it to the
     // first valid line.
     var nextMarker = editor.markText(
         {line: me.get_line_number()-1, ch: 0},
@@ -152,11 +152,11 @@ $(document).ready(function(){
                 return true;
             } else {
                 target.html(newVal.substring(0, 11));
-                alert("The 32 bit integers can only be 11 digits long.");    
+                alert("The 32 bit integers can only be 11 digits long.");
             }
-            
+
         }
-        
+
         return true;
     };
     function setHighlights(lines){
@@ -185,9 +185,9 @@ $(document).ready(function(){
         var reg = $(this);
         var regName = reg.attr('id');
         reg.html(
-            "<b>"+regName +":</b> " 
+            "<b>"+regName +":</b> "
             + "<span class='regSpacer' reg='"+regName+"' id='"+regName+"-val' contenteditable='true'>"
-            + me.getRegister(regName)
+            + me.getRegisterVal('$' + regName)
             + "</span>"
         );
     }
@@ -200,7 +200,6 @@ $(document).ready(function(){
         }
         running = true;
         while(running) step();
-        // TODO: hook this up to a mips engine
         
     };
     function mipsAnalyze(){
