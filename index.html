@@ -21,6 +21,7 @@
     <script src="js/lib/codemirror.js"></script>
     <script src="js/lib/jquery.min.js"></script>
     <script src="js/lib/underscore-min.js"></script>
+    <script src="js/lib.js"></script>
     <script src="js/mips_instructions.js"></script>
     <script src="js/mips_emulator.js"></script>
     <script src="js/stack.js"></script>
@@ -54,8 +55,8 @@ ADD $a1, $a0, $a0 # double s0 by adding it to itself, should be 1048576
 ADD $a2, $a1, $a1 # double s0 by adding it to itself, should be 2097152
 ADD $a3, $a2, $a2 # double s0 by adding it to itself, should be 4194304
 
-ADD $v0, $a3, $a3 # double s0 by adding it to itself, should be 8388608 
-ADD $v1, $v0, $v0 # double s0 by adding it to itself, should be 16777216 
+ADD $v0, $a3, $a3 # double s0 by adding it to itself, should be 8388608
+ADD $v1, $v0, $v0 # double s0 by adding it to itself, should be 16777216
       </div>
       <div id='stav'>
 # Set the all of the registers to the same value
@@ -69,7 +70,7 @@ ADDI $s3, $zero, 3
 ADDI $s4, $zero, 4
 ADDI $s5, $zero, 5
 ADDI $s6, $zero, 6
-ADDI $s7, $zero, 7 
+ADDI $s7, $zero, 7
 ADDI $s8, $zero, 8 # This should generate an error
 ADDI $s9, $zero, 9 # This should generate an error
 
@@ -144,7 +145,7 @@ J CHANGE_A
           </div><!-- /input-group -->
         </div>
         <div class='col-lg-10'>
-          Load Demos: 
+          Load Demos:
           <div class="btn-group" id="codeLoaders">
             <button type="button" load="#additionDoubler" class="btn btn-default">Addition Doubler</button>
             <button type="button" load="#stav" class="btn btn-default">STAV</button>
@@ -155,7 +156,7 @@ J CHANGE_A
       <div class="row">
         <div class="col-lg-8">
           <div id="editorContainer" class="CodeMirror">
-            <textarea id="editor" ># This program works by setting s0 to 2, then adding s0 to itself 
+            <textarea id="editor" ># This program works by setting s0 to 2, then adding s0 to itself
 # effectively doubling it. Because we start at 2, the result is
 # all the powers of 2
 ADDI $s0, $zero, 2 # set s0 to 2
