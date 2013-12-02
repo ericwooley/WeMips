@@ -10,7 +10,7 @@ $(document).ready(function(){
     ///////////////////////////////////////////////////
     // Mips Emulator Setup
     ///////////////////////////////////////////////////
-    var me = mips_emulator({
+    var me = mipsEmulator({
         debug: false,
         /*
          * Changes the registers visual representation when the mips emulator changes its value
@@ -34,7 +34,7 @@ $(document).ready(function(){
         onFinish: function(){
             alert("Emulation complete, returning to line 1");
             me.setLine(1);
-            setHighlights({lineRan: lastLineNoRun, nextLine: me.get_line_number()});
+            setHighlights({lineRan: lastLineNoRun, nextLine: me.getLineNumber()});
             running = false;
         },
         /*
@@ -52,7 +52,7 @@ $(document).ready(function(){
             );
         },
         // Set the starting code to be the defualt in the editor.
-        starting_code: $("#editor").val()
+        startingCode: $("#editor").val()
     });
     var running = false;
     // the active line, is the one whose results are being examined.
@@ -82,8 +82,8 @@ $(document).ready(function(){
     // Keeps track of the next line we will run, we want to set it to the
     // first valid line.
     var nextMarker = editor.markText(
-        {line: me.get_line_number()-1, ch: 0},
-        {line: me.get_line_number(), ch: 0},
+        {line: me.getLineNumber()-1, ch: 0},
+        {line: me.getLineNumber(), ch: 0},
         {title: "Next line to be run", className: 'nextLine'}
     );
 
@@ -104,7 +104,7 @@ $(document).ready(function(){
         // if(debug) console.log("Setting new line: "+ newLine);
         me.setLine(Number(newLine));
         // if(debug) console.log("nextLine"+ me.getLineNumber());
-        setHighlights({lineRan: null, nextLine: me.get_line_number()})
+        setHighlights({lineRan: null, nextLine: me.getLineNumber()})
         return false;
     };
     function markEditorAsInvalid(){
@@ -137,7 +137,7 @@ $(document).ready(function(){
         var newVal = $(e.target).html();
         var target =  $(e.target);
         var regName = target.attr("reg");
-        me.setRegister(regName, Number(newVal), false);
+        me.setRegisterVal(regName, Number(newVal), false);
     };
     function manualRegistryValidate(e){
         var newVal = $(e.target).html();
@@ -161,8 +161,8 @@ $(document).ready(function(){
     };
     function setHighlights(lines){
         lines = lines || {};
-        lastLineNoRun = lines.line_ran || null;
-        nextLine = lines.nextLine || me.get_line_number();
+        lastLineNoRun = lines.lineRan || null;
+        nextLine = lines.nextLine || me.getLineNumber();
         // if(debug) console.log("Active line: " + lastLineNoRun);
         // if(debug) console.log("Next line: " + nextLine);
         $("#currentLineInput").val(nextLine);
