@@ -36,6 +36,9 @@ function mipsEmulator(mipsArgs){
         },
         onFinish: function(){
             if (debug) alert("Finished running emulation, resetting $sp to line 1");
+        },
+        onStackChange: function(){
+
         }
     });
     var debug = mipsArgs.debug;
@@ -43,7 +46,7 @@ function mipsEmulator(mipsArgs){
     // Private Variables / Setup
     //////////////////////////////////
 
-   var stack = new Stack();
+   var stack = new Stack({onChange: mipsArgs.onStackChange});
 
     /**
      * Hash table of registers
@@ -255,6 +258,7 @@ function mipsEmulator(mipsArgs){
          */
         runLine: function(inputLine) {
             var line = new mipsLine(inputLine);
+            // This refers to the private method, private method should probably be renamed.
             runLine(line);
         },
         runLines: function(lines) {
@@ -291,7 +295,6 @@ function mipsEmulator(mipsArgs){
             var ret = {
                 lineRan: Number(currentLine)
             };
-
             runLine(mipsCode.code[currentLine]);
             ret.nextLine = currentLine;
 
