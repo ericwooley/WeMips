@@ -11,7 +11,7 @@ $(document).ready(function(){
     // Mips Emulator Setup
     ///////////////////////////////////////////////////
     var me = mipsEmulator({
-        debug: false,
+        debug: true,
         /*
          * Changes the registers visual representation when the mips emulator changes its value
          * @param  {String} regName the register name
@@ -206,6 +206,7 @@ $(document).ready(function(){
     function mipsAnalyze(){
         editor.save();
         me.setCode($("#editor").val());
+        me.setLine(1);
         me.valid = true;
     };
     function getCodeAsString(){
