@@ -210,7 +210,7 @@ function mips_emulator(mips_args){
         setCode: function(mc){   
             if(debug) console.log("Analyzing...");
             mips_code.code = [null];
-            current_line = 1;
+            //current_line = 1;
             $.each(mc.split('\n'), function(index, val){
                 var line = new mips_line(val, mips_code.code.length);
                 line.line_no = mips_code.code.length; // save the line number
