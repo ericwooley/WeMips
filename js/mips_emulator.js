@@ -6,6 +6,10 @@ function JumpError(message) {
     this.name = 'Jump Error';
     this.message = message;
 }
+function MipsError(message) {
+    this.name = 'Mips Error';
+    this.message = message;
+}
 
 /**
  * Mips emulator constructor
@@ -167,14 +171,21 @@ function mipsEmulator(mipsArgs){
             assert(reg[0] === '$');
             if(debug) console.log("Setting register " + reg + " to " + value);
 
-            if(!registers[reg]) return error("Line " + currentLine + " register: '" + reg + "' does not exist", currentLine);
-            // TODO: ensure the register name does not exist in readonlyRegs (or better yet, ensure it exists in the readwriteRegs)
-            if(registers[reg].onChange && enableCallback) registers[reg].onChange();
-                registers[reg].val = value;
-            if(mipsArgs.onRegisterChange && enableCallback)
-                mipsArgs.onRegisterChange(reg, value);
-            if(debug) console.log("----> New value: "+ ME.getRegister(reg));
+            var register = registers[reg];
+            if(!register) return error("Line " + currentLine + " register: '" + reg + "' does not exist", currentLine);
 
+            if (!register.writable) {
+                throw new RegisterError('Register "{0}" is readonly.'.format(reg));
+            }
+
+            if(register.onChange && enableCallback) {
+                register.onChange();
+            }
+            register.val = value;
+            if(mipsArgs.onRegisterChange && enableCallback) {
+                mipsArgs.onRegisterChange(reg, value);
+            }
+            if(debug) console.log("----> New value: "+ ME.getRegister(reg));
         },
         /**
          * Set an Onchange function for a register
@@ -344,6 +355,10 @@ function mipsEmulator(mipsArgs){
      * @return {null}
      */
     function runLine(line) {
+        if (line.error) {
+            throw new MipsError('Error on line: {0}'.format(line));
+            // TODO: get rid of the other error handler
+        }
         if (!line || line.ignore || line.error) {
             if(!line) error("Line is null");
             else error(line.error, currentLine); // returns error if there is one or null if not.

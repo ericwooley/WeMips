@@ -191,6 +191,8 @@ test("Labels", function() {
 	ok(ME.isValidLine("mylabel:ADD $t0, $t1, $t2"), "we can have attached labels.");
 });
 
+module("Registers");
+
 test("Set/Get Registers", function(){
     ME.setRegisterVal('$t0', 10);
     equal(ME.getRegisterVal('$t0'), 10);
@@ -200,6 +202,9 @@ test("Set/Get Registers", function(){
     equal(ME.getRegisterVal('$a0'), 10);
 });
 
+test("Readonly registers", function() {
+	throws(function() { ME.setRegisterVal('$zero', 5) }, RegisterError, "Cannot write to zero register.");
+});
 
 module("Execution", {
 	setup: function() {
@@ -219,6 +224,8 @@ test("ADD", function() {
 	equal(ME.getRegisterVal('$t0'), 23, "11 + 12 = 23.");
 	equal(ME.getRegisterVal('$t1'), 11, "None of the other register's values should change.");
 	equal(ME.getRegisterVal('$t2'), 12, "None of the other register's values should change.");
+
+	throws(function() { ME.runLine("ADD $zero, $zero, $zero"); });
 });
 
 test("ADDI", function() {
@@ -226,6 +233,8 @@ test("ADDI", function() {
 	equal(ME.getRegisterVal('$t1'), 515, "10 + 505 = 515");
 	ME.runLine("ADDI $t0, $t1, 2");
 	equal(ME.getRegisterVal('$t0'), 517, "515 + 2 = 517");
+
+	throws(function() { ME.runLine("ADDI $zero, $zero, 0"); });
 });
 
 test("LB, LBU, SB", function() {
