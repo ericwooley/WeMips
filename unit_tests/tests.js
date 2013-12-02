@@ -378,10 +378,7 @@ test("additionDoublerExample", function() {
 	equal(ME.getRegisterVal('$v1'), 16777216);
 });
 
-test("stavExample", function() {
-
-});
-
+// TODO: add tests for the rest of the examples
 
 module("API");
 
