@@ -42,7 +42,7 @@ function Stack(options) {
         assert(typeof byte === "number");
         assert(0 <= byte && byte <= 255);
         data[indexForAddress(address)] = byte;
-        if (options.onChange) options.onChange(address);
+        if (options.onChange) options.onChange(address, byte);
     }
     function indexForAddress(address) {
         // get the index into the data array which corresponds to a specific address
