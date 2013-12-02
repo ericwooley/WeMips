@@ -26,3 +26,5 @@ li{
 .lastLineNoRun, .lastRegChanged {background-color:#61FA9C; }
 .nextLine {background-color:#dadae3; }
 .errorLine{background-color: red;}
+.stackAddrReal, .stackAddrRelative {display: inline-block; text-align: right; width: 60px;}
+.lightGreyBG{background-color: #DDDDDD}
