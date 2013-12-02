@@ -3,46 +3,55 @@ var stack = new Stack({debug: true});
 
 module("LIBRARY");
 
-test("Signed/Unsigned conversions", function() {
-	equal(Stack.signedNumberToUnsignedNumber(-128, 8), 128, "(1000 0000)");
-	equal(Stack.signedNumberToUnsignedNumber(-1, 8), 255, "(1111 1111)");
-	equal(Stack.signedNumberToUnsignedNumber(-2, 8), 254, "(1111 1110)");
-	equal(Stack.signedNumberToUnsignedNumber(127, 8), 127, "(0111 1111)");
-	equal(Stack.signedNumberToUnsignedNumber(255, 8), 255, "(1111 1111)");
-	equal(Stack.signedNumberToUnsignedNumber(3, 8), 3, "(0000 0011)");
-	equal(Stack.signedNumberToUnsignedNumber(-1), Math.pow(2, 32) - 1, "11111111111111111111111111111111");
+test("Exception handling", function() {
+	expect(1);
+	try {
+		throw new StackError('foo');
+	} catch (e) {
+		ok(e instanceof StackError, "Must be able to capture stack errors in the setDataAtAddress method of the stack.");
+	}
+});
 
-	equal(Stack.unsignedNumberToSignedNumber(3, 8), 3, "(0000 0011)");
-	equal(Stack.unsignedNumberToSignedNumber(255, 8), -1, "(1111 1111)");
-	equal(Stack.unsignedNumberToSignedNumber(254, 8), -2, "(1111 1110)");
-	equal(Stack.unsignedNumberToSignedNumber(Math.pow(2, 32) - 1), -1, "11111111111111111111111111111111");
+test("Signed/Unsigned conversions", function() {
+	equal(MIPS.signedNumberToUnsignedNumber(-128, 8), 128, "(1000 0000)");
+	equal(MIPS.signedNumberToUnsignedNumber(-1, 8), 255, "(1111 1111)");
+	equal(MIPS.signedNumberToUnsignedNumber(-2, 8), 254, "(1111 1110)");
+	equal(MIPS.signedNumberToUnsignedNumber(127, 8), 127, "(0111 1111)");
+	equal(MIPS.signedNumberToUnsignedNumber(255, 8), 255, "(1111 1111)");
+	equal(MIPS.signedNumberToUnsignedNumber(3, 8), 3, "(0000 0011)");
+	equal(MIPS.signedNumberToUnsignedNumber(-1), Math.pow(2, 32) - 1, "11111111111111111111111111111111");
+
+	equal(MIPS.unsignedNumberToSignedNumber(3, 8), 3, "(0000 0011)");
+	equal(MIPS.unsignedNumberToSignedNumber(255, 8), -1, "(1111 1111)");
+	equal(MIPS.unsignedNumberToSignedNumber(254, 8), -2, "(1111 1110)");
+	equal(MIPS.unsignedNumberToSignedNumber(Math.pow(2, 32) - 1), -1, "11111111111111111111111111111111");
 });
 
 test("Binary Methods", function() {
-	equal(Stack.numberToBinaryString(-1),  "11111111111111111111111111111111");
-	equal(Stack.numberToBinaryString(0),   "00000000000000000000000000000000");
-	equal(Stack.numberToBinaryString(1),   "00000000000000000000000000000001");
-	equal(Stack.numberToBinaryString(33),  "00000000000000000000000000100001");
-	equal(Stack.numberToBinaryString(-33), "11111111111111111111111111011111");
-	equal(Stack.numberToBinaryString(255), "00000000000000000000000011111111");
-	equal(Stack.numberToBinaryString(256), "00000000000000000000000100000000");
-	equal(Stack.numberToBinaryString(257), "00000000000000000000000100000001");
-	equal(Stack.numberToBinaryString(Math.pow(2, 31) - 1), "01111111111111111111111111111111");
-	equal(Stack.numberToBinaryString(Math.pow(2, 32) - 1), "11111111111111111111111111111111");
+	equal(MIPS.numberToBinaryString(-1),  "11111111111111111111111111111111");
+	equal(MIPS.numberToBinaryString(0),   "00000000000000000000000000000000");
+	equal(MIPS.numberToBinaryString(1),   "00000000000000000000000000000001");
+	equal(MIPS.numberToBinaryString(33),  "00000000000000000000000000100001");
+	equal(MIPS.numberToBinaryString(-33), "11111111111111111111111111011111");
+	equal(MIPS.numberToBinaryString(255), "00000000000000000000000011111111");
+	equal(MIPS.numberToBinaryString(256), "00000000000000000000000100000000");
+	equal(MIPS.numberToBinaryString(257), "00000000000000000000000100000001");
+	equal(MIPS.numberToBinaryString(Math.pow(2, 31) - 1), "01111111111111111111111111111111");
+	equal(MIPS.numberToBinaryString(Math.pow(2, 32) - 1), "11111111111111111111111111111111");
 
-	equal(Stack.binaryStringToUnsignedNumber("11111111111111111111111111111111"), Math.pow(2, 32) - 1);
-	equal(Stack.binaryStringToUnsignedNumber("00000000000000000000000000000000"), 0);
-	equal(Stack.binaryStringToUnsignedNumber("00000000000000000000000000000011"), 3);
-	equal(Stack.binaryStringToUnsignedNumber("11"), 3, "We can ommit leading zeros.");
-	equal(Stack.binaryStringToUnsignedNumber("00000000000000000000000000100001"), 33);
+	equal(MIPS.binaryStringToUnsignedNumber("11111111111111111111111111111111"), Math.pow(2, 32) - 1);
+	equal(MIPS.binaryStringToUnsignedNumber("00000000000000000000000000000000"), 0);
+	equal(MIPS.binaryStringToUnsignedNumber("00000000000000000000000000000011"), 3);
+	equal(MIPS.binaryStringToUnsignedNumber("11"), 3, "We can ommit leading zeros.");
+	equal(MIPS.binaryStringToUnsignedNumber("00000000000000000000000000100001"), 33);
 
-	equal(Stack.binaryStringToNumber("00000000000000000000000000000001"), 1);
-	equal(Stack.binaryStringToNumber("11111111111111111111111111111111"), -1);
-	equal(Stack.binaryStringToNumber("11111111111111111111111111011111"), -33);
-	equal(Stack.binaryStringToNumber("00000000000000000000000000100001"), 33);
-	equal(Stack.binaryStringToNumber("11"), -1, "The string length is used to determine the power of two.");
-	equal(Stack.binaryStringToNumber("011"), 3, "Same as above.");
-	equal(Stack.binaryStringToNumber("10"), -2);
+	equal(MIPS.binaryStringToNumber("00000000000000000000000000000001"), 1);
+	equal(MIPS.binaryStringToNumber("11111111111111111111111111111111"), -1);
+	equal(MIPS.binaryStringToNumber("11111111111111111111111111011111"), -33);
+	equal(MIPS.binaryStringToNumber("00000000000000000000000000100001"), 33);
+	equal(MIPS.binaryStringToNumber("11"), -1, "The string length is used to determine the power of two.");
+	equal(MIPS.binaryStringToNumber("011"), 3, "Same as above.");
+	equal(MIPS.binaryStringToNumber("10"), -2);
 });
 
 
@@ -58,19 +67,19 @@ module("STACK", {
 
 test("Save/load strings to stack", function(){
 	stackPointer -= 1;
-	stack.setByte(stackPointer, Stack.stringToNumber('A'));
+	stack.setByte(stackPointer, MIPS.stringToNumber('A'));
 	stackPointer -= 1;
-	stack.setByte(stackPointer, Stack.stringToNumber('B'));
-	equal(Stack.numberToString(stack.getHalfword(stackPointer)), 'BA');
+	stack.setByte(stackPointer, MIPS.stringToNumber('B'));
+	equal(MIPS.numberToString(stack.getHalfword(stackPointer)), 'BA');
 	stackPointer -= 4;
-	stack.setByte(stackPointer + 0, Stack.stringToNumber('a'));
-	stack.setByte(stackPointer + 1, Stack.stringToNumber('b'));
-	stack.setByte(stackPointer + 2, Stack.stringToNumber('c'));
-	stack.setByte(stackPointer + 3, Stack.stringToNumber('d'));
-	equal(Stack.numberToString(stack.getWord(stackPointer)), 'abcd');
+	stack.setByte(stackPointer + 0, MIPS.stringToNumber('a'));
+	stack.setByte(stackPointer + 1, MIPS.stringToNumber('b'));
+	stack.setByte(stackPointer + 2, MIPS.stringToNumber('c'));
+	stack.setByte(stackPointer + 3, MIPS.stringToNumber('d'));
+	equal(MIPS.numberToString(stack.getWord(stackPointer)), 'abcd');
 	stackPointer -= 4;
-	stack.setWord(stackPointer, Stack.stringToNumber('wxyz'));
-	equal(Stack.numberToString(stack.getWord(stackPointer)), 'wxyz');
+	stack.setWord(stackPointer, MIPS.stringToNumber('wxyz'));
+	equal(MIPS.numberToString(stack.getWord(stackPointer)), 'wxyz');
 });
 
 test("Save/load integers to stack", function() {
@@ -235,6 +244,50 @@ test("ADDI", function() {
 	equal(ME.getRegisterVal('$t0'), 517, "515 + 2 = 517");
 
 	throws(function() { ME.runLine("ADDI $zero, $zero, 0"); });
+
+	// TODO: throw better errors? ParseError?
+	throws(function() { ME.runLine("ADDI $t0, $t0, 999999999999999"); }, "Immediate is out of range (2^16 is about 64,000).");
+	throws(function() { ME.runLine("ADDI $t0, $t0, -9999999"); }, "Immediate is out of range (2^16 is about 64,000).");
+});
+
+test("SLL", function() {
+	ME.runLine("ADDI $t1, $zero, 1");
+	ME.runLine("SLL $t1, $t1, 5");
+	equal(ME.getRegisterVal('$t1'), 32, "2^5 = 32");
+});
+
+test("SUBU", function() {
+	ME.runLine("ADDI $t1, $zero, 19");
+	ME.runLine("ADDI $t2, $zero, 9");
+	ME.runLine("SUBU $t3, $t1, $t2");
+	equal(ME.getRegisterVal('$t3'), 10, "19-9 = 10");
+});
+
+test("ADDU", function() {
+	// 0 (min unsigned int)
+	// 2^4 = 16
+	// 2^5 = 32
+	// 2^15 = 32768
+	// 2^16 = 65536
+	// -2^31 = -2147483648 (min signed int)
+	// 2^31 = 2147483648
+	// 2^31 - 1 = 2147483647 (max signed int)
+	// 2^32 = 4294967296
+	// 2^32 - 1 = 4294967296 (max unsigned int)
+
+	// t1 will have 1
+	// t2 will have 2147483647 (max signed int)
+	ME.runLine("ADDI $t1, $zero, 1");
+	ME.runLine("SLL $t2, $t1, 31 	# $t2 = 2147483648");
+	ME.runLine("SUBU $t2, $t2, $t1 	# $t2 = 2147483647 (max signed int)");
+
+	ME.runLine("ADD $t0, $t1, $t2");
+	equal(ME.getRegisterVal('$t0'), -2147483648, "Signed addition will overflow.");
+	equal(ME.getRegisterUnsignedVal('$t0'), 2147483648, "Unsigned addition will not overflow.");
+
+	ME.runLine("ADDU $t0, $t1, $t2");
+	equal(ME.getRegisterVal('$t0'), -2147483648, "Signed addition will overflow.");
+	equal(ME.getRegisterUnsignedVal('$t0'), 2147483648, "Unsigned addition will not overflow.");
 });
 
 test("LB, LBU, SB", function() {
