@@ -203,7 +203,8 @@ test("Set/Get Registers", function(){
 
 module("Execution", {
 	setup: function() {
-		// fill up some of the registers with predictable, usable data
+		// fill up some of the registers with predictable, usable data, and reset the emulator's state
+		ME = new mipsEmulator({debug: false});
 		ME.setRegisterVal('$t0', 10);
 		ME.setRegisterVal('$t1', 11);
 		ME.setRegisterVal('$t2', 12);
@@ -211,7 +212,6 @@ module("Execution", {
 		ME.setRegisterVal('$t4', 14);
 	}
 });
-
 
 
 test("ADD", function() {
@@ -240,6 +240,45 @@ test("LB, LBU, SB", function() {
 	equal(ME.getRegisterVal('$t5'), -1, "255 as signed is -1.");
 	ME.runLine("LBU $t5, 0($sp)");
 	equal(ME.getRegisterVal('$t5'), 255, "255 as unsigned is 255.");
+});
+
+test("J", function() {
+	ME.runLines([
+		"ADDI $t2, $t2, 1",
+		"J end",
+		"ADDI $t2, $zero, 5",
+		"end:"
+	]);
+	equal(ME.getRegisterVal('$t2'), 13, "The line which sets $t2 to 5 should have been skipped.");
+
+	throws(function() {
+		ME.runLines([
+			"J foo"
+		]);
+	}, JumpError, "There is no foo label.");
+
+	throws(function() {
+		ME.runLines([
+			"J end"
+		]);
+	}, JumpError, "There is no end label. Ensure that it doesn't take the end label from a previous run.");
+
+	// TODO: detect infinite loops, and either raise an error, or ask the user if they want to contiune (e.g. "foo: J foo")
+
+	ME.runLines([
+		"ADDI $t2, $zero, 100",
+		"J foo1",
+		"ADDI $t2, $zero, 200",
+		"J end",
+		"foo2: ",
+		"  ADDI $t2, $t2, 1",
+		"  J end",
+		"foo1:",
+		"  ADDI $t2, $t2, 1",
+		"  J foo2",
+		"end:"
+	]);
+	equal(ME.getRegisterVal('$t2'), 102);
 });
 
 

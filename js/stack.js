@@ -6,7 +6,7 @@ StackError.exceptionName = function() {
     return 'Stack Error';
 }
 StackError.prototype.toString = function() {
-    return '{0}: {1}'.format(this.name, this.message);
+    return '{0}: {1}'.format(StackError.exceptionName(), this.message);
 }
 
 function Stack(options) {

@@ -2,6 +2,10 @@ function RegisterError(message) {
     this.name = 'Register Error';
     this.message = message;
 }
+function JumpError(message) {
+    this.name = 'Jump Error';
+    this.message = message;
+}
 
 /**
  * Mips emulator constructor
@@ -27,7 +31,7 @@ function mipsEmulator(mipsArgs){
 
         },
         onFinish: function(){
-            alert("Finished running emulation, resetting $sp to line 1");
+            if (debug) alert("Finished running emulation, resetting $sp to line 1");
         }
     });
     var debug = mipsArgs.debug;
@@ -129,13 +133,14 @@ function mipsEmulator(mipsArgs){
      * Mips Emulation engine.
      */
     var ME = {
+        FINISHED_EMULATION: 'FINISHED_EMULATION',
+        stack: stack,
         /**
          * Returns a specified registers value
          * @member mipsEmulator
          * @param  {String} reg
          * @return {String}
          */
-        stack: stack,
         getRegisterVal: function(reg) {
             assert(reg[0] === '$');
             return this.getRegister(reg).val;
@@ -204,14 +209,21 @@ function mipsEmulator(mipsArgs){
         isValidLine: function(line){
             return !(new mipsLine(line).error);
         },
+        reset: function() {
+            mipsCode.labels = {};
+            mipsCode.code = [null];
+            stack.reset();
+            registers.$sp.val = stack.pointerToBottomOfStack();
+        },
         /**
          * Set code to be emulated
          * @member mipsEmulator
          * @param {String} mc
          */
         setCode: function(mc){
+            this.reset();
+
             if(debug) console.log("Analyzing...");
-            mipsCode.code = [null];
             //currentLine = 1;
             $.each(mc.split('\n'), function(index, val){
                 var line = new mipsLine(val, mipsCode.code.length);
@@ -234,8 +246,24 @@ function mipsEmulator(mipsArgs){
             var line = new mipsLine(inputLine);
             runLine(line);
         },
+        runLines: function(lines) {
+            // lines is an array of strings
+            lines = lines.join('\n');
+            this.setCode(lines);
+            this.run();
+        },
+        run: function() {
+            // run the current set of instructions which were set via setCode
+            assert(mipsCode.code !== null, 'Must have already set the code to run.');
+
+            while (true) {
+                var stepResult = this.step();
+                if (stepResult === this.FINISHED_EMULATION)
+                    break;
+            }
+        },
         /**
-         * execute the line $sp is pointing at.
+         * execute the line PC is pointing to.
          * @member mipsEmulator
          * @return {Object}
          * returns object.lineRan which is the line that was just run
@@ -274,9 +302,10 @@ function mipsEmulator(mipsArgs){
             if(debug) console.log("Getting label: "+ label + " - " +JSON.stringify(line) );
             if(line){
                 ME.setLine(line.lineNo);
-                return currentLine;
+                return currentLine; // TODO: probably don't need a return value here, instead, listen for an onChangeLineNumber handler
+            } else {
+                throw new JumpError('Unknown label: {0}'.format(label));
             }
-            return false;
         }
     };
 
@@ -288,6 +317,7 @@ function mipsEmulator(mipsArgs){
         mipsArgs.onFinish();
         if(debug) console.log("Emulation finished. Returning to line: " + ME.setLine(1));
         else ME.setLine(1);
+        return ME.FINISHED_EMULATION;
     };
     function checkRegPlusImm(testString){
         return testString.search(/^\s*\d+\s?\(\s*\$[a-zA-Z]+\d*\s*\)/g) >= 0;
