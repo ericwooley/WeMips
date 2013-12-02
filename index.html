@@ -156,21 +156,10 @@ J CHANGE_A
       <div class="row">
         <div class="col-lg-8">
           <div id="editorContainer" class="CodeMirror">
-            <textarea id="editor" ># This program works by setting s0 to 2, then adding s0 to itself
-# effectively doubling it. Because we start at 2, the result is
-# all the powers of 2
-ADDI $s0, $zero, 2 # set s0 to 2
-ADD $s0, $s0, $s0 # double s0 by adding it to itself, should be 4
-ADD $s0, $s0, $s0 # double s0 by adding it to itself, should be 8
-ADD $s0, $s0, $s0 # double s0 by adding it to itself, should be 16
-ADD $s0, $s0, $s0 # double s0 by adding it to itself, should be 32
-ADD $s0, $s0, $s0 # double s0 by adding it to itself, should be 64
-ADD $s0, $s0, $s0 # double s0 by adding it to itself, should be 128
-ADD $s0, $s0, $s0 # double s0 by adding it to itself, should be 256
-ADD $s0, $s0, $s0 # double s0 by adding it to itself, should be 512
-ADD $s0, $s0, $s0 # double s0 by adding it to itself, should be 1024
-ADD $s0, $s0, $s0 # double s0 by adding it to itself, should be 2048
-ADD $s0, $s0, $s0 # double s0 by adding it to itself, should be 4096</textarea>
+            <textarea id="editor" >ADDI $s0, $zero, 10
+ADDI $s1, $zero, 9
+SB $s0, -10($sp)
+SB $s1, -9($sp)</textarea>
           </div>
           <button id="step"> Step </button>
           <button id="run"> Run </button>
@@ -230,6 +219,9 @@ ADD $s0, $s0, $s0 # double s0 by adding it to itself, should be 4096</textarea>
             </div>
             <div class="tab-pane" id="stack-container-div">
               <ul class='stack-container' id="stack">
+                <div id='stackRep'>
+                  
+                </div>
               </ul>
             </div>
           </div>
