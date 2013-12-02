@@ -97,7 +97,39 @@ ADD $v0, $zero, $zero
 ADDI $v1, $zero, 1000
     </div>
     <div id='looper'>
-# the jump operations need to be implemented before this can be written
+# This is the same as the doubler, except the jumps cause the order
+# to change drastically, therefore all of the values will be different.
+CHANGE_S: ADDI $s0, $zero, 2 # set s0 to 2
+ADD $s1, $s0, $s0 # double s0 by adding it to itself, should be 4
+ADD $s2, $s1, $s1 # double s1 by adding it to itself, should be 8
+ADD $s3, $s2, $s2 # double s2 by adding it to itself, should be 16
+ADD $s4, $s3, $s3 # double s3 by adding it to itself, should be 32
+ADD $s5, $s4, $s4 # double s4 by adding it to itself, should be 64
+ADD $s6, $s5, $s5 # double s5 by adding it to itself, should be 128
+ADD $s7, $s6, $s6 # double s6 by adding it to itself, should be 256
+J CHANGE_V
+
+CHANGE_T: ADD $t0, $s7, $s7
+ADD $t1, $t0, $t0
+ADD $t2, $t1, $t1
+ADD $t3, $t2, $t2
+ADD $t4, $t3, $t3
+ADD $t5, $t4, $t4
+ADD $t6, $t5, $t5
+ADD $t7, $t6, $t6
+ADD $t8, $t7, $t7
+ADD $t9, $t8, $t8
+J CHANGE_S
+
+CHANGE_A: ADD $a0, $t9, $t9
+ADD $a1, $a0, $a0
+ADD $a2, $a1, $a1
+ADD $a3, $a2, $a2
+J CHANGE_S
+
+CHANGE_V: ADD $v0, $a3, $a3
+ADD $v1, $v0, $v0
+J CHANGE_A
     </div>
     </div>
     <div id="main" class="container">
