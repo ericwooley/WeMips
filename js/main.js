@@ -4,6 +4,7 @@
 
 
 $(document).ready(function(){
+    setupTests();
     // If we ever host this, we can enable sharing this way,
     // as long as the code is short enough to fit in a url.
     var urlParams = getURLParameters();
@@ -244,6 +245,23 @@ $(document).ready(function(){
         }
         console.log("stack Change: " + address + " - " + val);
         $("#stackVal-"+address).html(val);
+    };
+    function setupTests(){
+        // <div id='additionDoubler'></div>
+        // <button type="button" load="#additionDoubler" class="btn btn-default">Addition Doubler</button>
+        $.each(examples, function(index, func){
+            index = index.replace('Example', '');
+            indexNice = index.replace(/([A-Z])/g, " \$1");
+            
+            $("#exampleHolder").append(
+                "<div id='"+index+"'>"
+                + func().join('\n')
+                + "</div>"
+            );
+            $("#codeLoaders").append(
+                '<button type="button" load="#' + index + '" class="btn btn-default">' + indexNice + '</button>'
+            );
+        });
     };
 
 });
