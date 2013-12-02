@@ -51,6 +51,7 @@ $(document).ready(function(){
                 {title: message, className: 'errorLine', clearOnEnter: true}
             );
         },
+        onStackChange: addStackAddress,
         // Set the starting code to be the defualt in the editor.
         startingCode: $("#editor").val()
     });
@@ -113,13 +114,21 @@ $(document).ready(function(){
     function step(){
         // if this code is no longer valid, reanalyze.
         if(!me.valid){
-            mipsAnalyze();
+            try{
+                mipsAnalyze();
+            } catch(e){
+                console.error(JSON.stringify(e));
+            }
         }
-
-        lineResult = me.step();
-        if(lineResult){
-           setHighlights(lineResult);
-        }
+        //try{
+            lineResult = me.step();
+            if(lineResult){
+               setHighlights(lineResult);
+            }
+        //} catch(e){
+            //console.error("Error on line: " + nextLine + " - " + JSON.stringify(e));
+        //}
+        
     };
     function loadCustomCode(e){
         if(!confirm("This will erase what is in the code editor, are you sure?")) return;
@@ -215,6 +224,26 @@ $(document).ready(function(){
     };
     function unsignInt(num){
         return (num << 31) >>> 0;
-    }
+    };
+    var stackLow = me.stack.pointerToBottomOfStack();
+    var stackEnd = me.stack.pointerToBottomOfStack();
+    function addStackAddress(address, val){
+        $('#registers a[href="#stack-container-div"]').tab('show');
+        console.log("address: " + address + "\nStackLow: " + stackLow + "\nVal: " + val );
+        while(address <= stackLow){
+            
+            $("#stackRep").prepend(
+                "<div id='stackEntry-" + stackLow + "' >"
+                    + "<span id='stackAddr-"+stackLow+"'>"
+                        + stackLow + ": "
+                    + "</span>"
+                    + "<span id='stackVal-"+stackLow+"'></span>"
+                + "</div>"
+            );
+            stackLow--;
+        }
+        console.log("stack Change: " + address + " - " + val);
+        $("#stackVal-"+address).html(val);
+    };
 
 });
