@@ -141,6 +141,8 @@ function mipsEmulator(mipsArgs){
      */
     var ME = {
         FINISHED_EMULATION: 'FINISHED_EMULATION',
+        BYTES_PER_REGISTER: 4,
+        BITS_PER_REGISTER: 32,
         stack: stack,
         /**
          * Returns a specified registers value
@@ -150,7 +152,11 @@ function mipsEmulator(mipsArgs){
          */
         getRegisterVal: function(reg) {
             assert(reg[0] === '$');
-            return this.getRegister(reg).val;
+            return MIPS.unsignedNumberToSignedNumber(this.getRegister(reg).val, this.BITS_PER_REGISTER);
+        },
+        getRegisterUnsignedVal: function(reg) {
+            assert(reg[0] === '$');
+            return MIPS.signedNumberToUnsignedNumber(this.getRegisterVal(reg), this.BITS_PER_REGISTER);
         },
         getRegister: function(reg) {
             assert(reg[0] === '$');
@@ -169,7 +175,13 @@ function mipsEmulator(mipsArgs){
          * @param {String} reg
          * @param {Number} value
          */
-        setRegisterVal: function(reg, value, enableCallback){
+        setRegisterVal: function(reg, value, enableCallback) {
+            var minRegisterValue = -Math.pow(2, this.BITS_PER_REGISTER - 1);
+            var maxRegisterValue = Math.pow(2, this.BITS_PER_REGISTER) - 1;
+            if (value < minRegisterValue || maxRegisterValue < value) {
+                throw new RegisterError('Value out of range: {0}. Must be between {1} and {2}.'.format(minRegisterValue, maxRegisterValue));
+            }
+
             enableCallback = enableCallback || true;
             assert(reg[0] === '$');
             if(debug) console.log("Setting register " + reg + " to " + value);
@@ -332,9 +344,6 @@ function mipsEmulator(mipsArgs){
         if(debug) console.log("Emulation finished. Returning to line: " + ME.setLine(1));
         else ME.setLine(1);
         return ME.FINISHED_EMULATION;
-    };
-    function checkRegPlusImm(testString){
-        return testString.search(/^\s*\d+\s?\(\s*\$[a-zA-Z]+\d*\s*\)/g) >= 0;
     };
 
     /**

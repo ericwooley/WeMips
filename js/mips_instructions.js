@@ -1,4 +1,6 @@
 function mipsInstructionExecutor(ME) {
+    var BITS_PER_SHAMT = 5;
+    var BITS_PER_IMMEDIATE = 16;
 	var instructions = {
         /////////////////////////////////////////////
         // Mips Arithmetic Instructions
@@ -19,7 +21,10 @@ function mipsInstructionExecutor(ME) {
         },
         'ADDU': {
             parseMethod: parse_$RD_$rs_$rt,
-            runMethod: null // TODO: implement this and make some tests
+            runMethod: function(namedArgs) {
+                ME.setRegisterVal(namedArgs.$rd, ME.getRegisterUnsignedVal(namedArgs.$rs) + ME.getRegisterUnsignedVal(namedArgs.$rt));
+                ME.incerementPC();
+            }
         },
         'ADDIU': {
             parseMethod: parse_$RT_$rs_imm,
@@ -31,7 +36,10 @@ function mipsInstructionExecutor(ME) {
         },
         'SUBU': {
             parseMethod: parse_$RD_$rs_$rt,
-            runMethod: null // TODO: implement this and make some tests
+            runMethod: function(namedArgs) {
+                ME.setRegisterVal(namedArgs.$rd, ME.getRegisterUnsignedVal(namedArgs.$rs) - ME.getRegisterUnsignedVal(namedArgs.$rt));
+                ME.incerementPC();
+            }
         },
         'LUI': {
             parseMethod: parse_$RT_imm,
@@ -62,7 +70,10 @@ function mipsInstructionExecutor(ME) {
         },
         'SLL': {
             parseMethod: parse_$RD_$rt_shamt,
-            runMethod: null // TODO: implement this and make some tests
+            runMethod: function(namedArgs) {
+                ME.setRegisterVal(namedArgs.$rd, ME.getRegisterVal(namedArgs.$rt) << namedArgs.shamt);
+                ME.incerementPC();
+            }
         },
         'SRL': {
             parseMethod: parse_$RD_$rt_shamt,
@@ -146,6 +157,25 @@ function mipsInstructionExecutor(ME) {
             	ME.stack.setByte(ME.getRegisterVal(namedArgs.$rs) + namedArgs.imm, ME.getRegisterVal(namedArgs.$rt));
             	ME.incerementPC();
             }
+        },
+        /////////////////////////////////////////////
+        // Mips Comparison Instructions
+        /////////////////////////////////////////////
+        'SLT': {
+            parseMethod: parse_$RD_$rs_$rt,
+            runMethod: null // TODO: implement this and make some tests
+        },
+        'SLTI': {
+            parseMethod: parse_$RT_$rs_imm,
+            runMethod: null // TODO: implement this and make some tests
+        },
+        'SLTU': {
+            parseMethod: parse_$RD_$rs_$rt,
+            runMethod: null // TODO: implement this and make some tests
+        },
+        'SLTIU': {
+            parseMethod: parse_$RT_$rs_imm,
+            runMethod: null // TODO: implement this and make some tests
         }
     };
 
@@ -184,7 +214,7 @@ function mipsInstructionExecutor(ME) {
     		'expectedArgCount': 3,
     		'$rd': parseWritableRegister(args[0]),
     		'$rt': parseRegister(args[1]),
-    		'shamt': parseImmediate(args[2])
+    		'shamt': parseImmediate(args[2], BITS_PER_SHAMT)
     	};
     };
     function parse_$rs_$rt_label(args){
@@ -258,23 +288,24 @@ function mipsInstructionExecutor(ME) {
      * @param  {String} arg
      * @return {Number}
      */
-    function parseImmediate(arg) {
-        if (isImmediate(arg)) {
-            return parseInt(arg, 10);
-        }
-        return null;
-    };
-    /**
-     * Checks if a string matches as a number
-     * @member mips_emulator
-     * @private
-     * @param  {String}  arg
-     * @return {Boolean}
-     */
-    function isImmediate(arg) {
-        return /^([-+]\s*)?\d+$/.test(arg);
-    };
+    function parseImmediate(arg, bits) {
+        bits = bits || BITS_PER_IMMEDIATE;
+        var isNumber = /^([-+]\s*)?\d+$/.test(arg);
 
+        if (!isNumber) {
+            return null;
+        }
+
+        var number = parseInt(arg, 10);
+
+        var minValue = -Math.pow(2, bits-1);
+        var maxValue = Math.pow(2, bits) - 1;
+        if (number < minValue || maxValue < number) {
+            return null; // TODO: return that it was out of range?
+        }
+
+        return number;
+    };
 
     var result = {
     	parseInstruction: function(instructionName, args, outArgs, outError) {
