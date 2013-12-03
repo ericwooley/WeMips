@@ -5,6 +5,7 @@
 
 $(document).ready(function(){
     setupTests();
+    var autoSwitch = true;
     // If we ever host this, we can enable sharing this way,
     // as long as the code is short enough to fit in a url.
     var urlParams = getURLParameters();
@@ -29,7 +30,7 @@ $(document).ready(function(){
             reg.addClass('lastRegChanged');
             // change to correct tab
             var regLetter = regName.replace('$', '').replace(/\s/, '').charAt(0);
-            $('#registers a[href="#'+regLetter+'-registers"]').tab('show')
+            if(autoSwitch) $('#registers a[href="#'+regLetter+'-registers"]').tab('show')
         },
         /*
          * runs when the emulator has pushed past the last line
@@ -104,6 +105,7 @@ $(document).ready(function(){
     $("#goToLineButton").on('click', setLine);
     $("#run").click(run);
     $("#optionShowRelative").change(switchAddressMode);
+    $("#autoSwitch").change(function(e){autoSwitch = $(e.target).is(':checked');});
     $("#clearLog").on('click', function(){$("#log").html('')});
 
     // Functions to respond to events.
@@ -135,11 +137,13 @@ $(document).ready(function(){
             lineResult = me.step();
             if(lineResult){
                 setHighlights(lineResult);
+
                 //addToLog('info', "ran line successfully", lastLineAttempted);
             }
         
         } catch(e){
             addToLog('error', e.message, lastLineAttempted);
+            running = false;
             //me.setLine(lastLineAttempted + 1);
             //setHighlights();
         }
@@ -257,7 +261,7 @@ $(document).ready(function(){
         addStackAddress(address, '', false);
         $(".glyphicon-arrow-right").removeClass("glyphicon-arrow-right");
         $("#stackEntry-" + address + " .glyphicon").addClass("glyphicon-arrow-right lastRegChanged");
-        $('#registers a[href="#stack-container-div"]').tab('show');
+        if(autoSwitch) $('#registers a[href="#stack-container-div"]').tab('show');
             };
     var colorizeAddrBG = false;
     function addStackAddress(address, val, visualize){
@@ -297,7 +301,7 @@ $(document).ready(function(){
         
         $("#stackVal-"+address).html(val);
         if(visualize){
-            $('#registers a[href="#stack-container-div"]').tab('show');
+            if(autoSwitch) $('#registers a[href="#stack-container-div"]').tab('show');
             $(".lastRegChanged").removeClass('lastRegChanged');
             $("#stackVal-"+address).addClass('lastRegChanged');
         }
