@@ -8,7 +8,12 @@ StackError.exceptionName = function() {
 StackError.prototype.toString = function() {
     return '{0}: {1}'.format(StackError.exceptionName(), this.message);
 }
-
+/**
+ * @class stack
+ * @param {Object} options constructor options
+ * - options.onChange A function to be called when a stack address changes.
+ * - options.baseAddress The default base address.
+ */
 function Stack(options) {
     options = options || {};
     _.defaults(options, {
@@ -79,7 +84,13 @@ function Stack(options) {
     this.BYTES_PER_WORD = 4;
 
     // Privileged methods
-
+    /**
+     * Get a given number of bytes at an address
+     * @param  {Number} address    The starting address for your data
+     * @param  {Number} byteCount  How many bytes of data you want returned
+     * @param  {Boolean} asUnsigned True if you want the number returned without a sign extension.
+     * @return {Number}
+     */
     this.getDataAtAddress = function (address, byteCount, asUnsigned) {
         asUnsigned = asUnsigned || false;
         var result = 0;
@@ -95,6 +106,12 @@ function Stack(options) {
             return MIPS.unsignedNumberToSignedNumber(result, byteCount * this.BITS_PER_BYTE);
         }
     };
+    /**
+     * Set data at an address
+     * @param {Number} address   The address you want to write
+     * @param {Number} byteCount How many bytes you want to overwrite
+     * @param {Number} data      Number you want to set there.
+     */
     this.setDataAtAddress = function(address, byteCount, data) {
         assert(typeof data === "number", "Only numbers supported for now.");
         if (data < 0) {
@@ -119,9 +136,17 @@ function Stack(options) {
             data = data >> this.BITS_PER_BYTE;
         };
     };
+    /**
+     * Clear the data contained in the stack
+     * @return {null}
+     */
     this.reset = function() {
         data = [];
     };
+    /**
+     * Get a pointer to the address at the bottom of the stack
+     * @return {Number} Address to the bottom of the stack
+     */
     this.pointerToBottomOfStack = function () {
         // the initial value of the stack pointer. before you read or write to it, you must decrement the stack pointer.
         return options.baseAddress;
@@ -129,39 +154,77 @@ function Stack(options) {
 }
 
 // Public functions
-
+/**
+ * Get a byte at a specified address
+ * @param  {Number} pointer The address the wanted data lives
+ * @return {Number} Requested data
+ */
 Stack.prototype.getByte = function (pointer) {
     return this.getDataAtAddress(pointer, this.BYTES_PER_BYTE);
 };
-
+/**
+ * Get an unsigned byte at the specified address
+ * @param  {Number} pointer Address where you want data from.
+ * @return {Number} Data at address.
+ */
 Stack.prototype.getUnsignedByte = function (pointer) {
     return this.getDataAtAddress(pointer, this.BYTES_PER_BYTE, true);
 };
-
+/**
+ * Get one half word (16 bits if word is 32) at a given address
+ * @param  {Number} pointer Address where data lives
+ * @return {Number} Retrieved data
+ */
 Stack.prototype.getHalfword = function (pointer) {
     return this.getDataAtAddress(pointer, this.BYTES_PER_HALFWORD);
 };
-
+/**
+ * Get unsigned half word (16 bits if word is 32) at a given address
+ * @param  {Number} pointer Address where data lives
+ * @return {Number} Retrieved data
+ */
 Stack.prototype.getUnsignedHalfword = function (pointer) {
     return this.getDataAtAddress(pointer, this.BYTES_PER_HALFWORD, true);
 };
-
+/**
+ * Get word at a given address
+ * @param  {Number} pointer Address where data lives
+ * @return {Number} Retrieved data
+ */
 Stack.prototype.getWord = function (pointer) {
     return this.getDataAtAddress(pointer, this.BYTES_PER_WORD);
 };
-
+/**
+ * Get unsigned word at a given address
+ * @param  {Number} pointer Address where data lives
+ * @return {Number} Retrieved data
+ */
 Stack.prototype.getUnsignedWord = function (pointer) {
     return this.getDataAtAddress(pointer, this.BYTES_PER_WORD, true);
 };
-
+/**
+ * Set a byte at given address
+ * @param {Number} pointer The address with data you want to set
+ * @param {Number} data The data you want to write to the address
+ */
 Stack.prototype.setByte = function (pointer, data) {
     this.setDataAtAddress(pointer, this.BYTES_PER_BYTE, data);
 };
 
+/**
+ * Set half word at given address
+ * @param {Number} pointer Address to overwrite with half word of data
+ * @param {Number} data Data to write to address
+ */
 Stack.prototype.setHalfword = function (pointer, data) {
     this.setDataAtAddress(pointer, this.BYTES_PER_HALFWORD, data);
 };
 
+/**
+ * Set word at given address
+ * @param {Number} pointer where data will be written
+ * @param {Number} data Data to be written to the address
+ */
 Stack.prototype.setWord = function (pointer, data) {
     this.setDataAtAddress(pointer, this.BYTES_PER_WORD, data);
 };
