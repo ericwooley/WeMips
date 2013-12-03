@@ -245,11 +245,14 @@ $(document).ready(function(){
         running = true;
         var lineRanThisRun = 0;
         var notInfinite = false;
+
+        if(linesOfCode < 10) LC = 10;
+        else LC = linesOfCode;
         while(running){
 
             step();  
             lineRanThisRun++;
-            if(lineRanThisRun > 10 * linesOfCode && !notInfinite)
+            if(lineRanThisRun > 10 * LC && !notInfinite)
                 if(confirm(
                     "Code has run "
                     + lineRanThisRun
