@@ -65,6 +65,7 @@ $(document).ready(function(){
     var lastLineNoRun;
     var lastLineAttempted = 0;
     var nextLine;
+    var linesOfCode = 0;
 
     ///////////////////////////////////////////////////
     // Code Mirror Setup
@@ -241,11 +242,26 @@ $(document).ready(function(){
             me.valid = true;
         }
         running = true;
-        while(running) step();
+        var lineRanThisRun = 0;
+        var notInfinite = false;
+        while(running){
+
+            step();  
+            lineRanThisRun++;
+            if(lineRanThisRun > 10 * linesOfCode && !notInfinite)
+                if(confirm(
+                    "Code has run "
+                    + lineRanThisRun
+                    + " lines, are you stuck in an infinite loop? (press OK to stop executing)"))
+                    running = false;
+                else
+                    notInfinite = true;
+        } 
 
     };
     function mipsAnalyze(goBackToLineOne){
         editor.save();
+        linesOfCode = editor.lineCount();
         me.setCode($("#editor").val());
         if(goBackToLineOne) me.setLine(1);
         me.valid = true;
