@@ -317,13 +317,7 @@ function mipsInstructionExecutor(ME) {
     	else
     		return null;
     }
-    /**
-     * check if argument is an immediate, parse, and return the results.
-     * @member mips_emulator
-     * @private
-     * @param  {String} arg
-     * @return {Number}
-     */
+
     function parseImmediate(arg, bits) {
         bits = bits || BITS_PER_IMMEDIATE;
         var isNumber = /^([-+]\s*)?\d+$/.test(arg);
