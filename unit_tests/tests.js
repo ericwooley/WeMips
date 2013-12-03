@@ -400,6 +400,16 @@ test("BNE", function() {
 	equal(ME.getRegisterVal('$t2'), 21, "Fibonnaci's 6th number is 21.");
 });
 
+test("LUI", function(){
+	ME.setDebug(true);
+	ME.runLines([
+	"ADDI $t0, $zero, 10",
+	"LUI $t0, 10"	
+	]);
+	equal(ME.getRegisterVal('$t0'), 655360, "1010 (10) shifted 16 digits to the left (10100000000000000000) is 655360");
+	ME.setDebug(false);
+});
+
 module("Examples");
 
 test("additionDoublerExample", function() {
