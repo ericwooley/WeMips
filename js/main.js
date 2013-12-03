@@ -353,10 +353,11 @@ $(document).ready(function(){
                 );
             }
         }
-        console.log("Prepending to log "+ type)
         $("#log").prepend(
             '<div class="alert alert-'+type+'">'+message+'</div>'
         );
+        if(autoSwitch) $('#registers a[href="#logWrapper"]').tab('show');
+
     }
 
 });
