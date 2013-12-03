@@ -83,7 +83,7 @@ MIPS.numberToBinaryString = function (number, bits/*=32*/) {
     var result = number.toString(2);
     var zeroPadding = (new Array(bits - result.length + 1)).join('0');
     return zeroPadding + result;
-}
+};
 
 MIPS.binaryStringToNumber = function (binaryString) {
     assert(typeof binaryString == "string");
@@ -96,20 +96,20 @@ MIPS.binaryStringToNumber = function (binaryString) {
 
     assert(binaryString[0] === "1", "This should be a negative number.");
     return MIPS.unsignedNumberToSignedNumber(unsignedNumber, binaryString.length); // unsignedNumber - Math.pow(2, binaryString.length);
-}
+};
 
 MIPS.binaryStringToUnsignedNumber = function (binaryString) {
     assert(typeof binaryString == "string");
     return parseInt(binaryString, 2);
-}
+};
 
 MIPS.unsignedNumberToSignedNumber = function (number, bits/*=32*/) {
     assert(typeof number === "number");
     bits = bits || 32;
     assert(typeof bits === "number");
 
-    var minValidValue = -Math.pow(2, bits-1);
-    var maxValidValue = Math.pow(2, bits) - 1;
+    var minValidValue = MIPS.minSignedValue(bits);
+    var maxValidValue = MIPS.maxUnsignedValue(bits);
     if (number < minValidValue || maxValidValue < number) {
         throw new MipsError("Out of range value ({0}) for conversion of unsigned to signed number. The value must be between {1} and {2}.".format(number, minValidValue, maxValidValue));
     };
@@ -122,7 +122,7 @@ MIPS.unsignedNumberToSignedNumber = function (number, bits/*=32*/) {
     // e.g. f(255, 8) -> -1, since -1 and 255 (1111 1111) represent the same value in binary
     // e.g. f(254, 8) -> -2, since they represent the same number in binary (1111 1110)
     return number - Math.pow(2, bits);
-}
+};
 
 MIPS.signedNumberToUnsignedNumber = function (number, bits/*=32*/) {
     // e.g. f(-128, 8) -> 128 (1000 0000)
@@ -134,8 +134,8 @@ MIPS.signedNumberToUnsignedNumber = function (number, bits/*=32*/) {
     assert(typeof number === "number");
     bits = bits || 32;
     assert(typeof bits === "number");
-    var minValidValue = -Math.pow(2, bits-1);
-    var maxValidValue = Math.pow(2, bits) - 1;
+    var minValidValue = MIPS.minSignedValue(bits);
+    var maxValidValue = MIPS.maxUnsignedValue(bits);
     if (number < minValidValue || maxValidValue < number) {
         throw new MipsError("Out of range value ({0}) for conversion of signed to unsigned number. The value must be between {1} and {2}.".format(number, minValidValue, maxValidValue));
     };
@@ -147,4 +147,79 @@ MIPS.signedNumberToUnsignedNumber = function (number, bits/*=32*/) {
 
     // negative number
     return number + Math.pow(2, bits);
-}
+};
+
+MIPS.minSignedValue = function(bits) {
+    return -Math.pow(2, bits-1);
+};
+MIPS.minUnsignedValue = function(bits) {
+    return 0;
+};
+MIPS.maxSignedValue = function(bits) {
+    return Math.pow(2, bits-1) - 1;
+};
+MIPS.maxUnsignedValue = function(bits) {
+    return Math.pow(2, bits) - 1;
+};
+
+MIPS.signedAddition = function(value1, value2, bits) {
+    var result = value1 + value2;
+    var overflowFlag = false;
+    var carryFlag = false;
+    if (result < MIPS.minSignedValue(bits)) {
+        // e.g. -128 - 1 would cause underflow
+        overflowFlag = true;
+        // -128 (1000 0000)
+        // -129 (0111 1111) should become 127
+        // -130 (0111 1110) should become 126
+
+        // e.g. -128 + -300 = -428
+        result = MIPS.minSignedValue(bits) - result; // e.g. convert -428 to 300
+        result = result % (MIPS.maxSignedValue(bits) + 1); // e.g. convert 300 to 44
+        if (result === 0)
+            result = MIPS.minSignedValue(bits);
+        else
+            result = MIPS.maxSignedValue(bits) - (result - 1); // e.g. convert 44 to 128 - 44 = 84
+    } else if (MIPS.maxSignedValue(bits) < result) {
+        overflowFlag = true;
+
+        // e.g. 127 + 1 would cause overflow
+        // e.g. 127 + 300
+        result = result + (-MIPS.minSignedValue(bits)); // e.g. convert 427 to 555
+        result = result % (MIPS.maxUnsignedValue(bits) + 1); // e.g. convert 555 to 43
+        result = result + MIPS.minSignedValue(bits); // e.g. convert 43 to -85
+    }
+
+    return {
+        result: result,
+        overflowFlag: overflowFlag,
+        carryFlag: carryFlag
+    };
+};
+
+MIPS.unsignedAddition = function(value1, value2, bits) {
+    var result = value1 + value2;
+    var overflowFlag = false;
+    var carryFlag = false;
+    if (result < MIPS.minUnsignedValue(bits)) {
+        // e.g. 0 - 1, this would caues underflow
+        carryFlag = true;
+
+        result = MIPS.minUnsignedValue(bits) - result;
+        result = result % (MIPS.maxUnsignedValue(bits) + 1);
+        if (result === 0)
+            result = MIPS.minUnsignedValue(bits);
+        else
+            result = MIPS.maxUnsignedValue(bits) - (result - 1);
+    } else if (MIPS.maxUnsignedValue(bits) < result) {
+        carryFlag = true;
+
+        result = result % (MIPS.maxUnsignedValue(bits) + 1);
+    }
+
+    return {
+        result: result,
+        overflowFlag: overflowFlag,
+        carryFlag: carryFlag
+    };
+};

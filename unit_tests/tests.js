@@ -1,7 +1,7 @@
 var ME = new mipsEmulator({debug: false});
 var stack = new Stack({debug: true});
 
-module("LIBRARY");
+module("Library");
 
 test("Exception handling", function() {
 	expect(1);
@@ -25,6 +25,89 @@ test("Signed/Unsigned conversions", function() {
 	equal(MIPS.unsignedNumberToSignedNumber(255, 8), -1, "(1111 1111)");
 	equal(MIPS.unsignedNumberToSignedNumber(254, 8), -2, "(1111 1110)");
 	equal(MIPS.unsignedNumberToSignedNumber(Math.pow(2, 32) - 1), -1, "11111111111111111111111111111111");
+});
+
+test("Signed overflow math", function() {
+	var result;
+
+	resetFlags();
+	result = MIPS.signedAddition(-128, 256, 8);
+	equal(result.overflowFlag, true);
+	equal(result.result, -128, "256 wraps to same value.");
+
+	resetFlags();
+	result = MIPS.signedAddition(-128, 512, 8);
+	equal(result.overflowFlag, true);
+	equal(result.result, -128, "512 wraps to same value.");
+
+	resetFlags();
+	result = MIPS.signedAddition(-128, -256, 8);
+	equal(result.overflowFlag, true);
+	equal(result.result, -128, "-256 wraps to same value.");
+
+	resetFlags();
+	result = MIPS.signedAddition(-128, -512, 8);
+	equal(result.overflowFlag, true);
+	equal(result.result, -128, "-512 wraps to same value.");
+
+	resetFlags();
+	result = MIPS.signedAddition(-128, -257, 8);
+	equal(result.overflowFlag, true);
+	equal(result.result, 127, "Should subtract one.");
+
+	resetFlags();
+	result = MIPS.signedAddition(-128, 255, 8);
+	equal(result.overflowFlag, false);
+	equal(result.result, 127, "Should not overflow.");
+
+	resetFlags();
+	result = MIPS.signedAddition(-128, 5, 8);
+	equal(result.overflowFlag, false);
+	equal(result.result, -123, "Normal add.");
+
+	resetFlags();
+	result = MIPS.signedAddition(-128, -256 -256 -2, 8);
+	equal(result.overflowFlag, true);
+	equal(result.result, 126, "Should wrap twice.");
+});
+
+test("Unsigned carry flag math", function() {
+	var result;
+
+	resetFlags();
+	result = MIPS.unsignedAddition(0, 256, 8);
+	equal(result.carryFlag, true);
+	equal(result.result, 0, "256 wraps to same value.");
+
+	resetFlags();
+	result = MIPS.unsignedAddition(0, 512, 8);
+	equal(result.carryFlag, true);
+	equal(result.result, 0, "512 wraps to same value.");
+
+	resetFlags();
+	result = MIPS.unsignedAddition(0, -512, 8);
+	equal(result.carryFlag, true);
+	equal(result.result, 0, "-512 wraps to same value.");
+
+	resetFlags();
+	result = MIPS.unsignedAddition(0, 200, 8);
+	equal(result.carryFlag, false);
+	equal(result.result, 200, "Normal math");
+
+	resetFlags();
+	result = MIPS.unsignedAddition(0, 513, 8);
+	equal(result.carryFlag, true);
+	equal(result.result, 1);
+
+	resetFlags();
+	result = MIPS.unsignedAddition(0, -3, 8);
+	equal(result.carryFlag, true);
+	equal(result.result, 253);
+
+	resetFlags();
+	result = MIPS.unsignedAddition(0, -256 -3, 8);
+	equal(result.carryFlag, true);
+	equal(result.result, 253);
 });
 
 test("Binary Methods", function() {
@@ -58,7 +141,7 @@ test("Binary Methods", function() {
 var stack = new Stack();
 var stackPointer = stack.pointerToBottomOfStack();
 
-module("STACK", {
+module("Stack", {
 	setup: function() {
 		stack.reset();
 		stackPointer = stack.pointerToBottomOfStack();
@@ -211,9 +294,26 @@ test("Set/Get Registers", function(){
     equal(ME.getRegisterVal('$a0'), 10);
 });
 
+test("Unsigned/Signed Register Values", function() {
+	ME.setRegisterVal('$t0', MIPS.maxUnsignedValue(ME.BITS_PER_REGISTER));
+	ME.setRegisterVal('$t0', MIPS.maxSignedValue(ME.BITS_PER_REGISTER));
+	ME.setRegisterVal('$t0', MIPS.minUnsignedValue(ME.BITS_PER_REGISTER));
+	ME.setRegisterVal('$t0', MIPS.minSignedValue(ME.BITS_PER_REGISTER));
+	throws(function() { ME.setRegisterVal('$t0', MIPS.maxUnsignedValue(ME.BITS_PER_REGISTER) + 1) }, RegisterError, "Cannot set a register's value to higher than 32 bits.");
+	throws(function() { ME.setRegisterVal('$t0', MIPS.minSignedValue(ME.BITS_PER_REGISTER) - 1) }, RegisterError, "Cannot set a register's value to lower than 32 bits.");
+});
+
 test("Readonly registers", function() {
 	throws(function() { ME.setRegisterVal('$zero', 5) }, RegisterError, "Cannot write to zero register.");
 });
+
+
+var overflowFlag = false;
+var carryFlag = false;
+function resetFlags() {
+	overflowFlag = false;
+	carryFlag = false;
+}
 
 module("Execution", {
 	setup: function() {
@@ -224,6 +324,11 @@ module("Execution", {
 		ME.setRegisterVal('$t2', 12);
 		ME.setRegisterVal('$t3', 13);
 		ME.setRegisterVal('$t4', 14);
+
+		ME.onSetOverflowFlag = function() { overflowFlag = true; };
+		ME.onSetCarryFlag = function() { carryFlag = true; };
+
+		resetFlags();
 	}
 });
 
@@ -235,6 +340,16 @@ test("ADD", function() {
 	equal(ME.getRegisterVal('$t2'), 12, "None of the other register's values should change.");
 
 	throws(function() { ME.runLine("ADD $zero, $zero, $zero"); });
+
+	// ensure the overflow flag is set
+	ME.runLine("ADDI $t0, $zero, 1");
+	ME.runLine("ADDI $t1, $zero, -3");
+	ME.runLine("SLL $t0, $t0, 31 # $t0 stores min signed int");
+	resetFlags();
+	ME.runLine("ADD $t0, $t0, $t1");
+	equal(overflowFlag, true);
+	equal(carryFlag, false);
+	equal(ME.getRegisterVal('$t0'), MIPS.maxSignedValue(ME.BITS_PER_REGISTER) - 2);
 });
 
 test("ADDI", function() {
@@ -248,6 +363,16 @@ test("ADDI", function() {
 	// TODO: throw better errors? ParseError?
 	throws(function() { ME.runLine("ADDI $t0, $t0, 999999999999999"); }, "Immediate is out of range (2^16 is about 64,000).");
 	throws(function() { ME.runLine("ADDI $t0, $t0, -9999999"); }, "Immediate is out of range (2^16 is about 64,000).");
+
+
+	// ensure the overflow flag is set
+	ME.runLine("ADDI $t0, $zero, 1");
+	ME.runLine("SLL $t0, $t0, 31 # $t0 stores min signed int");
+	resetFlags();
+	ME.runLine("ADDI $t0, $t0, -3");
+	equal(overflowFlag, true);
+	equal(carryFlag, false);
+	equal(ME.getRegisterVal('$t0'), MIPS.maxSignedValue(ME.BITS_PER_REGISTER) - 2);
 });
 
 test("SLL", function() {
@@ -273,21 +398,57 @@ test("ADDU", function() {
 	// 2^31 = 2147483648
 	// 2^31 - 1 = 2147483647 (max signed int)
 	// 2^32 = 4294967296
-	// 2^32 - 1 = 4294967296 (max unsigned int)
+	// 2^32 - 1 = 4294967295 (max unsigned int)
 
 	// t1 will have 1
 	// t2 will have 2147483647 (max signed int)
+	// t3 will have 4294967295 or -1 (max unsigned int)
+	// t4 will have 2
+	// t5 will have -2147483648 or 2147483648 (min unsigned int)
 	ME.runLine("ADDI $t1, $zero, 1");
 	ME.runLine("SLL $t2, $t1, 31 	# $t2 = 2147483648");
 	ME.runLine("SUBU $t2, $t2, $t1 	# $t2 = 2147483647 (max signed int)");
+	ME.runLine("ADDI $t3, $zero, -1");
+	ME.runLine("ADDI $t4, $zero, 2");
+	ME.runLine("SLL $t5, $t1, 31 	# $t5 = -2147483648 or 2147483648 (min signed int)");
+	assert(ME.getRegisterVal('$t2') === MIPS.maxSignedValue(ME.BITS_PER_REGISTER));
 
+	resetFlags();
+	ME.runLine("ADDI $t0, $t5, -2");
+	equal(ME.getRegisterVal('$t0'), MIPS.maxSignedValue(ME.BITS_PER_REGISTER) - 1);
+	equal(carryFlag, false);
+	equal(overflowFlag, true);
+
+	resetFlags();
 	ME.runLine("ADD $t0, $t1, $t2");
+	equal(overflowFlag, true, "Adding one would cause the number to become negative.");
+	equal(carryFlag, false);
 	equal(ME.getRegisterVal('$t0'), -2147483648, "Signed addition will overflow.");
 	equal(ME.getRegisterUnsignedVal('$t0'), 2147483648, "Unsigned addition will not overflow.");
 
+	// TODO: the difference between these two is that one sets a CPU flag and the other doesn't, this means we probably need an onSetFlag event.
+
+	resetFlags();
 	ME.runLine("ADDU $t0, $t1, $t2");
+	equal(carryFlag, false);
+	equal(overflowFlag, false);
 	equal(ME.getRegisterVal('$t0'), -2147483648, "Signed addition will overflow.");
 	equal(ME.getRegisterUnsignedVal('$t0'), 2147483648, "Unsigned addition will not overflow.");
+
+
+	resetFlags();
+	ME.runLine("ADD $t0, $t1, $t3 		# -1 + 1 = 0");
+	equal(carryFlag, false);
+	equal(overflowFlag, false);
+	equal(ME.getRegisterVal('$t0'), 0);
+	equal(ME.getRegisterUnsignedVal('$t0'), 0);
+
+	resetFlags();
+	ME.runLine("ADDU $t0, $t1, $t3		# (2^32 - 1) + 1 = 2^32 or 0");
+	equal(carryFlag, true);
+	equal(overflowFlag, false);
+	equal(ME.getRegisterVal('$t0'), 0);
+	equal(ME.getRegisterUnsignedVal('$t0'), 0);
 });
 
 test("LB, LBU, SB", function() {

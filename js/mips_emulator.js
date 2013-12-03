@@ -183,17 +183,16 @@ function mipsEmulator(mipsArgs){
          */
         setRegisterVal: function(reg, value, enableCallback) {
             if(debug) console.log("Setting register " + reg + " to " + value);
-            if(reg.charAt(0) != '$') reg = '$'+reg;
-            var minRegisterValue = -Math.pow(2, this.BITS_PER_REGISTER - 1);
-            var maxRegisterValue = Math.pow(2, this.BITS_PER_REGISTER) - 1;
-
+            if(reg.charAt(0) != '$') reg = '$'+reg; // TODO: I think we should enforce that the reg always has the $ symbol
+            var minRegisterValue = MIPS.minSignedValue(this.BITS_PER_REGISTER);
+            var maxRegisterValue = MIPS.maxUnsignedValue(this.BITS_PER_REGISTER);
             if (value < minRegisterValue || maxRegisterValue < value) {
-                throw new RegisterError('Value out of range: {0}. Must be between {1} and {2}.'.format(minRegisterValue, maxRegisterValue));
+                throw new RegisterError('Value out of range: {0}. Must be between {1} and {2}.'.format(value, minRegisterValue, maxRegisterValue));
             }
 
             enableCallback = enableCallback || true;
             assert(reg[0] === '$');
-            
+
 
             var register = registers[reg];
             if(!register) return error("Line " + currentLine + " register: '" + reg + "' does not exist", currentLine);
@@ -261,7 +260,7 @@ function mipsEmulator(mipsArgs){
         setCode: function(mc){
             ME.reset();
             if(debug) console.log("Analyzing...");
-            
+
             $.each(mc.split('\n'), function(index, val){
                 var line = new mipsLine(val, mipsCode.code.length);
                 line.lineNo = mipsCode.code.length; // save the line number
@@ -314,8 +313,8 @@ function mipsEmulator(mipsArgs){
             if(mipsCode.code[currentLine].error) throw new MipsError(mipsCode.code[currentLine].error);
             if(mipsCode.code[currentLine].ignore) incrementLine();
             // we need to check again, because the remainder of the lines could have been comments or blank.
-            
-            
+
+
             var ret = {
                 lineRan: Number(currentLine)
             };
@@ -343,7 +342,9 @@ function mipsEmulator(mipsArgs){
             } else {
                 throw new JumpError('Unknown label: {0}'.format(label));
             }
-        }
+        },
+        onSetOverflowFlag: function() {}, // e.g. for 8 bit registers signed, 127 + 1 causes an overflow, since we can't store 128, so it wraps around to -128.
+        onSetCarryFlag: function() {} // e.g. for 8 bit registers unsigned, 255 + 1 causes a carry flag, since we can't store 256, so it wraps around to 0.
     };
 
 
@@ -559,7 +560,7 @@ function mipsEmulator(mipsArgs){
             if(debug) console.log("----> No matches");
         }
         if(debug) console.log("Finished parsing line: " + JSON.stringify(LINE));
-        
+
         return LINE;
     }
 

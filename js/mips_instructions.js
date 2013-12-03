@@ -8,21 +8,21 @@ function mipsInstructionExecutor(ME) {
         'ADD': {
             parseMethod: parse_$RD_$rs_$rt,
             runMethod: function(namedArgs) {
-            	ME.setRegisterVal(namedArgs.$rd, ME.getRegisterVal(namedArgs.$rs) + ME.getRegisterVal(namedArgs.$rt));
+            	ME.setRegisterVal(namedArgs.$rd, signedAddition(ME.getRegisterVal(namedArgs.$rs), ME.getRegisterVal(namedArgs.$rt)));
             	ME.incerementPC();
             }
         },
         'ADDI': {
             parseMethod: parse_$RT_$rs_imm,
             runMethod: function(namedArgs) {
-            	ME.setRegisterVal(namedArgs.$rt, ME.getRegisterVal(namedArgs.$rs) + namedArgs.imm);
+            	ME.setRegisterVal(namedArgs.$rt, signedAddition(ME.getRegisterVal(namedArgs.$rs), namedArgs.imm));
             	ME.incerementPC();
             }
         },
         'ADDU': {
             parseMethod: parse_$RD_$rs_$rt,
             runMethod: function(namedArgs) {
-                ME.setRegisterVal(namedArgs.$rd, ME.getRegisterUnsignedVal(namedArgs.$rs) + ME.getRegisterUnsignedVal(namedArgs.$rt));
+                ME.setRegisterVal(namedArgs.$rd, unsignedAddition(ME.getRegisterUnsignedVal(namedArgs.$rs), ME.getRegisterUnsignedVal(namedArgs.$rt)));
                 ME.incerementPC();
             }
         },
@@ -37,7 +37,7 @@ function mipsInstructionExecutor(ME) {
         'SUBU': {
             parseMethod: parse_$RD_$rs_$rt,
             runMethod: function(namedArgs) {
-                ME.setRegisterVal(namedArgs.$rd, ME.getRegisterUnsignedVal(namedArgs.$rs) - ME.getRegisterUnsignedVal(namedArgs.$rt));
+                ME.setRegisterVal(namedArgs.$rd, unsignedAddition(ME.getRegisterUnsignedVal(namedArgs.$rs), -ME.getRegisterUnsignedVal(namedArgs.$rt)));
                 ME.incerementPC();
             }
         },
@@ -189,6 +189,7 @@ function mipsInstructionExecutor(ME) {
         'SB': {
             parseMethod: parse_$rt_imm_$rs,
             runMethod: function(namedArgs) {
+                // TODO: is this really only saving the lower 8 bits?
             	ME.stack.setByte(ME.getRegisterVal(namedArgs.$rs) + namedArgs.imm, ME.getRegisterVal(namedArgs.$rt));
             	ME.incerementPC();
             }
@@ -333,14 +334,27 @@ function mipsInstructionExecutor(ME) {
 
         var number = parseInt(arg, 10);
 
-        var minValue = -Math.pow(2, bits-1);
-        var maxValue = Math.pow(2, bits) - 1;
+        var minValue = MIPS.minSignedValue(bits);
+        var maxValue = MIPS.maxUnsignedValue(bits); // TODO: should this be maxSigned value?
         if (number < minValue || maxValue < number) {
             return null; // TODO: return that it was out of range?
         }
 
         return number;
     };
+
+    function signedAddition(value1, value2) {
+        var result = MIPS.signedAddition(value1, value2, ME.BITS_PER_REGISTER);
+        if (result.overflowFlag)
+            ME.onSetOverflowFlag();
+        return result.result;
+    }
+    function unsignedAddition(value1, value2) {
+        var result = MIPS.unsignedAddition(value1, value2, ME.BITS_PER_REGISTER);
+        if (result.carryFlag)
+            ME.onSetCarryFlag();
+        return result.result;
+    }
 
     var result = {
     	parseInstruction: function(instructionName, args, outArgs, outError) {
