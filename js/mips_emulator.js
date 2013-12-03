@@ -152,6 +152,7 @@ function mipsEmulator(mipsArgs){
          * @return {String}
          */
         getRegisterVal: function(reg) {
+            if(!reg)throw new Error("Register must be non empty");
             if(reg.charAt(0) != '$') reg = '$'+reg;
             var regval = MIPS.unsignedNumberToSignedNumber(this.getRegister(reg).val, this.BITS_PER_REGISTER);
             if(debug) console.log("Getting signed register value: " + regval );
