@@ -66,11 +66,15 @@ ADDI $sp, $sp, -23
 ADDI $sp, $sp, -37
 LB $s3, 0($sp)</textarea>
           </div>
+          <br />
           <button id="step"> Step </button>
           <button id="run"> Run </button>
+          <button id="clearLog"> Clear Log </button>
+          <hr />
+          <div id='log'>
+          </div>
         </div>
         <div id="registers" class="col-lg-4">
-        <h3>Registers &amp; Stack</h3>
           <!-- Nav tabs -->
           <ul class="nav nav-tabs">
             <li class='active'><a href="#s-registers" data-toggle="tab">S</a></li>
