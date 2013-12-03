@@ -35,7 +35,7 @@ function mipsEmulator(mipsArgs){
 
         },
         onFinish: function(){
-            if (debug) alert("Finished running emulation, resetting $sp to line 1");
+            if (debug) console.log("Finished running emulation, resetting $sp to line 1");
         },
         onStackChange: function(){
 
@@ -143,6 +143,7 @@ function mipsEmulator(mipsArgs){
         FINISHED_EMULATION: 'FINISHED_EMULATION',
         BYTES_PER_REGISTER: 4,
         BITS_PER_REGISTER: 32,
+        running: false,
         stack: stack,
         /**
          * Returns a specified registers value
@@ -152,11 +153,15 @@ function mipsEmulator(mipsArgs){
          */
         getRegisterVal: function(reg) {
             if(reg.charAt(0) != '$') reg = '$'+reg;
-            return MIPS.unsignedNumberToSignedNumber(this.getRegister(reg).val, this.BITS_PER_REGISTER);
+            var regval = MIPS.unsignedNumberToSignedNumber(this.getRegister(reg).val, this.BITS_PER_REGISTER);
+            if(debug) console.log("Getting signed register value: " + regval );
+            return regval;
         },
         getRegisterUnsignedVal: function(reg) {
             if(reg.charAt(0) != '$') reg = '$'+reg;
-            return MIPS.signedNumberToUnsignedNumber(this.getRegisterVal(reg), this.BITS_PER_REGISTER);
+            var regval = MIPS.signedNumberToUnsignedNumber(this.getRegisterVal(reg), this.BITS_PER_REGISTER);
+            if(debug) console.log("Getting unsigned register value: " + regval);
+            return regval;
         },
         getRegister: function(reg) {
             if(reg.charAt(0) != '$') reg = '$'+reg;
@@ -176,16 +181,18 @@ function mipsEmulator(mipsArgs){
          * @param {Number} value
          */
         setRegisterVal: function(reg, value, enableCallback) {
+            if(debug) console.log("Setting register " + reg + " to " + value);
             if(reg.charAt(0) != '$') reg = '$'+reg;
             var minRegisterValue = -Math.pow(2, this.BITS_PER_REGISTER - 1);
             var maxRegisterValue = Math.pow(2, this.BITS_PER_REGISTER) - 1;
+
             if (value < minRegisterValue || maxRegisterValue < value) {
                 throw new RegisterError('Value out of range: {0}. Must be between {1} and {2}.'.format(minRegisterValue, maxRegisterValue));
             }
 
             enableCallback = enableCallback || true;
             assert(reg[0] === '$');
-            if(debug) console.log("Setting register " + reg + " to " + value);
+            
 
             var register = registers[reg];
             if(!register) return error("Line " + currentLine + " register: '" + reg + "' does not exist", currentLine);
@@ -242,16 +249,18 @@ function mipsEmulator(mipsArgs){
             stack.reset();
             registers.$sp.val = stack.pointerToBottomOfStack();
         },
+        setDebug: function(dbg){
+            debug = dbg;
+        },
         /**
          * Set code to be emulated
          * @member mipsEmulator
          * @param {String} mc
          */
         setCode: function(mc){
-            this.reset();
-
+            ME.reset();
             if(debug) console.log("Analyzing...");
-            //currentLine = 1;
+            
             $.each(mc.split('\n'), function(index, val){
                 var line = new mipsLine(val, mipsCode.code.length);
                 line.lineNo = mipsCode.code.length; // save the line number
@@ -278,16 +287,15 @@ function mipsEmulator(mipsArgs){
             // lines is an array of strings
             lines = lines.join('\n');
             this.setCode(lines);
+            this.setLine(1);
             this.run();
         },
         run: function() {
             // run the current set of instructions which were set via setCode
             assert(mipsCode.code !== null, 'Must have already set the code to run.');
-
-            while (true) {
-                var stepResult = this.step();
-                if (stepResult === this.FINISHED_EMULATION)
-                    break;
+            this.running = true;
+            while (this.running) {
+                this.step();
             }
         },
         /**
@@ -298,6 +306,7 @@ function mipsEmulator(mipsArgs){
          * and object.nextLine which is the line that is about to be run.
          */
         step: function(){
+            if(debug) console.log("Running line: " + currentLine + " - " + JSON.stringify(mipsCode.code[currentLine]));
             // check if we are finished with the emulation
             if(currentLine > mipsCode.code.length - 1) return finishEmulation();
             if(!mipsCode.code[currentLine]) throw new MipsError("Line " + currentLine + " does not exist");
@@ -305,7 +314,7 @@ function mipsEmulator(mipsArgs){
             if(mipsCode.code[currentLine].ignore) incrementLine();
             // we need to check again, because the remainder of the lines could have been comments or blank.
             
-            if(debug) console.log("Running line: " + currentLine + " - " + mipsCode.code[currentLine]);
+            
             var ret = {
                 lineRan: Number(currentLine)
             };
@@ -326,7 +335,6 @@ function mipsEmulator(mipsArgs){
         },
         goToLabel: function(label){
             var line = mipsCode.labels[label];
-            console.warn(JSON.stringify(mipsCode.labels));
             if(debug) console.log("Getting label: "+ label + " - " +JSON.stringify(line) );
             if(line){
                 ME.setLine(line.lineNo);
@@ -342,9 +350,10 @@ function mipsEmulator(mipsArgs){
     // Private Methods
     ////////////////////////////////////////////////
     function finishEmulation(){
+        ME.running = false;
         mipsArgs.onFinish();
         if(debug) console.log("Emulation finished. Returning to line: " + ME.setLine(1));
-        else ME.setLine(1);
+        ME.setLine(1);
         return ME.FINISHED_EMULATION;
     };
 
@@ -369,8 +378,9 @@ function mipsEmulator(mipsArgs){
      * @return {null}
      */
     function runLine(line) {
+        if(debug) console.log("running line: " + line.lineNo);
         if (line.error) {
-            throw new MipsError('Error on line: {0}'.format(line));
+            throw new MipsError('Error on line: {0}'.format(line.error));
             // TODO: get rid of the other error handler
         }
         if (!line || line.ignore || line.error) {
@@ -508,7 +518,6 @@ function mipsEmulator(mipsArgs){
             // if we have a label, save it to the hashtable and save it to line
             if(ar[1] && ar[1].length > 0){
                 LINE.label = ar[1];
-                console.log("found label: "+ LINE.label)
                 mipsCode.labels[LINE.label] = LINE;
                 // TODO: mipsCode.labels[ar[1]] = line;
             }
@@ -548,7 +557,8 @@ function mipsEmulator(mipsArgs){
             if(debug) LINE.error = "Error parsing line: "+ (index+1);
             if(debug) console.log("----> No matches");
         }
-        //if(debug) console.log("Finished parsing line: " + JSON.stringify(LINE));
+        if(debug) console.log("Finished parsing line: " + JSON.stringify(LINE));
+        
         return LINE;
     }
 
