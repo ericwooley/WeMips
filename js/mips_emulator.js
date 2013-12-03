@@ -60,18 +60,25 @@ function mipsEmulator(mipsArgs){
      */
     var registers = {};
     /**
-     * Array of read/write registers
-     * @property readwriteRegs
+     * Array of all registers
+     * @property allRegs
      * @private
      * @member mipsEmulator
      * @type {Array}
      */
-    var readwriteRegs = [
+    var allRegs = [
+        '$zero', '$at', '$v0', '$v1', '$a0', '$a1', '$a2', '$a3',
+        '$t0',   '$t1', '$t2', '$t3', '$t4', '$t5', '$t6', '$t7',
+        '$s0',   '$s1', '$s2', '$s3', '$s4', '$s5', '$s6', '$s7',
+        '$t8',   '$t9', '$k0', '$k1', '$gp', '$sp', '$fp', '$ra'
+    ];
+
+    var preservedRegs = [ // these are the registers that are preserved across function calls
+        '$zero',
         '$s0', '$s1', '$s2', '$s3', '$s4', '$s5', '$s6', '$s7',
-        '$t0', '$t1', '$t2', '$t3', '$t4', '$t5', '$t6', '$t7', '$t8', '$t9',
-        '$v0', '$v1',
-        '$a0', '$a1', '$a2', '$a3',
-        '$sp'
+        '$gp', '$sp', '$fp', '$ra',
+        // TODO: these shouldn't be here but are required right now because of the check of writable
+        '$at', '$k0', '$k1'
     ];
 
     /**
@@ -96,19 +103,8 @@ function mipsEmulator(mipsArgs){
      */
     var currentLine = 1;
     // populate registers with all the read and write registers and set their inital values to random
-    for (var i = 0; i < readwriteRegs.length; i++) {
-        registers[readwriteRegs[i]] = createRegister({
-            writable: true,
-            regName:readwriteRegs[i]
-        });
-    };
-
-    // populate registers with all the read and write registers and set their inital values to random
-    for (var i = 0; i < readonlyRegs.length; i++) {
-        registers[readonlyRegs[i]] = createRegister({
-            writable: false,
-            regName: readonlyRegs[i]
-        });
+    for (var i = 0; i < allRegs.length; i++) {
+        registers[allRegs[i]] = createRegister(allRegs[i], i);
     };
     registers.$zero.val = 0;
     registers.$sp.val = stack.pointerToBottomOfStack();
@@ -321,7 +317,7 @@ function mipsEmulator(mipsArgs){
             runLine(line);
         },
         /**
-         * Run an array of lines 
+         * Run an array of lines
          * @member mipsEmulator
          * @param  {Array} lines Array of mips code, one line per index
          * @return {null}
@@ -404,7 +400,20 @@ function mipsEmulator(mipsArgs){
             }
         },
         onSetOverflowFlag: function() {}, // e.g. for 8 bit registers signed, 127 + 1 causes an overflow, since we can't store 128, so it wraps around to -128.
-        onSetCarryFlag: function() {} // e.g. for 8 bit registers unsigned, 255 + 1 causes a carry flag, since we can't store 256, so it wraps around to 0.
+        onSetCarryFlag: function() {}, // e.g. for 8 bit registers unsigned, 255 + 1 causes a carry flag, since we can't store 256, so it wraps around to 0.
+        setUnpreservedRegsToGarbage: function() {
+            for (var i = 0; i < allRegs.length; i++) {
+                var register = this.getRegister(allRegs[i]);
+                if (register.preserved) {
+                    continue;
+                }
+
+                this.setRegisterVal(register.regName, getGarbageRegisterData());
+            };
+        },
+        log: function(string) {
+            mipsArgs.addToLog('success', string);
+        }
     };
 
 
@@ -455,6 +464,9 @@ function mipsEmulator(mipsArgs){
         instructionExecutor.runInstruction(line.instruction, line.args);
     };
 
+    function getGarbageRegisterData() {
+        return Math.floor((Math.random()*1000));
+    }
     /**
      * Create a default register
      * @member mipsEmulator
@@ -462,18 +474,18 @@ function mipsEmulator(mipsArgs){
      * @param  {Object} reg
      * @return {register}
      */
-    function createRegister(reg){
+    function createRegister(regName, regNumber){
         /**
          * @class register
          * contains register information.
          */
-        var register = {
+        return {
             /**
              * registers value
              * @property
              * @type {Number}
              */
-            val: Math.floor((Math.random()*1000)), // Set the initial register data to garbage
+            val: getGarbageRegisterData(),
             /**
              * Function that is called when this register is changed.
              * @type {Function}
@@ -483,15 +495,15 @@ function mipsEmulator(mipsArgs){
              * Wether or not this register is writable (false if this register is read only)
              * @type {Boolean}
              */
-            writable: true,
+            writable: readonlyRegs.indexOf(regName) === -1,
             /**
              * This registers name
              * @type {String}
              */
-            regName: null
+            regName: regName,
+            regNumber: regNumber,
+            preserved: preservedRegs.indexOf(regName) > -1
         };
-        _.defaults(reg, register);
-        return reg;
     };
     // these will be called after the parse method has been called
     // the goal is to make these methods look as close to the MIPS cheat sheet as possible.

@@ -212,6 +212,18 @@ function mipsInstructionExecutor(ME) {
         'SLTIU': {
             parseMethod: parse_$RT_$rs_imm,
             runMethod: null // TODO: implement this and make some tests
+        },
+        /////////////////////////////////////////////
+        // Other
+        /////////////////////////////////////////////
+        'SYSCALL': {
+            parseMethod: parse_noargs,
+            runMethod: function(namedArgs){
+                var syscalls = mipsSyscalls(ME);
+                syscalls.execute();
+                ME.setUnpreservedRegsToGarbage();
+                ME.incerementPC();
+            }
         }
     };
 
@@ -291,6 +303,11 @@ function mipsInstructionExecutor(ME) {
     		'$rs': parseRegister(immediateAndRegister.$rs)
     	};
     };
+    function parse_noargs(args) {
+        return {
+            'expectedArgCount': 0
+        };
+    }
 
     function parseImmAnd$rs(string) {
     	var match = /^((?:[-+]\s*)?\d+)\(\s*(\$\w+)\s*\)$/.exec(string);
@@ -365,8 +382,18 @@ function mipsInstructionExecutor(ME) {
         	var validArgs = true;
         	var namedArgs = parseMethod(args); // e.g. namedArgs has $rd, $rs, imm, etc.
         	if (namedArgs['expectedArgCount'] !== args.length) {
-	            if (outError) outError.message = "Incorrect number of arguments {0}, should be {1}.".format(args.length, namedArgs['expectedArgCount']);
-	            return false;
+                var invalid = true;
+                if (namedArgs['expectedArgCount'] === 0 && args.length === 1) {
+                    if (args[0] === '') {
+                        // 0 expected args should consider [''] to be valid as well.
+                        invalid = false;
+                    }
+                }
+
+                if (invalid) {
+    	            if (outError) outError.message = "Incorrect number of arguments {0}, should be {1}.".format(args.length, namedArgs['expectedArgCount']);
+    	            return false;
+                }
         	}
 			for (var key in namedArgs) {
 				// important check that this is objects own property not from prototype prop inherited

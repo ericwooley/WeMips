@@ -564,7 +564,7 @@ test("BNE", function() {
 test("LUI", function(){
 	ME.runLines([
 	"ADDI $t0, $zero, 10",
-	"LUI $t0, 10"	
+	"LUI $t0, 10"
 	]);
 	equal(ME.getRegisterVal('$t0'), 655360, "1010 (10) shifted 16 digits to the left (10100000000000000000) is 655360");
 });
@@ -590,7 +590,21 @@ test("ANDI", function(){
 	equal(ME.getRegisterVal("$s1"), 1, "1 & 1 is 1");
 });
 
-module("Examples");
+var output = '';
+function resetOutput() {
+	output = '';
+}
+module("Examples", {
+	setup: function() {
+		// fill up some of the registers with predictable, usable data, and reset the emulator's state
+		ME = new mipsEmulator({
+			addToLog: function(type, message) {
+				output = message;
+			}
+		});
+		resetOutput();
+	}
+});
 
 test("additionDoublerExample", function() {
 	var example = examples.additionDoublerExample();
@@ -619,6 +633,13 @@ test("additionDoublerExample", function() {
 	equal(ME.getRegisterVal('$a3'), 4194304);
 	equal(ME.getRegisterVal('$v0'), 8388608);
 	equal(ME.getRegisterVal('$v1'), 16777216);
+});
+
+test("helloWorldExample", function() {
+	var example = examples.helloWorld();
+	equal(output, '');
+	ME.runLines(example);
+	equal(output, 'Hello world!');
 });
 
 // TODO: add tests for the rest of the examples
