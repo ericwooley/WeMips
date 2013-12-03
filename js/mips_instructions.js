@@ -46,7 +46,7 @@ function mipsInstructionExecutor(ME) {
             runMethod: function(namedArgs){
                 ME.setRegisterVal(namedArgs.$rt, (namedArgs.imm << 16));
                 ME.incerementPC();
-            } // TODO: make some tests
+            }
         },
         /////////////////////////////////////////////
         // Mips Logical Instructions
@@ -58,7 +58,7 @@ function mipsInstructionExecutor(ME) {
                     ME.getRegisterVal(namedArgs.$rs) & ME.getRegisterVal(namedArgs.$rt)
                 );
                 ME.incerementPC();
-            } // TODO: make some tests
+            }
         },
         'ANDI': {
             parseMethod: parse_$RT_$rs_imm,
@@ -67,7 +67,7 @@ function mipsInstructionExecutor(ME) {
                     ME.getRegisterVal(namedArgs.$rs) & namedArgs.imm
                 );
                 ME.incerementPC();
-            } // TODO: make some tests
+            }
         },
         'NOR': {
             parseMethod: parse_$RD_$rs_$rt,
