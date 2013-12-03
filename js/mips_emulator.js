@@ -39,6 +39,9 @@ function mipsEmulator(mipsArgs){
         },
         onStackChange: function(){
 
+        },
+        addToLog: function(type, message){
+            console.log(type + " " + line_Number+ ": " + message)
         }
     });
     var debug = mipsArgs.debug;
