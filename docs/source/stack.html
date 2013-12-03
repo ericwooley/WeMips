@@ -23,9 +23,14 @@ StackError.exceptionName = function() {
     return &#39;Stack Error&#39;;
 }
 StackError.prototype.toString = function() {
-    return &#39;{0}: {1}&#39;.format(this.name, this.message);
+    return &#39;{0}: {1}&#39;.format(StackError.exceptionName(), this.message);
 }
-
+<span id='stack'>/**
+</span> * @class stack
+ * @param {Object} options constructor options
+ * - options.onChange A function to be called when a stack address changes.
+ * - options.baseAddress The default base address.
+ */
 function Stack(options) {
     options = options || {};
     _.defaults(options, {
@@ -59,7 +64,7 @@ function Stack(options) {
         assert(typeof byte === &quot;number&quot;);
         assert(0 &lt;= byte &amp;&amp; byte &lt;= 255);
         data[indexForAddress(address)] = byte;
-        if (options.onChange) options.onChange(address);
+        if (options.onChange) options.onChange(address, byte);
     }
     function indexForAddress(address) {
         // get the index into the data array which corresponds to a specific address
@@ -96,7 +101,13 @@ function Stack(options) {
     this.BYTES_PER_WORD = 4;
 
     // Privileged methods
-
+<span id='stack-method-getDataAtAddress'>    /**
+</span>     * Get a given number of bytes at an address
+     * @param  {Number} address    The starting address for your data
+     * @param  {Number} byteCount  How many bytes of data you want returned
+     * @param  {Boolean} asUnsigned True if you want the number returned without a sign extension.
+     * @return {Number}
+     */
     this.getDataAtAddress = function (address, byteCount, asUnsigned) {
         asUnsigned = asUnsigned || false;
         var result = 0;
@@ -109,13 +120,27 @@ function Stack(options) {
         if (asUnsigned) {
             return result;
         } else {
-            return Stack.unsignedNumberToSignedNumber(result, byteCount * this.BITS_PER_BYTE);
+            return MIPS.unsignedNumberToSignedNumber(result, byteCount * this.BITS_PER_BYTE);
         }
     };
+<span id='stack-method-setDataAtAddress'>    /**
+</span>     * Set data at an address
+     * @param {Number} address   The address you want to write
+     * @param {Number} byteCount How many bytes you want to overwrite
+     * @param {Number} data      Number you want to set there.
+     */
     this.setDataAtAddress = function(address, byteCount, data) {
         assert(typeof data === &quot;number&quot;, &quot;Only numbers supported for now.&quot;);
         if (data &lt; 0) {
-            data = Stack.signedNumberToUnsignedNumber(data, byteCount * this.BITS_PER_BYTE);
+            try {
+                data = MIPS.signedNumberToUnsignedNumber(data, byteCount * this.BITS_PER_BYTE);
+            } catch (e) {
+                if (e instanceof MipsError) {
+                    throw new StackError(e.message);
+                } else {
+                    throw e;
+                }
+            }
         }
         var minValidValue = 0;
         var maxValidValue = (Math.pow(256, byteCount) - 1);
@@ -128,9 +153,17 @@ function Stack(options) {
             data = data &gt;&gt; this.BITS_PER_BYTE;
         };
     };
+<span id='stack-method-reset'>    /**
+</span>     * Clear the data contained in the stack
+     * @return {null}
+     */
     this.reset = function() {
         data = [];
     };
+<span id='stack-method-pointerToBottomOfStack'>    /**
+</span>     * Get a pointer to the address at the bottom of the stack
+     * @return {Number} Address to the bottom of the stack
+     */
     this.pointerToBottomOfStack = function () {
         // the initial value of the stack pointer. before you read or write to it, you must decrement the stack pointer.
         return options.baseAddress;
@@ -138,157 +171,80 @@ function Stack(options) {
 }
 
 // Public functions
-
+<span id='stack-method-getByte'>/**
+</span> * Get a byte at a specified address
+ * @param  {Number} pointer The address the wanted data lives
+ * @return {Number} Requested data
+ */
 Stack.prototype.getByte = function (pointer) {
     return this.getDataAtAddress(pointer, this.BYTES_PER_BYTE);
 };
-
+<span id='stack-method-getUnsignedByte'>/**
+</span> * Get an unsigned byte at the specified address
+ * @param  {Number} pointer Address where you want data from.
+ * @return {Number} Data at address.
+ */
 Stack.prototype.getUnsignedByte = function (pointer) {
     return this.getDataAtAddress(pointer, this.BYTES_PER_BYTE, true);
 };
-
+<span id='stack-method-getHalfword'>/**
+</span> * Get one half word (16 bits if word is 32) at a given address
+ * @param  {Number} pointer Address where data lives
+ * @return {Number} Retrieved data
+ */
 Stack.prototype.getHalfword = function (pointer) {
     return this.getDataAtAddress(pointer, this.BYTES_PER_HALFWORD);
 };
-
+<span id='stack-method-getUnsignedHalfword'>/**
+</span> * Get unsigned half word (16 bits if word is 32) at a given address
+ * @param  {Number} pointer Address where data lives
+ * @return {Number} Retrieved data
+ */
 Stack.prototype.getUnsignedHalfword = function (pointer) {
     return this.getDataAtAddress(pointer, this.BYTES_PER_HALFWORD, true);
 };
-
+<span id='stack-method-getWord'>/**
+</span> * Get word at a given address
+ * @param  {Number} pointer Address where data lives
+ * @return {Number} Retrieved data
+ */
 Stack.prototype.getWord = function (pointer) {
     return this.getDataAtAddress(pointer, this.BYTES_PER_WORD);
 };
-
+<span id='stack-method-getUnsignedWord'>/**
+</span> * Get unsigned word at a given address
+ * @param  {Number} pointer Address where data lives
+ * @return {Number} Retrieved data
+ */
 Stack.prototype.getUnsignedWord = function (pointer) {
     return this.getDataAtAddress(pointer, this.BYTES_PER_WORD, true);
 };
-
+<span id='stack-method-setByte'>/**
+</span> * Set a byte at given address
+ * @param {Number} pointer The address with data you want to set
+ * @param {Number} data The data you want to write to the address
+ */
 Stack.prototype.setByte = function (pointer, data) {
     this.setDataAtAddress(pointer, this.BYTES_PER_BYTE, data);
 };
 
+<span id='stack-method-setHalfword'>/**
+</span> * Set half word at given address
+ * @param {Number} pointer Address to overwrite with half word of data
+ * @param {Number} data Data to write to address
+ */
 Stack.prototype.setHalfword = function (pointer, data) {
     this.setDataAtAddress(pointer, this.BYTES_PER_HALFWORD, data);
 };
 
+<span id='stack-method-setWord'>/**
+</span> * Set word at given address
+ * @param {Number} pointer where data will be written
+ * @param {Number} data Data to be written to the address
+ */
 Stack.prototype.setWord = function (pointer, data) {
     this.setDataAtAddress(pointer, this.BYTES_PER_WORD, data);
 };
-
-// Public Helper functions
-
-Stack.stringToNumber = function (string) {
-    assert(typeof string === &quot;string&quot;);
-    var number = 0;
-    for (var i = 0; i &lt; string.length; i++) {
-        number = number &lt;&lt; 8;
-        number += string.charCodeAt(i);
-    };
-    return number;
-};
-
-Stack.numberToString = function (number) {
-    assert(typeof number === &quot;number&quot;);
-    var string = &#39;&#39;;
-    while (0 &lt; number) {
-        string = String.fromCharCode(number &amp; 255) + string;
-        number = number &gt;&gt; 8;
-    }
-    return string;
-};
-
-Stack.numberToBinaryString = function (number, bits/*=32*/) {
-    // returns a binary representation of a string.
-    assert(typeof number === &quot;number&quot;);
-
-    bits = bits || 32;
-    assert(typeof bits === &quot;number&quot;);
-
-    if (number &lt; 0) {
-        // convert to the corresponding unsigned number (e.g. when we are using single bytes, then -2 would correspond to 254, since the two are represented the same in binary)
-        number = Math.pow(2, bits) + number;
-    }
-
-    var result = number.toString(2);
-    var zeroPadding = (new Array(bits - result.length + 1)).join(&#39;0&#39;);
-    return zeroPadding + result;
-}
-
-Stack.binaryStringToNumber = function (binaryString) {
-    assert(typeof binaryString == &quot;string&quot;);
-
-    var unsignedNumber = Stack.binaryStringToUnsignedNumber(binaryString);
-    if (binaryString[0] === &quot;0&quot;) {
-        // this is a positive number
-        return unsignedNumber;
-    }
-
-    assert(binaryString[0] === &quot;1&quot;, &quot;This should be a negative number.&quot;);
-    return Stack.unsignedNumberToSignedNumber(unsignedNumber, binaryString.length); // unsignedNumber - Math.pow(2, binaryString.length);
-}
-
-Stack.binaryStringToUnsignedNumber = function (binaryString) {
-    assert(typeof binaryString == &quot;string&quot;);
-    return parseInt(binaryString, 2);
-}
-
-Stack.unsignedNumberToSignedNumber = function (number, bits/*=32*/) {
-    assert(typeof number === &quot;number&quot;);
-    bits = bits || 32;
-    assert(typeof bits === &quot;number&quot;);
-    assert(0 &lt;= number &amp;&amp; number &lt; Math.pow(2, bits), &quot;Out of range.&quot;);
-    if (number &lt; Math.pow(2, bits - 1)) {
-        // e.g. f(3, 8) -&gt; 3, since 0000 0011 in signed and unsigned is always 3
-        return number;
-    };
-
-    // e.g. f(255, 8) -&gt; -1, since -1 and 255 (1111 1111) represent the same value in binary
-    // e.g. f(254, 8) -&gt; -2, since they represent the same number in binary (1111 1110)
-    return number - Math.pow(2, bits);
-}
-
-
-Stack.signedNumberToUnsignedNumber = function (number, bits/*=32*/) {
-    // e.g. f(-128, 8) -&gt; 128 (1000 0000)
-    // e.g. f(-1, 8) -&gt; 255   (1111 1111)
-    // e.g. f(-2, 8) -&gt; 254   (1111 1110)
-    // e.g. f(127, 8) -&gt; 127  (0111 1111)
-    // e.g. f(255, 8) -&gt; 255  (1111 1111)
-    // e.g. f(3, 8) -&gt; 3      (0000 0011)
-    assert(typeof number === &quot;number&quot;);
-    bits = bits || 32;
-    assert(typeof bits === &quot;number&quot;);
-    var minValidValue = -Math.pow(2, bits-1);
-    var maxValidValue = Math.pow(2, bits) - 1;
-    if (number &lt; minValidValue || maxValidValue &lt; number) {
-        throw new StackError(&quot;Out of range value ({0}) for conversion of signed to unsigned number. The value must be between {1) and {2}.&quot;.format(number, minValidValue, maxValidValue));
-    };
-
-    if (0 &lt;= number) {
-        return number;
-    }
-
-    // negative number
-    return number + Math.pow(2, bits);
-}
-
-// TODO: move this elsewhere
-function assert(condition, message) {
-    if (!condition) {
-        throw message || &quot;Assertion failed&quot;;
-    }
-}
-
-String.prototype.format = function() {
-    // &#39;Added {0} by {1} to your collection&#39;.format(title, artist)
-    // http://stackoverflow.com/a/2648463
-    var s = this,
-        i = arguments.length;
-
-    while (i--) {
-        s = s.replace(new RegExp(&#39;\\{&#39; + i + &#39;\\}&#39;, &#39;gm&#39;), arguments[i]);
-    }
-    return s;
-};</pre>
+</pre>
 </body>
 </html>

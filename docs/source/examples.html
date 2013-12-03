@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js">var examples = {
+	additionDoublerExample: function () {
+		return [
+			&quot;ADDI $s0, $zero, 2 # set s0 to 2&quot;,
+			&quot;ADD $s1, $s0, $s0 # double s0 by adding it to itself, should be 4&quot;,
+			&quot;ADD $s2, $s1, $s1 # double s1 by adding it to itself, should be 8&quot;,
+			&quot;ADD $s3, $s2, $s2 # double s2 by adding it to itself, should be 16&quot;,
+			&quot;ADD $s4, $s3, $s3 # double s3 by adding it to itself, should be 32&quot;,
+			&quot;ADD $s5, $s4, $s4 # double s4 by adding it to itself, should be 64&quot;,
+			&quot;ADD $s6, $s5, $s5 # double s5 by adding it to itself, should be 128&quot;,
+			&quot;ADD $s7, $s6, $s6 # double s6 by adding it to itself, should be 256&quot;,
+			&quot;&quot;,
+			&quot;ADD $t0, $s7, $s7 # double s7 by adding it to itself, should be 512&quot;,
+			&quot;ADD $t1, $t0, $t0 # double t0 by adding it to itself, should be 1024&quot;,
+			&quot;ADD $t2, $t1, $t1 # double t1 by adding it to itself, should be 2048&quot;,
+			&quot;ADD $t3, $t2, $t2 # double t2 by adding it to itself, should be 4096&quot;,
+			&quot;ADD $t4, $t3, $t3 # double t3 by adding it to itself, should be 8192&quot;,
+			&quot;ADD $t5, $t4, $t4 # double t4 by adding it to itself, should be 16384&quot;,
+			&quot;ADD $t6, $t5, $t5 # double t5 by adding it to itself, should be 32768&quot;,
+			&quot;ADD $t7, $t6, $t6 # double t6 by adding it to itself, should be 65536&quot;,
+			&quot;ADD $t8, $t7, $t7 # double t7 by adding it to itself, should be 131072&quot;,
+			&quot;ADD $t9, $t8, $t8 # double t8 by adding it to itself, should be 262144&quot;,
+			&quot;&quot;,
+			&quot;ADD $a0, $t9, $t9 # double t9 by adding it to itself, should be 524288&quot;,
+			&quot;ADD $a1, $a0, $a0 # double a0 by adding it to itself, should be 1048576&quot;,
+			&quot;ADD $a2, $a1, $a1 # double a1 by adding it to itself, should be 2097152&quot;,
+			&quot;ADD $a3, $a2, $a2 # double a2 by adding it to itself, should be 4194304&quot;,
+			&quot;&quot;,
+			&quot;ADD $v0, $a3, $a3 # double a3 by adding it to itself, should be 8388608&quot;,
+			&quot;ADD $v1, $v0, $v0 # double v0 by adding it to itself, should be 16777216&quot;
+		];
+	},
+
+	stavExample: function() {
+		return [
+			&quot;# Set the all of the registers to the same value&quot;,
+			&quot;# then manipulate all of them&quot;,
+			&quot;&quot;,
+			&quot;# change the s registers&quot;,
+			&quot;ADD $s0, $zero, $zero&quot;,
+			&quot;ADDI $s1, $zero, 1&quot;,
+			&quot;ADDI $s2, $zero, 2&quot;,
+			&quot;ADDI $s3, $zero, 3&quot;,
+			&quot;ADDI $s4, $zero, 4&quot;,
+			&quot;ADDI $s5, $zero, 5&quot;,
+			&quot;ADDI $s6, $zero, 6&quot;,
+			&quot;ADDI $s7, $zero, 7&quot;,
+			&quot;ADDI $s8, $zero, 8 # This should generate an error&quot;,
+			&quot;ADDI $s9, $zero, 9 # This should generate an error&quot;,
+			&quot;&quot;,
+			&quot;&quot;,
+			&quot;# change the t registers&quot;,
+			&quot;ADD $t0, $zero, $zero&quot;,
+			&quot;ADDI $t1, $zero, 10&quot;,
+			&quot;ADDI $t2, $zero, 20&quot;,
+			&quot;ADDI $t3, $zero, 30&quot;,
+			&quot;ADDI $t4, $zero, 40&quot;,
+			&quot;ADDI $t5, $zero, 50&quot;,
+			&quot;ADDI $t6, $zero, 60&quot;,
+			&quot;ADDI $t7, $zero, 70&quot;,
+			&quot;ADDI $t8, $zero, 80&quot;,
+			&quot;ADDI $t9, $zero, 90&quot;,
+			&quot;&quot;,
+			&quot;# change the a registers&quot;,
+			&quot;ADD $a0, $zero, $zero&quot;,
+			&quot;ADDI $a1, $zero, 100&quot;,
+			&quot;ADDI $a2, $zero, 200&quot;,
+			&quot;ADDI $a3, $zero, 300&quot;,
+			&quot;&quot;,
+			&quot;# change the v registers&quot;,
+			&quot;ADD $v0, $zero, $zero&quot;,
+			&quot;ADDI $v1, $zero, 1000&quot;
+		];
+	},
+
+	looperExample: function() {
+		return [
+			&quot;# This is the same as the doubler, except the jumps cause the order&quot;,
+			&quot;# to change drastically, therefore all of the values will be different.&quot;,
+			&quot;CHANGE_S: ADDI $t0, $zero, 2&quot;,
+			&quot;BEQ $s0, $t0, EXIT&quot;,
+			&quot;ADD $s1, $s0, $s0 # double s0 by adding it to itself, should be 4&quot;,
+			&quot;ADD $s2, $s1, $s1 # double s1 by adding it to itself, should be 8&quot;,
+			&quot;ADD $s3, $s2, $s2 # double s2 by adding it to itself, should be 16&quot;,
+			&quot;ADD $s4, $s3, $s3 # double s3 by adding it to itself, should be 32&quot;,
+			&quot;ADD $s5, $s4, $s4 # double s4 by adding it to itself, should be 64&quot;,
+			&quot;ADD $s6, $s5, $s5 # double s5 by adding it to itself, should be 128&quot;,
+			&quot;ADD $s7, $s6, $s6 # double s6 by adding it to itself, should be 256&quot;,
+			&quot;J CHANGE_V&quot;,
+			&quot;&quot;,
+			&quot;CHANGE_T: ADD $t0, $s7, $s7&quot;,
+			&quot;ADD $t1, $t0, $t0&quot;,
+			&quot;ADD $t2, $t1, $t1&quot;,
+			&quot;ADD $t3, $t2, $t2&quot;,
+			&quot;ADD $t4, $t3, $t3&quot;,
+			&quot;ADD $t5, $t4, $t4&quot;,
+			&quot;ADD $t6, $t5, $t5&quot;,
+			&quot;ADD $t7, $t6, $t6&quot;,
+			&quot;ADD $t8, $t7, $t7&quot;,
+			&quot;ADD $t9, $t8, $t8&quot;,
+			&quot;J CHANGE_S&quot;,
+			&quot;&quot;,
+			&quot;CHANGE_A: ADD $a0, $t9, $t9&quot;,
+			&quot;ADD $a1, $a0, $a0&quot;,
+			&quot;ADD $a2, $a1, $a1&quot;,
+			&quot;ADD $a3, $a2, $a2&quot;,
+			&quot;J CHANGE_S&quot;,
+			&quot;&quot;,
+			&quot;CHANGE_V: ADD $v0, $a3, $a3&quot;,
+			&quot;ADD $v1, $v0, $v0&quot;,
+			&quot;J CHANGE_A&quot;,
+			&quot;&quot;
+		];
+	},
+	stackTest: function(){
+		return [
+			&quot;ADDI $s0, $zero, 10&quot;,
+			&quot;ADDI $s1, $zero, 9&quot;,
+			&quot;SB $s0, -10($sp)&quot;,
+			&quot;SB $s1, -9($sp)&quot;,
+			&quot;LB $s2, -9($sp)&quot;,
+			&quot;ADDI $sp, $sp, -1&quot;,
+			&quot;ADDI $sp, $sp, -2&quot;,
+			&quot;ADDI $sp, $sp, -3&quot;,
+			&quot;ADDI $sp, $sp, -5&quot;,
+			&quot;ADDI $sp, $sp, -9&quot;,
+			&quot;ADDI $sp, $sp, -14&quot;,
+			&quot;ADDI $sp, $sp, -23&quot;,
+			&quot;ADDI $sp, $sp, -37&quot;,
+			&quot;SB $s0, 0($sp)&quot;,
+			&quot;LB $s3, 0($sp)&quot;
+		];
+	}
+}</pre>
+</body>
+</html>
