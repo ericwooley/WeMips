@@ -43,30 +43,52 @@ function mipsInstructionExecutor(ME) {
         },
         'LUI': {
             parseMethod: parse_$RT_imm,
-            runMethod: null // TODO: implement this and make some tests
+            runMethod: function(namedArgs){
+                ME.setRegisterVal(namedArgs.$rt, (namedArgs.imm << 16));
+            } // TODO: make some tests
         },
         /////////////////////////////////////////////
         // Mips Logical Instructions
         /////////////////////////////////////////////
         'AND': {
             parseMethod: parse_$RD_$rs_$rt,
-            runMethod: null // TODO: implement this and make some tests
+            runMethod: function(namedArgs){
+                ME.setRegisterVal(namedArgs.$rd,
+                    ME.getRegisterVal(namedArgs.rs) & ME.getRegisterVal(namedArgs.rt)
+                );
+            } // TODO: make some tests
         },
         'ANDI': {
             parseMethod: parse_$RT_$rs_imm,
-            runMethod: null // TODO: implement this and make some tests
+            runMethod: function(namedArgs){
+                ME.setRegisterVal(namedArgs.$rt,
+                    ME.getRegisterVal(namedArgs.rs) & namedArgs.imm
+                );
+            } // TODO: make some tests
         },
         'NOR': {
             parseMethod: parse_$RD_$rs_$rt,
-            runMethod: null // TODO: implement this and make some tests
+            runMethod: function(namedArgs){
+                ME.setRegisterVal(namedArgs.$rd,
+                    ~(ME.getRegisterVal(namedArgs.rs) | ME.getRegisterVal(namedArgs.rt))
+                );
+            } // TODO: make some tests
         },
         'OR': {
             parseMethod: parse_$RD_$rs_$rt,
-            runMethod: null // TODO: implement this and make some tests
+            runMethod: function(namedArgs){
+                ME.setRegisterVal(namedArgs.$rd,
+                    (ME.getRegisterVal(namedArgs.rs) | ME.getRegisterVal(namedArgs.rt))
+                );
+            } // TODO: make some tests
         },
         'ORI': {
             parseMethod: parse_$RT_$rs_imm,
-            runMethod: null // TODO: implement this and make some tests
+            runMethod: function(namedArgs){
+                ME.setRegisterVal(namedArgs.$rt,
+                    (ME.getRegisterVal(namedArgs.rs) | namedArgs.imm)
+                );
+            } // TODO: make some tests
         },
         'SLL': {
             parseMethod: parse_$RD_$rt_shamt,
@@ -77,7 +99,10 @@ function mipsInstructionExecutor(ME) {
         },
         'SRL': {
             parseMethod: parse_$RD_$rt_shamt,
-            runMethod: null // TODO: implement this and make some tests
+            runMethod: function(namedArgs) {
+                ME.setRegisterVal(namedArgs.$rd, ME.getRegisterVal(namedArgs.$rt) >> namedArgs.shamt);
+                ME.incerementPC();
+            } // TODO: make some tests
         },
         /////////////////////////////////////////////
         // Mips Branch and Jump Instructions
@@ -108,7 +133,10 @@ function mipsInstructionExecutor(ME) {
         },
         'JAL': {
             parseMethod: parse_label,
-            runMethod: null // TODO: implement this and make some tests
+            runMethod: function(namedArgs) {
+                ME.goToLabel(namedArgs.label);
+                ME.setRegisterVal('$ra', ME.getLineNumber() + 1);
+            } // TODO: make some tests
         },
         'JR': {
             parseMethod: parse_$rs,
