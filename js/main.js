@@ -12,7 +12,7 @@ $(document).ready(function(){
     // Mips Emulator Setup
     ///////////////////////////////////////////////////
     var me = mipsEmulator({
-        debug: true,
+        debug: false,
         /*
          * Changes the registers visual representation when the mips emulator changes its value
          * @param  {String} regName the register name
@@ -36,7 +36,7 @@ $(document).ready(function(){
          * @return {null}
          */
         onFinish: function(){
-            alert("Emulation complete, returning to line 1");
+            addToLog('success', "Emulation complete, returning to line 1");
             me.setLine(1);
             setHighlights({lineRan: lastLineNoRun, nextLine: me.getLineNumber()});
             running = false;
@@ -62,6 +62,7 @@ $(document).ready(function(){
     var running = false;
     // the active line, is the one whose results are being examined.
     var lastLineNoRun;
+    var lastLineAttempted = 0;
     var nextLine;
 
     ///////////////////////////////////////////////////
@@ -96,13 +97,14 @@ $(document).ready(function(){
     // Event Handlers setup
     ///////////////////////////////////////////////////
     $(".registers-container li").each(setupRegisters);
-    $('.regSpacer').on('input', manualRegistryEdit);
+    $('.regSpacer').on('blur', manualRegistryEdit);
     //$('.regSpacer').on('blur', manualRegistryEditSave);
     $('#codeLoaders button').on('click', loadCustomCode);
     $("#step").click(step);
     $("#goToLineButton").on('click', setLine);
     $("#run").click(run);
     $("#optionShowRelative").change(switchAddressMode);
+    $("#clearLog").on('click', function(){$("#log").html('')});
 
     // Functions to respond to events.
     function setLine(){
@@ -117,22 +119,30 @@ $(document).ready(function(){
         me.valid = false;
     };
     function step(){
+        
         // if this code is no longer valid, reanalyze.
         if(!me.valid){
             try{
                 mipsAnalyze();
             } catch(e){
-                console.error(JSON.stringify(e));
+                console.error("Error analyzing code: "+JSON.stringify(e));
+                addToLog('error', e.message, 1);
             }
         }
-        //try{
+        try{
+            lastLineAttempted = me.getLineNumber();
+            console.log("Attempting line: " + lastLineAttempted);
             lineResult = me.step();
             if(lineResult){
-               setHighlights(lineResult);
+                setHighlights(lineResult);
+                //addToLog('info', "ran line successfully", lastLineAttempted);
             }
-        //} catch(e){
-            //console.error("Error on line: " + nextLine + " - " + JSON.stringify(e));
-        //}
+        
+        } catch(e){
+            addToLog('error', e.message, lastLineAttempted);
+            //me.setLine(lastLineAttempted + 1);
+            //setHighlights();
+        }
         
     };
     function loadCustomCode(e){
@@ -143,7 +153,7 @@ $(document).ready(function(){
         newContent = newContent.replace(/^\s+|\s+$/g, '');
         //newContent = newContent.replace(/\n\s+/g, '\n');
         editor.setValue(newContent);
-        mipsAnalyze();
+        mipsAnalyze(true);
         me.setLine(1);
         lastLineNoRun = null;
         setHighlights();
@@ -159,8 +169,12 @@ $(document).ready(function(){
         var target =  $(e.target);
         var regName = target.attr("reg");
         newVal = parseInt(newVal);
-        me.setRegisterVal(regName, newVal, false);
-        target.html(me.getRegisterVal(regName));
+        try{
+            me.setRegisterVal(regName, newVal, false);
+        } catch(e) {
+            target.html(me.getRegisterVal(regName));
+            addToLog('error', e);
+        }
     };
     function manualRegistryValidate(e){
         var newVal = $(e.target).html();
@@ -183,6 +197,7 @@ $(document).ready(function(){
         return true;
     };
     function setHighlights(lines){
+        console.log("Setting highlights")
         lines = lines || {};
         lastLineNoRun = lines.lineRan || lastLineNoRun || null;
         nextLine = lines.nextLine || me.getLineNumber();
@@ -225,10 +240,10 @@ $(document).ready(function(){
         while(running) step();
 
     };
-    function mipsAnalyze(){
+    function mipsAnalyze(goBackToLineOne){
         editor.save();
         me.setCode($("#editor").val());
-        me.setLine(1);
+        if(goBackToLineOne) me.setLine(1);
         me.valid = true;
     };
     function getCodeAsString(){
@@ -321,6 +336,23 @@ $(document).ready(function(){
             $('.stackAddrRelative').hide();
             $('.stackAddrReal').show();
         }
+    }
+    function addToLog(type, message, line_no){
+        if(type == 'error') type = 'danger';
+        if(line_no){
+            message = "Line " + line_no + ": " + message;
+            if(type == 'danger'){
+                editor.markText(
+                    {line: line_no-1, ch: 0},
+                    {line: line_no, ch: 0},
+                    {title: message, className: 'errorLine', clearOnEnter: true}
+                );
+            }
+        }
+        console.log("Prepending to log "+ type)
+        $("#log").prepend(
+            '<div class="alert alert-'+type+'">'+message+'</div>'
+        );
     }
 
 });
