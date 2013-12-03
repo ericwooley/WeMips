@@ -1,0 +1,2 @@
+Use this command to recreate the docs
+js --builtin-classes -o docs --welcome=using_WeMips.html --head-html='<link rel="stylesheet" href="../css/weMipsStyle.css" type="text/css">'
