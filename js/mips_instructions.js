@@ -45,6 +45,7 @@ function mipsInstructionExecutor(ME) {
             parseMethod: parse_$RT_imm,
             runMethod: function(namedArgs){
                 ME.setRegisterVal(namedArgs.$rt, (namedArgs.imm << 16));
+                ME.incerementPC();
             } // TODO: make some tests
         },
         /////////////////////////////////////////////
@@ -56,6 +57,7 @@ function mipsInstructionExecutor(ME) {
                 ME.setRegisterVal(namedArgs.$rd,
                     ME.getRegisterVal(namedArgs.rs) & ME.getRegisterVal(namedArgs.rt)
                 );
+                ME.incerementPC();
             } // TODO: make some tests
         },
         'ANDI': {
@@ -64,6 +66,7 @@ function mipsInstructionExecutor(ME) {
                 ME.setRegisterVal(namedArgs.$rt,
                     ME.getRegisterVal(namedArgs.rs) & namedArgs.imm
                 );
+                ME.incerementPC();
             } // TODO: make some tests
         },
         'NOR': {
@@ -72,6 +75,7 @@ function mipsInstructionExecutor(ME) {
                 ME.setRegisterVal(namedArgs.$rd,
                     ~(ME.getRegisterVal(namedArgs.rs) | ME.getRegisterVal(namedArgs.rt))
                 );
+                ME.incerementPC();
             } // TODO: make some tests
         },
         'OR': {
@@ -80,6 +84,7 @@ function mipsInstructionExecutor(ME) {
                 ME.setRegisterVal(namedArgs.$rd,
                     (ME.getRegisterVal(namedArgs.rs) | ME.getRegisterVal(namedArgs.rt))
                 );
+                ME.incerementPC();
             } // TODO: make some tests
         },
         'ORI': {
@@ -88,6 +93,7 @@ function mipsInstructionExecutor(ME) {
                 ME.setRegisterVal(namedArgs.$rt,
                     (ME.getRegisterVal(namedArgs.rs) | namedArgs.imm)
                 );
+                ME.incerementPC();
             } // TODO: make some tests
         },
         'SLL': {
@@ -136,6 +142,7 @@ function mipsInstructionExecutor(ME) {
             runMethod: function(namedArgs) {
                 ME.goToLabel(namedArgs.label);
                 ME.setRegisterVal('$ra', ME.getLineNumber() + 1);
+
             } // TODO: make some tests
         },
         'JR': {
