@@ -151,15 +151,15 @@ function mipsEmulator(mipsArgs){
          * @return {String}
          */
         getRegisterVal: function(reg) {
-            assert(reg[0] === '$');
+            if(reg.charAt(0) != '$') reg = '$'+reg;
             return MIPS.unsignedNumberToSignedNumber(this.getRegister(reg).val, this.BITS_PER_REGISTER);
         },
         getRegisterUnsignedVal: function(reg) {
-            assert(reg[0] === '$');
+            if(reg.charAt(0) != '$') reg = '$'+reg;
             return MIPS.signedNumberToUnsignedNumber(this.getRegisterVal(reg), this.BITS_PER_REGISTER);
         },
         getRegister: function(reg) {
-            assert(reg[0] === '$');
+            if(reg.charAt(0) != '$') reg = '$'+reg;
             if(!this.isValidRegister(reg)) throw new RegisterError('Non existant register: {0}'.format(reg));
             return registers[reg];
         },
@@ -176,6 +176,7 @@ function mipsEmulator(mipsArgs){
          * @param {Number} value
          */
         setRegisterVal: function(reg, value, enableCallback) {
+            if(reg.charAt(0) != '$') reg = '$'+reg;
             var minRegisterValue = -Math.pow(2, this.BITS_PER_REGISTER - 1);
             var maxRegisterValue = Math.pow(2, this.BITS_PER_REGISTER) - 1;
             if (value < minRegisterValue || maxRegisterValue < value) {
@@ -299,17 +300,18 @@ function mipsEmulator(mipsArgs){
         step: function(){
             // check if we are finished with the emulation
             if(currentLine > mipsCode.code.length - 1) return finishEmulation();
-            if(!mipsCode.code[currentLine]) return error("Line " + currentLine + " could not be read", currentLine);
+            if(!mipsCode.code[currentLine]) throw new MipsError("Line " + currentLine + " does not exist");
+            if(mipsCode.code[currentLine].error) throw new MipsError(mipsCode.code[currentLine].error);
             if(mipsCode.code[currentLine].ignore) incrementLine();
             // we need to check again, because the remainder of the lines could have been comments or blank.
-            if(currentLine > mipsCode.code.length - 1) return finishEmulation();
+            
             if(debug) console.log("Running line: " + currentLine + " - " + mipsCode.code[currentLine]);
             var ret = {
                 lineRan: Number(currentLine)
             };
             runLine(mipsCode.code[currentLine]);
             ret.nextLine = currentLine;
-
+            if(currentLine > mipsCode.code.length - 1) finishEmulation();
             return ret;
         },
         /**
@@ -536,14 +538,14 @@ function mipsEmulator(mipsArgs){
                 // an instruction was found, so try to parse it
                 var error = {};
                 if (!instructionExecutor.parseInstruction(LINE.instruction, LINE.args, null, error)) {
-                    LINE.error = "Error: " + line.lineNo + " " + error.message;
+                    LINE.error = error.message;
                 }
             };
 
         // In the else case, the regex didn't match, possible error?
         } else {
             // TODO: check for special cases
-            LINE.error = "Error parsing line: "+ (index+1);
+            if(debug) LINE.error = "Error parsing line: "+ (index+1);
             if(debug) console.log("----> No matches");
         }
         //if(debug) console.log("Finished parsing line: " + JSON.stringify(LINE));
