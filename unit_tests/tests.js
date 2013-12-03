@@ -306,12 +306,12 @@ test("LB, LBU, SB", function() {
 
 test("J", function() {
 	ME.runLines([
-		"ADDI $t2, $t2, 1",
+		"ADDI $t2, $zero, 1",
 		"J end",
 		"ADDI $t2, $zero, 5",
 		"end:"
 	]);
-	equal(ME.getRegisterVal('$t2'), 13, "The line which sets $t2 to 5 should have been skipped.");
+	equal(ME.getRegisterVal('$t2'), 1, "The line which sets $t2 to 5 should have been skipped.");
 
 	throws(function() {
 		ME.runLines([
@@ -327,7 +327,6 @@ test("J", function() {
 
 
 	// TODO: detect infinite loops, and either raise an error, or ask the user if they want to contiune (e.g. "foo: J foo")
-
 	ME.runLines([
 		"ADDI $t2, $zero, 100",
 		"J foo1",
@@ -342,6 +341,7 @@ test("J", function() {
 		"end:"
 	]);
 	equal(ME.getRegisterVal('$t2'), 102);
+
 });
 
 test("BEQ", function() {
