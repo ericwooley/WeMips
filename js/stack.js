@@ -9,7 +9,7 @@ StackError.prototype.toString = function() {
     return '{0}: {1}'.format(StackError.exceptionName(), this.message);
 }
 /**
- * @class stack
+ * @class Stack
  * @param {Object} options constructor options
  * - options.onChange A function to be called when a stack address changes.
  * - options.baseAddress The default base address.
