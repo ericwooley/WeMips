@@ -77,7 +77,8 @@ var examples = {
 		return [
 			"# This is the same as the doubler, except the jumps cause the order",
 			"# to change drastically, therefore all of the values will be different.",
-			"CHANGE_S: ADDI $s0, $zero, 2 # set s0 to 2",
+			"CHANGE_S: ADDI $t0, $zero, 2",
+			"BEQ $s0, $t0, EXIT",
 			"ADD $s1, $s0, $s0 # double s0 by adding it to itself, should be 4",
 			"ADD $s2, $s1, $s1 # double s1 by adding it to itself, should be 8",
 			"ADD $s3, $s2, $s2 # double s2 by adding it to itself, should be 16",
