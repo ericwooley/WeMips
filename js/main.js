@@ -56,6 +56,7 @@ $(document).ready(function(){
                 {title: message, className: 'errorLine', clearOnEnter: true}
             );
         },
+        addToLog: addToLog,
         onStackChange: addStackAddress,
         // Set the starting code to be the defualt in the editor.
         startingCode: $("#editor").val()
