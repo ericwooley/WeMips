@@ -55,7 +55,7 @@ function mipsInstructionExecutor(ME) {
             parseMethod: parse_$RD_$rs_$rt,
             runMethod: function(namedArgs){
                 ME.setRegisterVal(namedArgs.$rd,
-                    ME.getRegisterVal(namedArgs.rs) & ME.getRegisterVal(namedArgs.rt)
+                    ME.getRegisterVal(namedArgs.$rs) & ME.getRegisterVal(namedArgs.$rt)
                 );
                 ME.incerementPC();
             } // TODO: make some tests
@@ -64,7 +64,7 @@ function mipsInstructionExecutor(ME) {
             parseMethod: parse_$RT_$rs_imm,
             runMethod: function(namedArgs){
                 ME.setRegisterVal(namedArgs.$rt,
-                    ME.getRegisterVal(namedArgs.rs) & namedArgs.imm
+                    ME.getRegisterVal(namedArgs.$rs) & namedArgs.imm
                 );
                 ME.incerementPC();
             } // TODO: make some tests
@@ -73,7 +73,7 @@ function mipsInstructionExecutor(ME) {
             parseMethod: parse_$RD_$rs_$rt,
             runMethod: function(namedArgs){
                 ME.setRegisterVal(namedArgs.$rd,
-                    ~(ME.getRegisterVal(namedArgs.rs) | ME.getRegisterVal(namedArgs.rt))
+                    ~(ME.getRegisterVal(namedArgs.$rs) | ME.getRegisterVal(namedArgs.$rt))
                 );
                 ME.incerementPC();
             } // TODO: make some tests
@@ -82,7 +82,7 @@ function mipsInstructionExecutor(ME) {
             parseMethod: parse_$RD_$rs_$rt,
             runMethod: function(namedArgs){
                 ME.setRegisterVal(namedArgs.$rd,
-                    (ME.getRegisterVal(namedArgs.rs) | ME.getRegisterVal(namedArgs.rt))
+                    (ME.getRegisterVal(namedArgs.$rs) | ME.getRegisterVal(namedArgs.$rt))
                 );
                 ME.incerementPC();
             } // TODO: make some tests
@@ -91,7 +91,7 @@ function mipsInstructionExecutor(ME) {
             parseMethod: parse_$RT_$rs_imm,
             runMethod: function(namedArgs){
                 ME.setRegisterVal(namedArgs.$rt,
-                    (ME.getRegisterVal(namedArgs.rs) | namedArgs.imm)
+                    (ME.getRegisterVal(namedArgs.$rs) | namedArgs.imm)
                 );
                 ME.incerementPC();
             } // TODO: make some tests
