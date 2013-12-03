@@ -401,13 +401,21 @@ test("BNE", function() {
 });
 
 test("LUI", function(){
-	ME.setDebug(true);
 	ME.runLines([
 	"ADDI $t0, $zero, 10",
 	"LUI $t0, 10"	
 	]);
 	equal(ME.getRegisterVal('$t0'), 655360, "1010 (10) shifted 16 digits to the left (10100000000000000000) is 655360");
-	ME.setDebug(false);
+});
+test("AND", function(){
+	ME.runLines([
+		"ADDI $s0, $zero, 1",
+		"AND $t0, $zero, $s0",
+		"ADDI $s0, $zero, 1",
+		"AND $t1, $s0, $s0"
+	]);
+	equal(ME.getRegisterVal("$t0"), 0, "0 & 1 is 1");
+	equal(ME.getRegisterVal("$t1"), 1, "1 & 1 is 1");
 });
 
 module("Examples");
