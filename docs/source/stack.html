@@ -25,8 +25,8 @@ StackError.exceptionName = function() {
 StackError.prototype.toString = function() {
     return &#39;{0}: {1}&#39;.format(StackError.exceptionName(), this.message);
 }
-<span id='stack'>/**
-</span> * @class stack
+<span id='Stack'>/**
+</span> * @class Stack
  * @param {Object} options constructor options
  * - options.onChange A function to be called when a stack address changes.
  * - options.baseAddress The default base address.
@@ -101,7 +101,7 @@ function Stack(options) {
     this.BYTES_PER_WORD = 4;
 
     // Privileged methods
-<span id='stack-method-getDataAtAddress'>    /**
+<span id='Stack-method-getDataAtAddress'>    /**
 </span>     * Get a given number of bytes at an address
      * @param  {Number} address    The starting address for your data
      * @param  {Number} byteCount  How many bytes of data you want returned
@@ -123,7 +123,7 @@ function Stack(options) {
             return MIPS.unsignedNumberToSignedNumber(result, byteCount * this.BITS_PER_BYTE);
         }
     };
-<span id='stack-method-setDataAtAddress'>    /**
+<span id='Stack-method-setDataAtAddress'>    /**
 </span>     * Set data at an address
      * @param {Number} address   The address you want to write
      * @param {Number} byteCount How many bytes you want to overwrite
@@ -153,14 +153,14 @@ function Stack(options) {
             data = data &gt;&gt; this.BITS_PER_BYTE;
         };
     };
-<span id='stack-method-reset'>    /**
+<span id='Stack-method-reset'>    /**
 </span>     * Clear the data contained in the stack
      * @return {null}
      */
     this.reset = function() {
         data = [];
     };
-<span id='stack-method-pointerToBottomOfStack'>    /**
+<span id='Stack-method-pointerToBottomOfStack'>    /**
 </span>     * Get a pointer to the address at the bottom of the stack
      * @return {Number} Address to the bottom of the stack
      */
@@ -171,7 +171,7 @@ function Stack(options) {
 }
 
 // Public functions
-<span id='stack-method-getByte'>/**
+<span id='Stack-method-getByte'>/**
 </span> * Get a byte at a specified address
  * @param  {Number} pointer The address the wanted data lives
  * @return {Number} Requested data
@@ -179,7 +179,7 @@ function Stack(options) {
 Stack.prototype.getByte = function (pointer) {
     return this.getDataAtAddress(pointer, this.BYTES_PER_BYTE);
 };
-<span id='stack-method-getUnsignedByte'>/**
+<span id='Stack-method-getUnsignedByte'>/**
 </span> * Get an unsigned byte at the specified address
  * @param  {Number} pointer Address where you want data from.
  * @return {Number} Data at address.
@@ -187,7 +187,7 @@ Stack.prototype.getByte = function (pointer) {
 Stack.prototype.getUnsignedByte = function (pointer) {
     return this.getDataAtAddress(pointer, this.BYTES_PER_BYTE, true);
 };
-<span id='stack-method-getHalfword'>/**
+<span id='Stack-method-getHalfword'>/**
 </span> * Get one half word (16 bits if word is 32) at a given address
  * @param  {Number} pointer Address where data lives
  * @return {Number} Retrieved data
@@ -195,7 +195,7 @@ Stack.prototype.getUnsignedByte = function (pointer) {
 Stack.prototype.getHalfword = function (pointer) {
     return this.getDataAtAddress(pointer, this.BYTES_PER_HALFWORD);
 };
-<span id='stack-method-getUnsignedHalfword'>/**
+<span id='Stack-method-getUnsignedHalfword'>/**
 </span> * Get unsigned half word (16 bits if word is 32) at a given address
  * @param  {Number} pointer Address where data lives
  * @return {Number} Retrieved data
@@ -203,7 +203,7 @@ Stack.prototype.getHalfword = function (pointer) {
 Stack.prototype.getUnsignedHalfword = function (pointer) {
     return this.getDataAtAddress(pointer, this.BYTES_PER_HALFWORD, true);
 };
-<span id='stack-method-getWord'>/**
+<span id='Stack-method-getWord'>/**
 </span> * Get word at a given address
  * @param  {Number} pointer Address where data lives
  * @return {Number} Retrieved data
@@ -211,7 +211,7 @@ Stack.prototype.getUnsignedHalfword = function (pointer) {
 Stack.prototype.getWord = function (pointer) {
     return this.getDataAtAddress(pointer, this.BYTES_PER_WORD);
 };
-<span id='stack-method-getUnsignedWord'>/**
+<span id='Stack-method-getUnsignedWord'>/**
 </span> * Get unsigned word at a given address
  * @param  {Number} pointer Address where data lives
  * @return {Number} Retrieved data
@@ -219,7 +219,7 @@ Stack.prototype.getWord = function (pointer) {
 Stack.prototype.getUnsignedWord = function (pointer) {
     return this.getDataAtAddress(pointer, this.BYTES_PER_WORD, true);
 };
-<span id='stack-method-setByte'>/**
+<span id='Stack-method-setByte'>/**
 </span> * Set a byte at given address
  * @param {Number} pointer The address with data you want to set
  * @param {Number} data The data you want to write to the address
@@ -228,7 +228,7 @@ Stack.prototype.setByte = function (pointer, data) {
     this.setDataAtAddress(pointer, this.BYTES_PER_BYTE, data);
 };
 
-<span id='stack-method-setHalfword'>/**
+<span id='Stack-method-setHalfword'>/**
 </span> * Set half word at given address
  * @param {Number} pointer Address to overwrite with half word of data
  * @param {Number} data Data to write to address
@@ -237,7 +237,7 @@ Stack.prototype.setHalfword = function (pointer, data) {
     this.setDataAtAddress(pointer, this.BYTES_PER_HALFWORD, data);
 };
 
-<span id='stack-method-setWord'>/**
+<span id='Stack-method-setWord'>/**
 </span> * Set word at given address
  * @param {Number} pointer where data will be written
  * @param {Number} data Data to be written to the address
