@@ -418,6 +418,17 @@ test("AND", function(){
 	equal(ME.getRegisterVal("$t1"), 1, "1 & 1 is 1");
 });
 
+test("ANDI", function(){
+	ME.runLines([
+		"ADDI $s0, $zero, 0",
+		"ANDI $s0, $s0, 1",
+		"ADDI $s1, $zero, 1",
+		"ANDI $s1, $s1, 1"
+	]);
+	equal(ME.getRegisterVal("$s0"), 0, "0 & 1 is 1");
+	equal(ME.getRegisterVal("$s1"), 1, "1 & 1 is 1");
+});
+
 module("Examples");
 
 test("additionDoublerExample", function() {
