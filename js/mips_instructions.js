@@ -221,7 +221,8 @@ function mipsInstructionExecutor(ME) {
             runMethod: function(namedArgs){
                 var syscalls = mipsSyscalls(ME);
                 syscalls.execute();
-                ME.setUnpreservedRegsToGarbage();
+                // don't garbage up the registers, since some of the functions return values in the registers (e.g. $v0)
+                //ME.setUnpreservedRegsToGarbage();
                 ME.incerementPC();
             }
         }

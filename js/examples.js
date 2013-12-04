@@ -165,7 +165,23 @@ var examples = {
 			"",
 			"ADDI $v0, $zero, 4 # 4 is for print string",
 			"ADDI $a0, $sp, 0",
-			"syscall 			# print to the JavaScript console"
+			"syscall 			# print to the log"
+		];
+	},
+	codeGenSaveString: function() {
+		// Given the input "Hello world!", this will output the hello world example above
+		return [
+
+		];
+	},
+	debug: function() {
+		return [
+			'ADDI $t0, $zero, 10   # max chars to read',
+			'SUBU $sp, $sp, $t0',
+			'ADDI $a0, $sp, 0',
+			'ADD $a1, $zero, $t0',
+			'ADDI $v0, $zero, 8 # read string',
+			'syscall'
 		];
 	}
 }

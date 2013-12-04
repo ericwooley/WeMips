@@ -59,6 +59,9 @@ $(document).ready(function(){
         onOutput: function(message) {
             addToLog('success', message);
         },
+        onInput: function(message) {
+            return window.prompt(message, '');
+        },
         onStackChange: addStackAddress,
         // Set the starting code to be the defualt in the editor.
         startingCode: $("#editor").val()

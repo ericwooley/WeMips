@@ -28,6 +28,36 @@ function mipsSyscalls(ME) {
 				}
 				ME.output(string);
 			}
+		},
+		'5': {
+			description: 'Read Integer',
+			execute: function() {
+				var minValue = MIPS.minSignedValue(ME.BITS_PER_REGISTER);
+				var maxValue = MIPS.maxUnsignedValue(ME.BITS_PER_REGISTER);
+				var input = ME.getInput('Enter a number from {0} to {1}'.format(minValue, maxValue));
+				var number = parseInt(input, 10);
+				if (number < minValue || maxValue < number) {
+					throw new SyscallError('Invalid input number: {0}'.format(number));
+				}
+				ME.setRegisterVal('$v0', number);
+			}
+		},
+		'8': {
+			description: 'Read String',
+			execute: function() {
+				var addressOfInputBuffer = ME.getRegisterUnsignedVal('$a0');
+				var maxCharCount = ME.getRegisterUnsignedVal('$a1') - 1;
+
+				var input = ME.getInput('Enter a string (max length is {0} char(s))'.format(maxCharCount));
+				if (maxCharCount < input.length)
+					input.substring(0, maxCharCount); // ignore strings that are too long
+
+				for (var i = 0; i <= maxCharCount; i++) {
+					// null terminate the rest of the addresses
+					var byte = (i < input.length) ? input.charCodeAt(i) : 0;
+					ME.stack.setByte(addressOfInputBuffer + i, byte);
+				}
+			}
 		}
 	};
 

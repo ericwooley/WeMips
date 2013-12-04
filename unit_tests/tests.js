@@ -650,6 +650,46 @@ test("Print Integer", function() {
 	equal(output, -2147483648, "Should print values as signed. (1000 0000 0000 0000 0000 0000 0000 0000)");
 });
 
+test("Read Integer", function() {
+	input = 523;
+	ME.runLine('ADDI $v0, $zero, 5 # read integer');
+	ME.runLine('syscall');
+	equal(ME.getRegisterVal('$v0'), 523, 'Input is stored in $v0.');
+
+	input = -2147483649;
+	ME.runLine('ADDI $v0, $zero, 5 # read integer');
+	throws(function() { ME.runLine('syscall'); }, SyscallError, 'Value is too low.');
+
+	input = 2147483648;
+	ME.runLine('ADDI $v0, $zero, 5 # read integer');
+	ME.runLine('syscall');
+	equal(ME.getRegisterUnsignedVal('$v0'), input);
+
+	input = 4294967296;
+	ME.runLine('ADDI $v0, $zero, 5 # read integer');
+	throws(function() { ME.runLine('syscall'); }, SyscallError, 'Value is too high.');
+});
+
+test('Read/write string', function() {
+	input = 'Hello';
+	resetOutput();
+	ME.runLines([
+			'# get user input and save to stack',
+			'ADDI $t0, $zero, 10   # max chars to read',
+			'SUBU $sp, $sp, $t0',
+			'ADDI $a0, $sp, 0',
+			'ADD $a1, $zero, $t0',
+			'ADDI $v0, $zero, 8 # read string',
+			'syscall',
+			'',
+			'# read stack and output',
+			'ADDI $a0, $sp, 0',
+			'ADDI $v0, $zero, 4 # print string',
+			'syscall'
+	]);
+	equal(output, input, "Should be able to write hello to stack and read it from the stack.");
+});
+
 
 module("Examples", {
 	setup: function() {
