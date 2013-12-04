@@ -265,6 +265,9 @@ test("General", function() {
 	ok(ME.isValidLine("JAL label"));
 	ok(ME.isValidLine("J label"));
 	ok(ME.isValidLine("LW $s1, 16( $sp )"), "spaces allowed between parens");
+	ok(ME.isValidLine("syscall"));
+	ok(!ME.isValidLine("syscall foo"), "Syscall takes no params");
+	ok(!ME.isValidLine("ADD t0, $t1, $t2"), "Must not omit the $ symbols.");
 
 	ok(ME.isValidLine("  "), "We can have whitespace lines.");
 	ok(!ME.isValidLine("This is an english statement"), "We cannot have english phrases.");
@@ -363,6 +366,11 @@ test("ADDI", function() {
 	// TODO: throw better errors? ParseError?
 	throws(function() { ME.runLine("ADDI $t0, $t0, 999999999999999"); }, "Immediate is out of range (2^16 is about 64,000).");
 	throws(function() { ME.runLine("ADDI $t0, $t0, -9999999"); }, "Immediate is out of range (2^16 is about 64,000).");
+	throws(function() { ME.runLine("ADDI $t0, $t0, 32768"); }, "Immediate is out of range (2^15 = 32768).");
+	ME.runLine("ADDI $t0, $t0, 32767"); // max value
+	ME.runLine("ADDI $t0, $t0, -32768"); // min value
+	ME.runLine("ADDI $t0, $t0, 0"); // valid value
+	throws(function() { ME.runLine("ADDI $t0, $t0, -32769"); }, "Immediate is out of range (2^15 = 32768).");
 
 
 	// ensure the overflow flag is set
@@ -567,6 +575,15 @@ test("LUI", function(){
 	"LUI $t0, 10"
 	]);
 	equal(ME.getRegisterVal('$t0'), 655360, "1010 (10) shifted 16 digits to the left (10100000000000000000) is 655360");
+
+	ME.runLine("LUI $t0, -1");
+	equal(ME.getRegisterVal('$t0'), -65536, "1111 1111 1111 1111 0000 0000 0000 0000");
+
+	ME.runLine("LUI $t0, 65535");
+	equal(ME.getRegisterVal('$t0'), -65536, "1111 1111 1111 1111 0000 0000 0000 0000");
+
+	ME.runLine("LUI $t0, 1");
+	equal(ME.getRegisterVal('$t0'), 65536, "0000 0000 0000 0001 0000 0000 0000 0000");
 });
 test("AND", function(){
 	ME.runLines([
@@ -598,7 +615,7 @@ module("Examples", {
 	setup: function() {
 		// fill up some of the registers with predictable, usable data, and reset the emulator's state
 		ME = new mipsEmulator({
-			addToLog: function(type, message) {
+			onOutput: function(message) {
 				output = message;
 			}
 		});

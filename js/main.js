@@ -56,7 +56,9 @@ $(document).ready(function(){
                 {title: message, className: 'errorLine', clearOnEnter: true}
             );
         },
-        addToLog: addToLog,
+        onOutput: function(message) {
+            addToLog('success', message);
+        },
         onStackChange: addStackAddress,
         // Set the starting code to be the defualt in the editor.
         startingCode: $("#editor").val()
@@ -123,7 +125,7 @@ $(document).ready(function(){
         me.valid = false;
     };
     function step(){
-        
+
         // if this code is no longer valid, reanalyze.
         if(!me.valid){
             try{
@@ -142,14 +144,14 @@ $(document).ready(function(){
 
                 //addToLog('info', "ran line successfully", lastLineAttempted);
             }
-        
+
         } catch(e){
             addToLog('error', e.message, lastLineAttempted);
             running = false;
             //me.setLine(lastLineAttempted + 1);
             //setHighlights();
         }
-        
+
     };
     function loadCustomCode(e){
         if(!confirm("This will erase what is in the code editor, are you sure?")) return;
@@ -250,7 +252,7 @@ $(document).ready(function(){
         else LC = linesOfCode;
         while(running){
 
-            step();  
+            step();
             lineRanThisRun++;
             if(lineRanThisRun > 10 * LC && !notInfinite)
                 if(confirm(
@@ -260,7 +262,7 @@ $(document).ready(function(){
                     running = false;
                 else
                     notInfinite = true;
-        } 
+        }
 
     };
     function mipsAnalyze(goBackToLineOne){
@@ -318,7 +320,7 @@ $(document).ready(function(){
             stackLow--;
         }
         console.log("stack Change: " + address + " - " + val);
-        
+
         $("#stackVal-"+address).html(val);
         if(visualize){
             if(autoSwitch) $('#registers a[href="#stack-container-div"]').tab('show');
@@ -344,8 +346,8 @@ $(document).ready(function(){
                 + "</div>"
             );
             $("#codeLoaders").append(
-                '<button type="button" load="#' 
-                + index + '" class="btn btn-default">' 
+                '<button type="button" load="#'
+                + index + '" class="btn btn-default">'
                 + indexNice + '</button>'
             );
         });

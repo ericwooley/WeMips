@@ -40,8 +40,8 @@ function mipsEmulator(mipsArgs){
         onStackChange: function(){
 
         },
-        addToLog: function(type, message){
-            console.log(type + " " + line_Number+ ": " + message)
+        onOutput: function(message) {
+            console.log(message)
         }
     });
     var debug = mipsArgs.debug;
@@ -77,7 +77,7 @@ function mipsEmulator(mipsArgs){
         '$zero',
         '$s0', '$s1', '$s2', '$s3', '$s4', '$s5', '$s6', '$s7',
         '$gp', '$sp', '$fp', '$ra',
-        // TODO: these shouldn't be here but are required right now because of the check of writable
+        // TODO: these shouldn't be here but are required right now because of the check of writable (e.g. when setting garbage data)
         '$at', '$k0', '$k1'
     ];
 
@@ -91,7 +91,7 @@ function mipsEmulator(mipsArgs){
     var readonlyRegs = [
         '$zero', '$at',
         '$k0', '$k1',
-        '$gp', '$fp', '$ra'
+        '$gp', '$ra'
     ];
     // The intial line where we start the emulation.
     /**
@@ -108,6 +108,7 @@ function mipsEmulator(mipsArgs){
     };
     registers.$zero.val = 0;
     registers.$sp.val = stack.pointerToBottomOfStack();
+    registers.$fp.val = stack.pointerToBottomOfStack();
 
     // Object that will contain analyzed code information
     /**
@@ -411,8 +412,8 @@ function mipsEmulator(mipsArgs){
                 this.setRegisterVal(register.regName, getGarbageRegisterData());
             };
         },
-        log: function(string) {
-            mipsArgs.addToLog('success', string);
+        output: function(string) {
+            mipsArgs.onOutput(string);
         }
     };
 

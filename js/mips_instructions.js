@@ -13,7 +13,7 @@ function mipsInstructionExecutor(ME) {
             }
         },
         'ADDI': {
-            parseMethod: parse_$RT_$rs_imm,
+            parseMethod: parse_$RT_$rs_immSignExt,
             runMethod: function(namedArgs) {
             	ME.setRegisterVal(namedArgs.$rt, signedAddition(ME.getRegisterVal(namedArgs.$rs), namedArgs.imm));
             	ME.incerementPC();
@@ -27,7 +27,7 @@ function mipsInstructionExecutor(ME) {
             }
         },
         'ADDIU': {
-            parseMethod: parse_$RT_$rs_imm,
+            parseMethod: parse_$RT_$rs_immSignExt,
             runMethod: null // TODO: implement this and make some tests
         },
         'SUB': {
@@ -61,7 +61,7 @@ function mipsInstructionExecutor(ME) {
             }
         },
         'ANDI': {
-            parseMethod: parse_$RT_$rs_imm,
+            parseMethod: parse_$RT_$rs_immZeroExt,
             runMethod: function(namedArgs){
                 ME.setRegisterVal(namedArgs.$rt,
                     ME.getRegisterVal(namedArgs.$rs) & namedArgs.imm
@@ -88,7 +88,7 @@ function mipsInstructionExecutor(ME) {
             } // TODO: make some tests
         },
         'ORI': {
-            parseMethod: parse_$RT_$rs_imm,
+            parseMethod: parse_$RT_$rs_immZeroExt,
             runMethod: function(namedArgs){
                 ME.setRegisterVal(namedArgs.$rt,
                     (ME.getRegisterVal(namedArgs.$rs) | namedArgs.imm)
@@ -202,7 +202,7 @@ function mipsInstructionExecutor(ME) {
             runMethod: null // TODO: implement this and make some tests
         },
         'SLTI': {
-            parseMethod: parse_$RT_$rs_imm,
+            parseMethod: parse_$RT_$rs_immSignExt,
             runMethod: null // TODO: implement this and make some tests
         },
         'SLTU': {
@@ -210,7 +210,7 @@ function mipsInstructionExecutor(ME) {
             runMethod: null // TODO: implement this and make some tests
         },
         'SLTIU': {
-            parseMethod: parse_$RT_$rs_imm,
+            parseMethod: parse_$RT_$rs_immSignExt,
             runMethod: null // TODO: implement this and make some tests
         },
         /////////////////////////////////////////////
@@ -242,19 +242,27 @@ function mipsInstructionExecutor(ME) {
     		'$rt': parseRegister(args[2])
     	};
     }
-    function parse_$RT_$rs_imm(args) {
-    	return {
-    		'expectedArgCount': 3,
-    		'$rt': parseWritableRegister(args[0]),
-    		'$rs': parseRegister(args[1]),
-    		'imm': parseImmediate(args[2])
-    	};
+    function parse_$RT_$rs_immSignExt(args) {
+        return {
+            'expectedArgCount': 3,
+            '$rt': parseWritableRegister(args[0]),
+            '$rs': parseRegister(args[1]),
+            'imm': parseImmediateAndSignExtend(args[2])
+        };
+    }
+    function parse_$RT_$rs_immZeroExt(args) {
+        return {
+            'expectedArgCount': 3,
+            '$rt': parseWritableRegister(args[0]),
+            '$rs': parseRegister(args[1]),
+            'imm': parseImmediateAndZeroExtend(args[2])
+        };
     }
     function parse_$RT_imm(args){
     	return {
     		'expectedArgCount': 2,
     		'$rt': parseWritableRegister(args[0]),
-    		'imm': parseImmediate(args[1])
+    		'imm': parseImmediate16Bit(args[1])
     	};
     };
     function parse_$RD_$rt_shamt(args){
@@ -262,7 +270,7 @@ function mipsInstructionExecutor(ME) {
     		'expectedArgCount': 3,
     		'$rd': parseWritableRegister(args[0]),
     		'$rt': parseRegister(args[1]),
-    		'shamt': parseImmediate(args[2], BITS_PER_SHAMT)
+    		'shamt': parseImmediateAndZeroExtend(args[2], BITS_PER_SHAMT)
     	};
     };
     function parse_$rs_$rt_label(args){
@@ -290,7 +298,7 @@ function mipsInstructionExecutor(ME) {
     	return {
     		'expectedArgCount': 2,
     		'$rt': parseWritableRegister(args[0]),
-    		'imm': parseImmediate(immediateAndRegister.imm),
+    		'imm': parseImmediateAndSignExtend(immediateAndRegister.imm),
     		'$rs': parseRegister(immediateAndRegister.$rs)
     	};
     };
@@ -299,7 +307,7 @@ function mipsInstructionExecutor(ME) {
     	return {
     		'expectedArgCount': 2,
     		'$rt': parseRegister(args[0]),
-    		'imm': parseImmediate(immediateAndRegister.imm),
+    		'imm': parseImmediateAndSignExtend(immediateAndRegister.imm),
     		'$rs': parseRegister(immediateAndRegister.$rs)
     	};
     };
@@ -335,8 +343,9 @@ function mipsInstructionExecutor(ME) {
     		return null;
     }
 
-    function parseImmediate(arg, bits) {
+    function _parseImmediate(arg, bits, extensionRule) {
         bits = bits || BITS_PER_IMMEDIATE;
+
         var isNumber = /^([-+]\s*)?\d+$/.test(arg);
 
         if (!isNumber) {
@@ -345,14 +354,45 @@ function mipsInstructionExecutor(ME) {
 
         var number = parseInt(arg, 10);
 
-        var minValue = MIPS.minSignedValue(bits);
-        var maxValue = MIPS.maxUnsignedValue(bits); // TODO: should this be maxSigned value?
+        var minValue;
+        var maxValue;
+        switch (extensionRule) {
+            case 'signExtend':
+                // when we sign extend, we keep the same value, but this means that we are dealing with signed numbers
+                // e.g. -3 is 1101, when we sign extend, we get 111111101, which is still -3.
+                minValue = MIPS.minSignedValue(bits);
+                maxValue = MIPS.maxSignedValue(bits);
+                break;
+            case 'zeroExtend':
+                // when we zero fill, this means we are dealing with unsigned values.
+                // for example, -3 would be 1101, when we zero fill it, we get something like 0000001101, which is no longer the value -3
+                minValue = MIPS.minUnsignedValue(bits);
+                maxValue = MIPS.maxUnsignedValue(bits);
+                break;
+            case '16bit':
+                // since only 16 bits are taken, it doesn't matter what we use, thus give the most amount of freedom here
+                minValue = MIPS.minSignedValue(bits);
+                maxValue = MIPS.maxUnsignedValue(bits);
+                break;
+            default:
+                assert(false, 'Unhandled case.');
+        }
+
         if (number < minValue || maxValue < number) {
             return null; // TODO: return that it was out of range?
         }
 
         return number;
-    };
+    }
+    function parseImmediateAndSignExtend(arg, bits) {
+        return _parseImmediate(arg, bits, 'signExtend');
+    }
+    function parseImmediateAndZeroExtend(arg, bits) {
+        return _parseImmediate(arg, bits, 'zeroExtend');
+    }
+    function parseImmediate16Bit(arg, bits) {
+        return _parseImmediate(arg, bits, '16bit');
+    }
 
     function signedAddition(value1, value2) {
         var result = MIPS.signedAddition(value1, value2, ME.BITS_PER_REGISTER);

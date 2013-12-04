@@ -19,7 +19,7 @@ function mipsSyscalls(ME) {
 					string += char;
 					stackPointer++;
 				}
-				ME.log(string);
+				ME.output(string);
 			}
 		}
 	};
