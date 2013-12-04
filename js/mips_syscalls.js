@@ -5,6 +5,13 @@ function SyscallError(message) {
 
 function mipsSyscalls(ME) {
 	var syscalls = { // key is the $v0 op code
+		'1': {
+			description: 'Print Integer',
+			execute: function() {
+				var integer = ME.getRegisterVal('$a0');
+				ME.output(integer);
+			}
+		},
 		'4': {
 			description: 'Print String',
 			execute: function() {

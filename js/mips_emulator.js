@@ -42,6 +42,9 @@ function mipsEmulator(mipsArgs){
         },
         onOutput: function(message) {
             console.log(message)
+        },
+        onInput: function(message) {
+            assert(false, "Expecting input, but there is no handler.");
         }
     });
     var debug = mipsArgs.debug;
@@ -414,6 +417,9 @@ function mipsEmulator(mipsArgs){
         },
         output: function(string) {
             mipsArgs.onOutput(string);
+        },
+        getInput: function(message) {
+            return mipsArgs.onInput(message);
         }
     };
 
@@ -574,12 +580,13 @@ function mipsEmulator(mipsArgs){
              * @type {String}
              */
             error: null,
-            lineNo: lineNo
+            lineNo: lineNo,
+            text: line
         };
 
 
         //console.log("--> "+val);
-        var regex = /^\s*(?:(\w+)\s*:\s*)?(?:(\w+)\s+([^#]+))?(?:#\s*(.*))?$/;
+        var regex = /^\s*(?:(\w+)\s*:\s*)?(?:(\w+)(?:\s+([^#]+))?)?(?:#\s*(.*))?$/;
         var ar = line.match(regex);
         // when matched the array contains the following
         // ----> [0] The entire line
@@ -629,8 +636,8 @@ function mipsEmulator(mipsArgs){
         // In the else case, the regex didn't match, possible error?
         } else {
             // TODO: check for special cases
-            if(debug) LINE.error = "Error parsing line: "+ (index+1);
             if(debug) console.log("----> No matches");
+            LINE.error = "Error parsing line: "+ (lineNo+1);
         }
         if(debug) console.log("Finished parsing line: " + JSON.stringify(LINE));
 

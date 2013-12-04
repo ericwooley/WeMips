@@ -265,11 +265,14 @@ test("General", function() {
 	ok(ME.isValidLine("JAL label"));
 	ok(ME.isValidLine("J label"));
 	ok(ME.isValidLine("LW $s1, 16( $sp )"), "spaces allowed between parens");
+	ok(!ME.isValidLine("foobar"), "single word, invalid command (previous failure)");
+	ok(!ME.isValidLine("!=@!="), "random symbols");
 	ok(ME.isValidLine("syscall"));
 	ok(!ME.isValidLine("syscall foo"), "Syscall takes no params");
 	ok(!ME.isValidLine("ADD t0, $t1, $t2"), "Must not omit the $ symbols.");
 
 	ok(ME.isValidLine("  "), "We can have whitespace lines.");
+	ok(ME.isValidLine(""), "We can have blank lines.");
 	ok(!ME.isValidLine("This is an english statement"), "We cannot have english phrases.");
 });
 
@@ -611,9 +614,45 @@ var output = '';
 function resetOutput() {
 	output = '';
 }
+var input = '';
+module("Syscalls", {
+	setup: function() {
+		ME = new mipsEmulator({
+			onOutput: function(message) {
+				output = message;
+			},
+			onInput: function(message) {
+				return input;
+			}
+		});
+		resetOutput();
+	}
+});
+
+test("Print Integer", function() {
+	ME.runLine('ADDI $t0, $zero, 123');
+	ME.runLine('ADDI $a0, $t0, 0');
+	ME.runLine('ADDI $v0, $zero, 1 # print integer');
+	resetOutput();
+	ME.runLine('syscall');
+	equal(output, 123, "Normal print integer.");
+
+	ME.runLine('ADDI $a0, $zero, -1');
+	ME.runLine('ADDI $v0, $zero, 1 # print integer');
+	resetOutput();
+	ME.runLine('syscall');
+	equal(output, -1, "Should print values as signed. (1111 1111 1111 1111 1111 1111 1111 1111)");
+
+	ME.runLine('LUI $a0, 32768 # store 10000... in the register');
+	ME.runLine('ADDI $v0, $zero, 1 # print integer');
+	resetOutput();
+	ME.runLine('syscall');
+	equal(output, -2147483648, "Should print values as signed. (1000 0000 0000 0000 0000 0000 0000 0000)");
+});
+
+
 module("Examples", {
 	setup: function() {
-		// fill up some of the registers with predictable, usable data, and reset the emulator's state
 		ME = new mipsEmulator({
 			onOutput: function(message) {
 				output = message;
