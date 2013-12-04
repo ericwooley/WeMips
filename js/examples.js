@@ -171,7 +171,20 @@ var examples = {
 	codeGenSaveString: function() {
 		// Given the input "Hello world!", this will output the hello world example above
 		return [
-
+			"# This example will allow you to easily store a string on to the stack.",
+			"# Once you run this, copy its output and use it in an MIPS scripts you want.",
+			"",
+			"# Store the user's input to the stack",
+			"ADDI $t0, $zero, 65   # max chars to read",
+			"SUBU $sp, $sp, $t0",
+			"ADDI $t1, $sp, 0 # t1 will store the location of the user's input",
+			"ADDI $a0, $sp, 0",
+			"ADD $a1, $zero, $t0 # length of read",
+			"ADDI $v0, $zero, 8 # read string",
+			"syscall",
+			"",
+			"ADDI $v0, $zero, 60 # Code generator",
+			"syscall"
 		];
 	},
 	debug: function() {

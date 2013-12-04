@@ -58,8 +58,15 @@ MIPS.stringToNumber = function (string) {
     return number;
 };
 
-MIPS.numberToString = function (number) {
+MIPS.numberToString = function (number, returnNullOnZero) {
     assert(typeof number === "number");
+    returnNullOnZero = typeof returnNullOnZero === 'undefined' ? false : returnNullOnZero;
+    assert(typeof returnNullOnZero === 'boolean');
+
+    if (returnNullOnZero && number === 0) {
+        return '\0';
+    }
+
     var string = '';
     while (0 < number) {
         string = String.fromCharCode(number & 255) + string;

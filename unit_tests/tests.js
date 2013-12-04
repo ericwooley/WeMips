@@ -12,6 +12,14 @@ test("Exception handling", function() {
 	}
 });
 
+test("Number to string", function() {
+	equal(MIPS.numberToString(0), '');
+	equal(MIPS.numberToString(0, false), '');
+	equal(MIPS.numberToString(0, true), '\0');
+	equal(MIPS.numberToString(65), 'A');
+	equal(MIPS.numberToString(4276803), 'ABC', 'Each letter is stored in a successive byte ((65 << 16) + (66 << 8) + (67)).');
+});
+
 test("Signed/Unsigned conversions", function() {
 	equal(MIPS.signedNumberToUnsignedNumber(-128, 8), 128, "(1000 0000)");
 	equal(MIPS.signedNumberToUnsignedNumber(-1, 8), 255, "(1111 1111)");
@@ -670,22 +678,79 @@ test("Read Integer", function() {
 	throws(function() { ME.runLine('syscall'); }, SyscallError, 'Value is too high.');
 });
 
+test('Read string', function() {
+	function verifyStackChars(stackPointerReg, expectedString) {
+		for (var i = 0; i < expectedString.length; i++) {
+			var expectedChar = expectedString[i];
+		};
+	}
+	var MSYS = mipsSyscalls(ME);
+	var expectedStackString;
+
+	input = 'Hello';
+	expectedStackString = 'Hello\0\0\0\0\0';
+	ME.runLines([
+		'# get user input and save to stack',
+		'ADDI $t0, $zero, 10   # max chars to read',
+		'SUBU $sp, $sp, $t0',
+		'ADDI $a0, $sp, 0',
+		'ADD $a1, $zero, $t0',
+		'ADDI $v0, $zero, 8 # read string',
+		'syscall'
+	]);
+	equal(ME.getRegisterVal('$v0'), input.length);
+	equal(expectedStackString.length, 10, 'Ensure the length works as expected.');
+	equal(MSYS.getStringAtAddress(ME.getRegisterUnsignedVal('$a0'), expectedStackString.length), expectedStackString);
+	equal(MSYS.getStringAtAddress(ME.getRegisterUnsignedVal('$a0')), input);
+
+	input = 'HelloHelloHello';
+	expectedStackString = 'HelloHell\0';
+	ME.runLines([
+		'# get user input and save to stack',
+		'ADDI $t0, $zero, 10   # max chars to read',
+		'SUBU $sp, $sp, $t0',
+		'ADDI $a0, $sp, 0',
+		'ADD $a1, $zero, $t0',
+		'ADDI $v0, $zero, 8 # read string',
+		'syscall'
+	]);
+	equal(ME.getRegisterVal('$v0'), 9, "Long strings are chopped.");
+	equal(MSYS.getStringAtAddress(ME.getRegisterUnsignedVal('$a0'), expectedStackString.length), expectedStackString);
+	equal(MSYS.getStringAtAddress(ME.getRegisterUnsignedVal('$a0')), input.substring(0, 9));
+
+	input = '';
+	expectedStackString = '\0\0\0\0\0\0\0\0\0\0';
+	ME.runLines([
+		'# get user input and save to stack',
+		'ADDI $t0, $zero, 10   # max chars to read',
+		'SUBU $sp, $sp, $t0',
+		'ADDI $a0, $sp, 0',
+		'ADD $a1, $zero, $t0',
+		'ADDI $v0, $zero, 8 # read string',
+		'syscall'
+	]);
+	equal(ME.getRegisterVal('$v0'), 0, "Null string.");
+	equal(MSYS.getStringAtAddress(ME.getRegisterUnsignedVal('$a0'), expectedStackString.length), expectedStackString);
+	equal(MSYS.getStringAtAddress(ME.getRegisterUnsignedVal('$a0')), input);
+
+});
+
 test('Read/write string', function() {
 	input = 'Hello';
 	resetOutput();
 	ME.runLines([
-			'# get user input and save to stack',
-			'ADDI $t0, $zero, 10   # max chars to read',
-			'SUBU $sp, $sp, $t0',
-			'ADDI $a0, $sp, 0',
-			'ADD $a1, $zero, $t0',
-			'ADDI $v0, $zero, 8 # read string',
-			'syscall',
-			'',
-			'# read stack and output',
-			'ADDI $a0, $sp, 0',
-			'ADDI $v0, $zero, 4 # print string',
-			'syscall'
+		'# get user input and save to stack',
+		'ADDI $t0, $zero, 10   # max chars to read',
+		'SUBU $sp, $sp, $t0',
+		'ADDI $a0, $sp, 0',
+		'ADD $a1, $zero, $t0',
+		'ADDI $v0, $zero, 8 # read string',
+		'syscall',
+		'',
+		'# read stack and output',
+		'ADDI $a0, $sp, 0',
+		'ADDI $v0, $zero, 4 # print string',
+		'syscall'
 	]);
 	equal(output, input, "Should be able to write hello to stack and read it from the stack.");
 });
