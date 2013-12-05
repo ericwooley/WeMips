@@ -224,6 +224,44 @@ function mipsSyscalls(ME) {
 				result += "sb $zero, " + string.length + "($sp) # '\\0' \n";
 				ME.output(result);
 			}
+		},
+		'61': {
+			description: 'Binary -> Decimal',
+			execute: function() {
+				var stackPointer = ME.getRegisterUnsignedVal('$a0');
+				var string = MSYS.getStringAtAddress(stackPointer);
+
+				var signedValue = MIPS.binaryStringToNumber(string);
+				var unsignedValue = MIPS.binaryStringToUnsignedNumber(string);
+
+				var result;
+				if (signedValue !== unsignedValue) {
+					result = '{0} in decimal is {1} or {2}.'.format(string, signedValue, unsignedValue);
+				} else {
+					result = '{0} in decimal is {1}.'.format(string, signedValue);
+				}
+
+				ME.output(result);
+			}
+		},
+		'62': {
+			description: 'Decimal -> Binary',
+			execute: function() {
+				var signedNumber = ME.getRegisterVal('$a0');
+				var charCount = ME.getRegisterVal('$a1');
+
+				var unsignedNumber = MIPS.signedNumberToUnsignedNumber(signedNumber, charCount);
+				var binaryString = MIPS.numberToBinaryString(signedNumber, charCount);
+
+				var result;
+				if (signedNumber !== unsignedNumber) {
+					result = '{0} (or {1}) in binary is {2}.'.format(signedNumber, unsignedNumber, binaryString);
+				} else {
+					result = '{0} in binary is {1}.'.format(signedNumber, binaryString);
+				}
+
+				ME.output(result);
+			}
 		}
 	};
 

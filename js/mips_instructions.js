@@ -143,37 +143,56 @@ function mipsInstructionExecutor(ME) {
         'JAL': {
             parseMethod: parse_label,
             runMethod: function(namedArgs) {
-                ME.goToLabel(namedArgs.label);
                 ME.setRegisterVal('$ra', ME.getLineNumber() + 1);
-
+                ME.goToLabel(namedArgs.label);
             } // TODO: make some tests
         },
         'JR': {
             parseMethod: parse_$rs,
-            runMethod: null // TODO: implement this and make some tests
+            runMethod: function(namedArgs) {
+                // TODO: the line numbers should be random and not start at 0
+                // Also, blank lines should probably have a line number associated with them
+                var lineNumber = ME.getRegisterUnsignedVal(namedArgs.$rs);
+                ME.setLine(lineNumber);
+            } // TODO: make some tests
         },
         /////////////////////////////////////////////
         // Mips Memory Access Instructions
         /////////////////////////////////////////////
         'LW': {
             parseMethod: parse_$RT_imm_$rs,
-            runMethod: null // TODO: implement this and make some tests
+            runMethod: function(namedArgs) {
+                ME.setRegisterVal(namedArgs.$rt, ME.stack.getWord(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm));
+                ME.incerementPC();
+            } // TODO: make some tests
         },
         'SW': {
             parseMethod: parse_$rt_imm_$rs,
-            runMethod: null // TODO: implement this and make some tests
+            runMethod: function(namedArgs) {
+                ME.stack.setWord(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm, ME.getRegisterVal(namedArgs.$rt));
+                ME.incerementPC();
+            } // TODO: make some tests
         },
         'LH': {
             parseMethod: parse_$RT_imm_$rs,
-            runMethod: null // TODO: implement this and make some tests
+            runMethod: function(namedArgs) {
+                ME.setRegisterVal(namedArgs.$rt, ME.stack.getHalfword(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm));
+                ME.incerementPC();
+            } // TODO: make some tests
         },
         'LHU': {
             parseMethod: parse_$RT_imm_$rs,
-            runMethod: null // TODO: implement this and make some tests
+            runMethod: function(namedArgs) {
+                ME.setRegisterVal(namedArgs.$rt, ME.stack.getUnsignedHalfword(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm));
+                ME.incerementPC();
+            } // TODO: make some tests
         },
         'SH': {
             parseMethod: parse_$rt_imm_$rs,
-            runMethod: null // TODO: implement this and make some tests
+            runMethod: function(namedArgs) {
+                ME.stack.setHalfword(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm, ME.getRegisterVal(namedArgs.$rt));
+                ME.incerementPC();
+            } // TODO: make some tests
         },
         'LB': {
             parseMethod: parse_$RT_imm_$rs,
@@ -192,7 +211,7 @@ function mipsInstructionExecutor(ME) {
         'SB': {
             parseMethod: parse_$rt_imm_$rs,
             runMethod: function(namedArgs) {
-                // TODO: is this really only saving the lower 8 bits?
+                // TODO: should these be using unsignedAdd so that the appropriate flags are set?
             	ME.stack.setByte(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm, ME.getRegisterVal(namedArgs.$rt));
             	ME.incerementPC();
             }
@@ -202,19 +221,35 @@ function mipsInstructionExecutor(ME) {
         /////////////////////////////////////////////
         'SLT': {
             parseMethod: parse_$RD_$rs_$rt,
-            runMethod: null // TODO: implement this and make some tests
+            runMethod: function(namedArgs) {
+                var value = ME.getRegisterVal(namedArgs.$rs) < ME.getRegisterVal(namedArgs.$rt);
+                ME.setRegisterVal(namedArgs.$rd, value ? 1 : 0);
+                ME.incerementPC();
+            } // TODO: make some tests
         },
         'SLTI': {
             parseMethod: parse_$RT_$rs_immSignExt,
-            runMethod: null // TODO: implement this and make some tests
+            runMethod: function(namedArgs) {
+                var value = ME.getRegisterVal(namedArgs.$rs) < namedArgs.imm;
+                ME.setRegisterVal(namedArgs.$rd, value ? 1 : 0);
+                ME.incerementPC();
+            } // TODO: make some tests
         },
         'SLTU': {
             parseMethod: parse_$RD_$rs_$rt,
-            runMethod: null // TODO: implement this and make some tests
+            runMethod: function(namedArgs) {
+                var value = ME.getRegisterUnsignedVal(namedArgs.$rs) < ME.getRegisterUnsignedVal(namedArgs.$rt);
+                ME.setRegisterVal(namedArgs.$rd, value ? 1 : 0);
+                ME.incerementPC();
+            } // TODO: make some tests
         },
         'SLTIU': {
             parseMethod: parse_$RT_$rs_immSignExt,
-            runMethod: null // TODO: implement this and make some tests
+            runMethod: function(namedArgs) {
+                var value = ME.getRegisterUnsignedVal(namedArgs.$rs) < namedArgs.imm;
+                ME.setRegisterVal(namedArgs.$rd, value ? 1 : 0);
+                ME.incerementPC();
+            } // TODO: make some tests
         },
         /////////////////////////////////////////////
         // Other

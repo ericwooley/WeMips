@@ -120,6 +120,8 @@ test("Unsigned carry flag math", function() {
 
 test("Binary Methods", function() {
 	equal(MIPS.numberToBinaryString(-1),  "11111111111111111111111111111111");
+	equal(MIPS.numberToBinaryString(-1, 4),  "1111");
+	equal(MIPS.numberToBinaryString(-1, 8, 2),  "11 11 11 11", "Block size specified.");
 	equal(MIPS.numberToBinaryString(0),   "00000000000000000000000000000000");
 	equal(MIPS.numberToBinaryString(1),   "00000000000000000000000000000001");
 	equal(MIPS.numberToBinaryString(33),  "00000000000000000000000000100001");
@@ -131,6 +133,7 @@ test("Binary Methods", function() {
 	equal(MIPS.numberToBinaryString(Math.pow(2, 32) - 1), "11111111111111111111111111111111");
 
 	equal(MIPS.binaryStringToUnsignedNumber("11111111111111111111111111111111"), Math.pow(2, 32) - 1);
+	equal(MIPS.binaryStringToUnsignedNumber("1111111 1111111111  11111111111 1111"), Math.pow(2, 32) - 1, "Spaces are allowed.");
 	equal(MIPS.binaryStringToUnsignedNumber("00000000000000000000000000000000"), 0);
 	equal(MIPS.binaryStringToUnsignedNumber("00000000000000000000000000000011"), 3);
 	equal(MIPS.binaryStringToUnsignedNumber("11"), 3, "We can ommit leading zeros.");
@@ -138,7 +141,10 @@ test("Binary Methods", function() {
 
 	equal(MIPS.binaryStringToNumber("00000000000000000000000000000001"), 1);
 	equal(MIPS.binaryStringToNumber("11111111111111111111111111111111"), -1);
+	equal(MIPS.binaryStringToNumber("1111111111 11111 11111 111   111111111"), -1, "spaces are allowed.");
 	equal(MIPS.binaryStringToNumber("11111111111111111111111111011111"), -33);
+	equal(MIPS.binaryStringToNumber("11111111 11111111 11111111 10000000"), -128);
+	equal(MIPS.binaryStringToNumber("11111111 11111111 10000000 10000000"), -32640);
 	equal(MIPS.binaryStringToNumber("00000000000000000000000000100001"), 33);
 	equal(MIPS.binaryStringToNumber("11"), -1, "The string length is used to determine the power of two.");
 	equal(MIPS.binaryStringToNumber("011"), 3, "Same as above.");
@@ -236,6 +242,28 @@ test("Save/load integers to stack", function() {
 	stack.setByte(stackPointer, 257);
 	equal(stack.getByte(stackPointer), 1, "Should save only the bottom 8 bits.");
 	throws(function() { stack.setByte(stackPointer, Math.pow(2, 32)); }, StackError, "Out of range.");
+
+	var twoToThe24 = 16777216;
+	var twoToThe23 = 8388608;
+	var twoToThe15 = 32768;
+	var twoToThe7 = 128;
+	var value = twoToThe23 + twoToThe15 + twoToThe7;
+	stackPointer -= 4;
+	stack.setWord(stackPointer, value);
+	equal(stack.getWord(stackPointer), value, 					"[00000000  10000000  10000000  10000000]");
+
+	equal(stack.getHalfword(stackPointer), 128,			 		"[00000000  10000000] 10000000  10000000 --> 00000000 00000000 00000000 10000000");
+	equal(stack.getUnsignedHalfword(stackPointer), 128, 		"[00000000  10000000] 10000000  10000000 --> 00000000 00000000 00000000 10000000");
+	equal(stack.getHalfword(stackPointer + 1), -32640, 			" 00000000 [10000000  10000000] 10000000 --> 11111111 11111111 10000000 10000000");
+	equal(stack.getUnsignedHalfword(stackPointer + 1), 32896, 	" 00000000 [10000000  10000000] 10000000 --> 00000000 00000000 10000000 10000000");
+
+	value = twoToThe24 + twoToThe23 + twoToThe15 + twoToThe7;
+	stack.setWord(stackPointer, value);
+
+	equal(stack.getByte(stackPointer), 1, 						"[00000001] 10000000  10000000  10000000 --> 00000000 00000000 00000000 00000001");
+	equal(stack.getUnsignedByte(stackPointer), 1, 				"[00000001] 10000000  10000000  10000000 --> 00000000 00000000 00000000 00000001");
+	equal(stack.getByte(stackPointer + 1), -128, 				" 00000001 [10000000] 10000000  10000000 --> 11111111 11111111 11111111 10000000");
+	equal(stack.getUnsignedByte(stackPointer + 1), 128, 		" 00000001 [10000000] 10000000  10000000 --> 00000000 00000000 00000000 10000000");
 });
 
 test("Addresses", function() {
@@ -506,6 +534,19 @@ test("LB, LBU, SB", function() {
 	equal(ME.getRegisterVal('$t5'), -1, "255 as signed is -1.");
 	ME.runLine("LBU $t5, 0($sp)");
 	equal(ME.getRegisterVal('$t5'), 255, "255 as unsigned is 255.");
+
+	// loading should sign extend or zero extend
+	ME.runLine('ADDI $sp, $sp, -4');
+	ME.runLine('ADDI $t5, $zero, 511'); // 511 is 256 + 255 -- 00000000 00000000 00000001 11111111
+	ME.runLine('SW $t5, 0($sp)'); // 00000000 00000000 00000001 11111111 is now stored at top of stack
+	ME.runLine('LB $t5, 3($sp)'); // 00000000 00000000 00000001 [11111111] load this byte
+	equal(ME.getRegisterVal('$t5'), -1, 'LB should sign extend.');
+	ME.runLine('LBU $t5, 3($sp)'); // 00000000 00000000 00000001 [11111111] load this byte
+	equal(ME.getRegisterVal('$t5'), 255, 'LBU should zero extend.');
+	ME.runLine('LB $t5, 2($sp)'); // 00000000 00000000 [00000001] 11111111 load this byte
+	equal(ME.getRegisterVal('$t5'), 1, 'LB should sign extend.');
+	ME.runLine('LBU $t5, 2($sp)'); // 00000000 00000000 [00000001] 11111111 load this byte
+	equal(ME.getRegisterVal('$t5'), 1, 'LBU should zero extend.');
 });
 
 test("J", function() {

@@ -75,12 +75,13 @@ MIPS.numberToString = function (number, returnNullOnZero) {
     return string;
 };
 
-MIPS.numberToBinaryString = function (number, bits/*=32*/) {
+MIPS.numberToBinaryString = function (number, bits/*=32*/, blockSize) {
     // returns a binary representation of a string.
     assert(typeof number === "number");
 
     bits = bits || 32;
     assert(typeof bits === "number");
+    blockSizeDefined = typeof blockSize !== undefined;
 
     if (number < 0) {
         // convert to the corresponding unsigned number (e.g. when we are using single bytes, then -2 would correspond to 254, since the two are represented the same in binary)
@@ -89,11 +90,25 @@ MIPS.numberToBinaryString = function (number, bits/*=32*/) {
 
     var result = number.toString(2);
     var zeroPadding = (new Array(bits - result.length + 1)).join('0');
-    return zeroPadding + result;
+    result = zeroPadding + result;
+
+    if (blockSizeDefined) {
+        var resultWithSpaces = '';
+        for (var i = 0; i < result.length; i++) {
+            resultWithSpaces += result[i];
+            if (((i+1) % blockSize === 0) && ((i+1) !== result.length)) {
+                resultWithSpaces += ' ';
+            }
+        }
+        result = resultWithSpaces;
+    }
+
+    return result;
 };
 
 MIPS.binaryStringToNumber = function (binaryString) {
     assert(typeof binaryString == "string");
+    binaryString = binaryString.replace(/\s+/g, '');
 
     var unsignedNumber = MIPS.binaryStringToUnsignedNumber(binaryString);
     if (binaryString[0] === "0") {
@@ -107,6 +122,7 @@ MIPS.binaryStringToNumber = function (binaryString) {
 
 MIPS.binaryStringToUnsignedNumber = function (binaryString) {
     assert(typeof binaryString == "string");
+    binaryString = binaryString.replace(/\s+/g, '');
     return parseInt(binaryString, 2);
 };
 
