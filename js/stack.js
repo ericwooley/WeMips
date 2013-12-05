@@ -17,7 +17,7 @@ StackError.prototype.toString = function() {
 function Stack(options) {
     var BITS_PER_REGISTER = 32; // TODO: get this from somewhere else?
     var MIN_STACK_ADDRESS = MIPS.minUnsignedValue(BITS_PER_REGISTER);
-    var MAX_STACK_ADDRESS = MIPS.maxUnsignedValue(BITS_PER_REGISTER);
+    var MAX_STACK_ADDRESS = MIPS.maxUnsignedValue(BITS_PER_REGISTER - 1); // TODO: shouldn't need minus 1
 
     // Returns a random integer between min and max
     function getRandomInt(min, max) {
