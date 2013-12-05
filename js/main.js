@@ -320,11 +320,11 @@ $(document).ready(function(){
                         + "<span class='stackAddrRelative' "+ showAddRelative +" id='stackAddrRelative-"+stackLow+"'>"
                             + (stackLow - stackEnd) + ": "
                         + "</span>"
-                        + "<span class='regSpacer' id='stackVal-"+stackLow+"'>"+
+                        + "<span class='regSpacer' id='stackVal-"+stackLow+"'>"
                             + me.stack.getByte(stackLow)
                         +"</span>"
-                        + "<span class='regSpacer' id='stackChar-"+stackLow+"'>"+
-                            + me.stack.getByte(stackLow)
+                        + "<span class='regSpacer' id='stackChar-"+stackLow+"'>"
+                            + asChar(me.stack.getByte(stackLow))
                         +"</span>"
                     + "</span>"
                 + "</div>"
@@ -334,11 +334,14 @@ $(document).ready(function(){
         console.log("stack Change: " + address + " - " + val);
 
         $("#stackVal-"+address).html(val);
-        $("#stackVal-"+address).html(asChar(val));
+        
+
+        $("#stackChar-"+address).html(asChar(val));
         if(visualize){
             if(autoSwitch) $('#registers a[href="#stack-container-div"]').tab('show');
             $(".lastRegChanged").removeClass('lastRegChanged');
             $("#stackVal-"+address).addClass('lastRegChanged');
+            $("#stackChar-"+address).addClass('lastRegChanged');
         }
     };
     var stackLow = me.stack.pointerToBottomOfStack()-1;
@@ -378,7 +381,12 @@ $(document).ready(function(){
     }
     function asChar(num){
         num = MIPS.signedNumberToUnsignedNumber(num, 8);
-        return String.fromCharCode(num);
+        console.log(num)
+        if(!num)
+            return '-';
+        if(num > 32 && num < 127)
+            return String.fromCharCode(num);
+        return '-';
     }
     function addToLog(type, message, line_no){
         message = message.replace(/\n/g, "<br />");
