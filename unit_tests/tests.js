@@ -501,8 +501,8 @@ test("ADDU", function() {
 });
 
 test("LB, LBU, SB", function() {
-	var ME2 = new mipsEmulator({ baseStackAddress: MIPS.maxUnsignedValue(ME.BITS_PER_REGISTER) });
-	equal(ME2.stack.pointerToBottomOfStack(), MIPS.maxUnsignedValue(ME.BITS_PER_REGISTER), 'Ensure the stack is actually at the max value.');
+	var ME2 = new mipsEmulator({ baseStackAddress: MIPS.maxUnsignedValue(ME.BITS_PER_REGISTER - 1) }); // TODO: don't need the -1 here
+	equal(ME2.stack.pointerToBottomOfStack(), MIPS.maxUnsignedValue(ME.BITS_PER_REGISTER - 1), 'Ensure the stack is actually at the max value.');
 	// make sure that accessing high addresses causes no problems (i.e. that we are using unsigned, rather than signed values.)
 	ME2.runLine("ADDI $t5, $zero, 120");
 	ME2.runLine("SB $t5, -1($fp)");
