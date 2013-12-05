@@ -317,14 +317,17 @@ $(document).ready(function(){
                         + "<span class='stackAddrReal' "+ showAddReal +" id='stackAddr-"+stackLow+"'>"
                             + stackLow + ": "
                         + "</span>"
-                        + "<span class='stackAddrRelative' "+ showAddRelative +" id='stackAddrRelative-"+stackLow+"'>"
+                        + "<span class='regAddrRelative' "+ showAddRelative +" id='stackAddrRelative-"+stackLow+"'>"
                             + (stackLow - stackEnd) + ": "
                         + "</span>"
                         + "<span class='regSpacer' id='stackVal-"+stackLow+"'>"
                             + me.stack.getByte(stackLow)
                         +"</span>"
-                        + "<span class='regSpacer' id='stackChar-"+stackLow+"'>"
+                        + "<span class='regSpacer charBin' id='stackChar-"+stackLow+"'>"
                             + asChar(me.stack.getByte(stackLow))
+                        +"</span>"
+                        + "<span class='regSpacer charBin' id='stackBin-"+stackLow+"' style='display: none'>"
+                            + asBin(me.stack.getByte(stackLow))
                         +"</span>"
                     + "</span>"
                 + "</div>"
@@ -337,11 +340,13 @@ $(document).ready(function(){
         
 
         $("#stackChar-"+address).html(asChar(val));
+        $("#stackBin-"+address).html(asBin(val));
         if(visualize){
             if(autoSwitch) $('#registers a[href="#stack-container-div"]').tab('show');
             $(".lastRegChanged").removeClass('lastRegChanged');
             $("#stackVal-"+address).addClass('lastRegChanged');
             $("#stackChar-"+address).addClass('lastRegChanged');
+            $("#stackBin-"+address).addClass('lastRegChanged');
         }
     };
     var stackLow = me.stack.pointerToBottomOfStack()-1;
@@ -387,6 +392,9 @@ $(document).ready(function(){
         if(num > 32 && num < 127)
             return String.fromCharCode(num);
         return '-';
+    }
+    function asBin(num){
+        return MIPS.numberToBinaryString(num, 8);
     }
     function addToLog(type, message, line_no){
         message = message.replace(/\n/g, "<br />");
