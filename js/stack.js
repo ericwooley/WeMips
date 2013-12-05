@@ -15,6 +15,15 @@ StackError.prototype.toString = function() {
  * - options.baseAddress The default base address.
  */
 function Stack(options) {
+    var BITS_PER_REGISTER = 32; // TODO: get this from somewhere else?
+    var MIN_STACK_ADDRESS = MIPS.minUnsignedValue(BITS_PER_REGISTER);
+    var MAX_STACK_ADDRESS = MIPS.maxUnsignedValue(BITS_PER_REGISTER);
+
+    // Returns a random integer between min and max
+    function getRandomInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1) + min);
+    }
+
     options = options || {};
     _.defaults(options, {
         /**
@@ -29,8 +38,9 @@ function Stack(options) {
          * @type {Function}
          */
         onAdd: null,
-        baseAddress: Math.floor((Math.random()*999999)) + 10000
+        baseAddress: getRandomInt(50000, MAX_STACK_ADDRESS)
     });
+    assert(MIN_STACK_ADDRESS <= options.baseAddress && options.baseAddress <= MAX_STACK_ADDRESS, "Stack addresses must be able to be stored in a register, thus they cannot exceed the register bounds.");
 
     // Private memebers
 
@@ -113,10 +123,12 @@ function Stack(options) {
      * @param {Number} data      Number you want to set there.
      */
     this.setDataAtAddress = function(address, byteCount, data) {
-        assert(typeof data === "number", "Only numbers supported for now.");
+        assert(typeof data === "number", "Only numbers supported.");
+        var bitCount = byteCount * this.BITS_PER_BYTE;
         if (data < 0) {
+            // convert negative value to positive one
             try {
-                data = MIPS.signedNumberToUnsignedNumber(data, byteCount * this.BITS_PER_BYTE);
+                data = MIPS.signedNumberToUnsignedNumber(data, bitCount);
             } catch (e) {
                 if (e instanceof MipsError) {
                     throw new StackError(e.message);
@@ -125,11 +137,20 @@ function Stack(options) {
                 }
             }
         }
-        var minValidValue = 0;
-        var maxValidValue = (Math.pow(256, byteCount) - 1);
+
+        var minValidValue = MIPS.minUnsignedValue(BITS_PER_REGISTER);
+        var maxValidValue = MIPS.maxUnsignedValue(BITS_PER_REGISTER);
         if (data < minValidValue || maxValidValue < data) {
             throw new StackError('Unable to store out-of-range value ({0}). Valid values are {1} through {2}.'.format(data, minValidValue, maxValidValue));
         };
+
+        // preserve only the lower N bytes
+        assert(0 <= bitCount && bitCount <= 32, "The & operator will only work for up to 32 bits.");
+        data = data & (Math.pow(2, bitCount)-1);
+        minValidValue = 0;
+        maxValidValue = (Math.pow(2, bitCount) - 1);
+        assert(minValidValue <= data && data <= maxValidValue, "Ensure the above chopping math was performed correctly.");
+
         for (var i = byteCount - 1; i >= 0; i--) {
             var rightMostByte = data & this.MAX_BYTE_VALUE;
             setByteAtAddress(address + i, rightMostByte);

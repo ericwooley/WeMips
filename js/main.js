@@ -60,7 +60,13 @@ $(document).ready(function(){
             addToLog('success', message);
         },
         onInput: function(message) {
-            return window.prompt(message, '');
+            return window.prompt(message);
+        },
+        onConfirm: function(message) {
+            return window.confirm(message);
+        },
+        onAlert: function(message) {
+            window.alert(message);
         },
         onStackChange: addStackAddress,
         // Set the starting code to be the defualt in the editor.

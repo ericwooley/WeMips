@@ -45,14 +45,21 @@ function mipsEmulator(mipsArgs){
         },
         onInput: function(message) {
             assert(false, "Expecting input, but there is no handler.");
-        }
+        },
+        onConfirm: function(message) {
+            assert(false, "Expecting confirmation, but there is no handler.");
+        },
+        onAlert: function(message) {
+            assert(false, "Expecting alert to be displayed, but there is no handler.");
+        },
+        baseStackAddress: undefined
     });
     var debug = mipsArgs.debug;
     //////////////////////////////////
     // Private Variables / Setup
     //////////////////////////////////
 
-   var stack = new Stack({onChange: mipsArgs.onStackChange});
+   var stack = new Stack({onChange: mipsArgs.onStackChange, baseAddress: mipsArgs.baseStackAddress});
 
     /**
      * Hash table of registers
@@ -420,6 +427,12 @@ function mipsEmulator(mipsArgs){
         },
         getInput: function(message) {
             return mipsArgs.onInput(message);
+        },
+        confirm: function(message) {
+            return mipsArgs.onConfirm(message);
+        },
+        alert: function(message) {
+            mipsArgs.onAlert(message);
         }
     };
 

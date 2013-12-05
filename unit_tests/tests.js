@@ -233,7 +233,9 @@ test("Save/load integers to stack", function() {
 	stack.setByte(stackPointer, 0);
 	stack.setByte(stackPointer, 127);
 	stack.setByte(stackPointer, 255);
-	throws(function() { stack.setByte(stackPointer, 256); }, StackError, "Out of range.");
+	stack.setByte(stackPointer, 257);
+	equal(stack.getByte(stackPointer), 1, "Should save only the bottom 8 bits.");
+	throws(function() { stack.setByte(stackPointer, Math.pow(2, 32)); }, StackError, "Out of range.");
 });
 
 test("Addresses", function() {
@@ -471,6 +473,21 @@ test("ADDU", function() {
 });
 
 test("LB, LBU, SB", function() {
+	var ME2 = new mipsEmulator({ baseStackAddress: MIPS.maxUnsignedValue(ME.BITS_PER_REGISTER) });
+	equal(ME2.stack.pointerToBottomOfStack(), MIPS.maxUnsignedValue(ME.BITS_PER_REGISTER), 'Ensure the stack is actually at the max value.');
+	// make sure that accessing high addresses causes no problems (i.e. that we are using unsigned, rather than signed values.)
+	ME2.runLine("ADDI $t5, $zero, 120");
+	ME2.runLine("SB $t5, -1($fp)");
+	ME2.runLine("LB $t5, -2($fp)");
+	ME2.runLine("LBU $t5, -2($fp)");
+
+	// saving a byte should take the bottom 8 bits
+	ME.runLine("ADDI $t5, $zero, 257");
+	ME.runLine("SB $t5, -1($fp)");
+	ME.runLine("LB $t5, -1($fp)");
+	equal(ME.getRegisterVal('$t5'), 1, "Should have stored the bottom 8 bits.");
+
+
 	ME.runLine("ADDI $sp, $sp, -1");
 	ME.runLine("SB $t2, 0($sp)");
 	ME.runLine("LB $t5, 0($sp)");

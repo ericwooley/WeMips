@@ -175,14 +175,14 @@ function mipsInstructionExecutor(ME) {
         'LB': {
             parseMethod: parse_$RT_imm_$rs,
             runMethod: function(namedArgs) {
-            	ME.setRegisterVal(namedArgs.$rt, ME.stack.getByte(ME.getRegisterVal(namedArgs.$rs) + namedArgs.imm));
+            	ME.setRegisterVal(namedArgs.$rt, ME.stack.getByte(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm));
             	ME.incerementPC();
             }
         },
         'LBU': {
             parseMethod: parse_$RT_imm_$rs,
             runMethod: function(namedArgs) {
-            	ME.setRegisterVal(namedArgs.$rt, ME.stack.getUnsignedByte(ME.getRegisterVal(namedArgs.$rs) + namedArgs.imm));
+            	ME.setRegisterVal(namedArgs.$rt, ME.stack.getUnsignedByte(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm));
             	ME.incerementPC();
             }
         },
@@ -190,7 +190,7 @@ function mipsInstructionExecutor(ME) {
             parseMethod: parse_$rt_imm_$rs,
             runMethod: function(namedArgs) {
                 // TODO: is this really only saving the lower 8 bits?
-            	ME.stack.setByte(ME.getRegisterVal(namedArgs.$rs) + namedArgs.imm, ME.getRegisterVal(namedArgs.$rt));
+            	ME.stack.setByte(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm, ME.getRegisterVal(namedArgs.$rt));
             	ME.incerementPC();
             }
         },
