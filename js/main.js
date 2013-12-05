@@ -323,6 +323,9 @@ $(document).ready(function(){
                         + "<span class='regSpacer' id='stackVal-"+stackLow+"'>"+
                             + me.stack.getByte(stackLow)
                         +"</span>"
+                        + "<span class='regSpacer' id='stackChar-"+stackLow+"'>"+
+                            + me.stack.getByte(stackLow)
+                        +"</span>"
                     + "</span>"
                 + "</div>"
             );
@@ -331,6 +334,7 @@ $(document).ready(function(){
         console.log("stack Change: " + address + " - " + val);
 
         $("#stackVal-"+address).html(val);
+        $("#stackVal-"+address).html(asChar(val));
         if(visualize){
             if(autoSwitch) $('#registers a[href="#stack-container-div"]').tab('show');
             $(".lastRegChanged").removeClass('lastRegChanged');
@@ -371,6 +375,10 @@ $(document).ready(function(){
             $('.stackAddrRelative').hide();
             $('.stackAddrReal').show();
         }
+    }
+    function asChar(num){
+        num = MIPS.signedNumberToUnsignedNumber(num, 8);
+        return String.fromCharCode(num);
     }
     function addToLog(type, message, line_no){
         message = message.replace(/\n/g, "<br />");
