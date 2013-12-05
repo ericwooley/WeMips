@@ -263,7 +263,7 @@ $(document).ready(function(){
 
             step();
             lineRanThisRun++;
-            if(lineRanThisRun > 10 * LC && !notInfinite)
+            if(lineRanThisRun > 100 * LC && !notInfinite)
                 if(confirm(
                     "Code has run "
                     + lineRanThisRun
