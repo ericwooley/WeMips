@@ -373,6 +373,7 @@ $(document).ready(function(){
         }
     }
     function addToLog(type, message, line_no){
+        message = message.replace(/\n/g, "<br />");
         if(type == 'error') type = 'danger';
         if(line_no){
             message = "Line " + line_no + ": " + message;
