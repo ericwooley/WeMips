@@ -481,6 +481,13 @@ test("LB, LBU, SB", function() {
 	ME2.runLine("LB $t5, -2($fp)");
 	ME2.runLine("LBU $t5, -2($fp)");
 
+	// TODO: move these tests elsewhere
+	ME2.runLine("ADDIU $sp, $sp, -10");
+	ME2.runLine("SB $t5, 0($sp)"); // should not cause any problems
+	// ME2.runLine("ADDI $sp, $sp, -100");
+	// throws(function() { ME2.runLine('SB $t5, 0($sp)'); }, StackError, "When the stack address starts high, you should never use addi, use addiu instead.");
+
+
 	// saving a byte should take the bottom 8 bits
 	ME.runLine("ADDI $t5, $zero, 257");
 	ME.runLine("SB $t5, -1($fp)");
@@ -819,6 +826,14 @@ test("helloWorldExample", function() {
 	ME.runLines(example);
 	equal(output, 'Hello world!');
 });
+
+// TODO: add this test (e.g. input 2012 and expect it to return 'Your age is: 1').
+// test("interactive", function() {
+// 	var example = examples.helloWorld();
+// 	equal(output, '');
+// 	ME.runLines(example);
+// 	equal(output, 'Hello world!');
+// });
 
 // TODO: add tests for the rest of the examples
 

@@ -212,7 +212,7 @@ function mipsSyscalls(ME) {
 				var CHAR_TEMP_REG = '$t9';
 
 				result += "# Store '" + string + "' at the top of the stack\n";
-				result += "addi $sp, $sp, -" + (string.length + 1) + "\n";
+				result += "addiu $sp, $sp, -" + (string.length + 1) + "\n";
 
 				for (var i = 0; i < string.length; i++) {
 					var char = string[i];

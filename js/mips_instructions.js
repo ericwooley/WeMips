@@ -28,7 +28,10 @@ function mipsInstructionExecutor(ME) {
         },
         'ADDIU': {
             parseMethod: parse_$RT_$rs_immSignExt,
-            runMethod: null // TODO: implement this and make some tests
+            runMethod: function(namedArgs) {
+                ME.setRegisterVal(namedArgs.$rt, unsignedAddition(ME.getRegisterUnsignedVal(namedArgs.$rs), namedArgs.imm));
+                ME.incerementPC();
+            } // TODO: make some tests
         },
         'SUB': {
             parseMethod: parse_$RD_$rs_$rt,
