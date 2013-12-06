@@ -112,7 +112,6 @@ $(document).ready(function(){
     ///////////////////////////////////////////////////
     $(".registers-container li").each(setupRegisters);
     $('.regSpacer').on('blur', manualRegistryEdit);
-    //$('.regSpacer').on('blur', manualRegistryEditSave);
     $('#codeLoaders button').on('click', loadCustomCode);
     $("#step").click(step);
     $("#goToLineButton").on('click', setLine);
@@ -121,7 +120,7 @@ $(document).ready(function(){
     $("#autoSwitch").change(function(e){autoSwitch = $(e.target).is(':checked');});
     $("#clearLog").on('click', function(){$("#log").html('')});
     $("#stackDisplayType").change(changeStackType);
-    $('.stackVal').on('blur', manualStackEdit);
+    //$(".stackVal").on('blur', manualStackEdit); This has to be setup after the stack has been created
 
     // Functions to respond to events.
     function setLine(){
@@ -177,12 +176,7 @@ $(document).ready(function(){
         lastLineNoRun = null;
         setHighlights();
     };
-    function manualRegistryEditSave(e){
-        var newVal = $(e.target).html();
-        var target =  $(e.target);
-        var regName = target.attr("reg");
-        me.setRegisterVal(regName, Number(newVal), false);
-    };
+
     function manualRegistryEdit(e){
         var newVal = $(e.target).html();
         var target =  $(e.target);
@@ -297,6 +291,7 @@ $(document).ready(function(){
         if(autoSwitch) $('#registers a[href="#stack-container-div"]').tab('show');
             };
     var colorizeAddrBG = false;
+    var stackDisplayMode = "integer";
     function addStackAddress(address, val, visualize){
         if(!val || val == '') val = me.stack.getByte(address);
         if(typeof visualize == 'undefined')
@@ -310,6 +305,8 @@ $(document).ready(function(){
         }
         while(address <= stackLow){
             var bgColorClass = '';
+            var addressVal = me.stack.getByte(stackLow);
+            var valRep = changeToStackRep(addressVal);
             if(colorizeAddrBG) bgColorClass = 'lightGreyBG';
             colorizeAddrBG = !colorizeAddrBG;
             $("#stackRep").prepend(
@@ -326,12 +323,12 @@ $(document).ready(function(){
                             + "class='stackVal stackSpacer' "
                             + "id='stackVal-"+stackLow+"' "
                             + "address='"+stackLow+"' "
-                            + "contenteditable=true "
-                            + "integer='"+me.stack.getByte(stackLow)+"' "
-                            + "ascii='"+asChar(me.stack.getByte(stackLow))+"' "
-                            + "binary='"+asBin(me.stack.getByte(stackLow))+"' "
+                            + "contenteditable='true' "
+                            + "integer='"+addressVal+"' "
+                            + "ascii='"+asChar(addressVal)+"' "
+                            + "binary='"+asBin(addressVal)+"' "
                         + ">"
-                            + me.stack.getByte(stackLow)
+                            + valRep
                         +"</span>"
                         // + "<span class='regSpacer charBin' id='stackChar-"+stackLow+"'>"
                         //     + asChar(me.stack.getByte(stackLow))
@@ -342,28 +339,28 @@ $(document).ready(function(){
                     + "</span>"
                 + "</div>"
             );
+            $("#stackVal-"+stackLow).on('blur', manualStackEdit);
             stackLow--;
+            
         }
-        console.log("stack Change: " + address + " - " + val);
 
-        $("#stackVal-"+address).html(val);
-        
+        $("#stackVal-"+address).html(changeToStackRep(val));
+        $("#stackVal-"+address).attr('binary', asBin(val));
+        $("#stackVal-"+address).attr('integer', val);
+        $("#stackVal-"+address).attr('ascii', asChar(val));
 
-        $("#stackChar-"+address).html(asChar(val));
-        $("#stackBin-"+address).html(asBin(val));
+    
         if(visualize){
             if(autoSwitch) $('#registers a[href="#stack-container-div"]').tab('show');
             $(".lastRegChanged").removeClass('lastRegChanged');
             $("#stackVal-"+address).addClass('lastRegChanged');
-            $("#stackChar-"+address).addClass('lastRegChanged');
-            $("#stackBin-"+address).addClass('lastRegChanged');
         }
     };
     var stackLow = me.stack.pointerToBottomOfStack()-1;
     var stackEnd = me.stack.pointerToBottomOfStack();
     addStackAddress(stackLow, me.stack.getByte(stackLow), false);
 
-    var stackDisplayMode = "integer";
+    
     function changeStackType(e){
        stackDisplayMode = $("#stackDisplayType option:selected").html().toLowerCase();
        $(".stackVal").each(function(){
@@ -371,8 +368,32 @@ $(document).ready(function(){
             $(this).html($(this).attr(stackDisplayMode));
         });
     }; 
-    function manualStackEdit(){
-        alert("stack display mode" + stackDisplayMode);
+    function changeToStackRep(v){
+        console.log(stackDisplayMode);
+        switch(stackDisplayMode) {
+            case "integer":
+                return v;
+                break;
+            case "ascii":
+                return asChar(v);
+                break;
+            case "binary":
+                return asChar(v);
+                break;
+        }
+    }
+    function manualStackEdit(e){
+        var address = parseInt($(e.target).attr('address'));
+        var newVal = $(e.target).html();
+        switch(stackDisplayMode) {
+            case "integer":
+                me.stack.setByte(address, parseInt(newVal));
+                $(e.target).html(me.stack.getByte(address)); 
+                break;
+            case "ascii":
+                
+                break;
+        }
     };
     //setSP(stackEnd);
     function setupTests(){
@@ -410,7 +431,7 @@ $(document).ready(function(){
         num = MIPS.signedNumberToUnsignedNumber(num, 8);
         console.log(num)
         if(!num)
-            return '-';
+            return '';
         if(num > 32 && num < 127)
             return String.fromCharCode(num);
         return '-';
