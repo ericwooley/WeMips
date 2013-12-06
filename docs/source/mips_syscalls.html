@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js">function SyscallError(message) {
+	this.name = &#39;SyscallError&#39;;
+	this.message = message;
+}
+
+function mipsSyscalls(ME) {
+	function getInputStringAndSaveToStack(message, maxCharCount, stackSaveAddress, status) {
+		// Note: maxCharCount referst to actual character count, so &#39;cat&#39; is 3, not 4.
+
+		var input = ME.getInput(message);
+		if (maxCharCount &lt; input.length) {
+			input = input.substring(0, maxCharCount); // ignore strings that are too long
+			if (status)
+				status.tooLong = true;
+		}
+
+		for (var i = 0; i &lt;= maxCharCount; i++) {
+			// null terminate the rest of the addresses
+			var byte = (i &lt; input.length) ? input.charCodeAt(i) : 0;
+			ME.stack.setByte(stackSaveAddress + i, byte);
+		}
+
+		return input;
+	}
+
+	var MSYS = {
+		execute: function() {
+			var $v0Value = ME.getRegisterVal(&#39;$v0&#39;);
+			var syscallMethod = syscalls[$v0Value];
+			if (typeof syscallMethod === &#39;undefined&#39;) {
+				throw new SyscallError(&quot;No valid syscall for $v0&#39;s value of {0}.&quot;.format($v0Value));
+			}
+
+			syscallMethod.execute();
+		},
+		getStringAtAddress: function(address, length) {
+			assert(typeof address === &#39;number&#39;);
+			length = (typeof length === &#39;undefined&#39;) ? -1 : length;
+
+			// when length is -1, then stop once you reach a null byte
+			var stopOnceNullReached = length === -1;
+			var stopOnceLengthReached = !stopOnceNullReached;
+
+			var string = &#39;&#39;;
+			while (true) {
+				if (stopOnceLengthReached &amp;&amp; string.length === length) {
+					break;
+				}
+
+				var byte =  ME.stack.getByte(address);
+				if (stopOnceNullReached &amp;&amp; byte === 0) {
+					break;
+				}
+				var char = MIPS.numberToString(byte, true);
+				string += char;
+				address++;
+			}
+			return string;
+		}
+	};
+
+	var syscalls = { // key is the $v0 op code
+		&#39;1&#39;: {
+			description: &#39;Print Integer&#39;,
+			execute: function() {
+				var integer = ME.getRegisterVal(&#39;$a0&#39;);
+				ME.output(integer);
+			}
+		},
+		&#39;4&#39;: {
+			description: &#39;Print String&#39;,
+			execute: function() {
+				var stackPointer = ME.getRegisterUnsignedVal(&#39;$a0&#39;);
+				var string = MSYS.getStringAtAddress(stackPointer);
+				ME.output(string);
+			}
+		},
+		&#39;5&#39;: {
+			description: &#39;Read Integer&#39;,
+			execute: function() {
+				var minValue = MIPS.minSignedValue(ME.BITS_PER_REGISTER);
+				var maxValue = MIPS.maxUnsignedValue(ME.BITS_PER_REGISTER);
+				var input = ME.getInput(&#39;Enter a number from {0} to {1}&#39;.format(minValue, maxValue));
+				var number = parseInt(input, 10);
+				if (number &lt; minValue || maxValue &lt; number) {
+					throw new SyscallError(&#39;Invalid input number: {0}&#39;.format(number));
+				}
+				ME.setRegisterVal(&#39;$v0&#39;, number);
+			}
+		},
+		&#39;8&#39;: {
+			description: &#39;Read String&#39;,
+			execute: function() {
+				var addressOfInputBuffer = ME.getRegisterUnsignedVal(&#39;$a0&#39;);
+				var maxCharCount = ME.getRegisterUnsignedVal(&#39;$a1&#39;) - 1;
+
+				var input = getInputStringAndSaveToStack(&#39;Enter a string (max length is {0} char(s))&#39;.format(maxCharCount), maxCharCount, addressOfInputBuffer);
+
+				ME.setRegisterVal(&#39;$v0&#39;, input.length);
+			}
+		},
+		&#39;50&#39;: {
+			description: &#39;Confirm dialog&#39;,
+			execute: function() {
+				var stackPointer = ME.getRegisterUnsignedVal(&#39;$a0&#39;);
+				var message = MSYS.getStringAtAddress(stackPointer);
+
+				var result = ME.confirm(message);
+				ME.setRegisterVal(&#39;$a0&#39;, result ? 0 : 1);
+			}
+		},
+		&#39;51&#39;: {
+			description: &#39;Input dialog int&#39;,
+			execute: function() {
+				var stackPointer = ME.getRegisterUnsignedVal(&#39;$a0&#39;);
+				var message = MSYS.getStringAtAddress(stackPointer);
+
+				var minValue = MIPS.minSignedValue(ME.BITS_PER_REGISTER);
+				var maxValue = MIPS.maxUnsignedValue(ME.BITS_PER_REGISTER);
+
+
+				var result = ME.getInput(message);
+				var number = parseInt(result, 10);
+				var unableToParse = isNaN(number);
+				var status;
+
+				if (result === null) {
+					// cancel was chosen
+					status = -2;
+				} else if (result === &#39;&#39;) {
+					// OK was chosen, but no data was input into the field
+					status = -3;
+				} else if (unableToParse) {
+					// input data cannot be correctly parsed
+					status = -1;
+				} else if (number &lt; minValue || maxValue &lt; number) {
+					status = -1;
+					// TODO: output that the value was out of range?
+				} else {
+					// valid input
+					status = 0;
+					ME.setRegisterVal(&#39;$a0&#39;, number);
+				}
+				ME.setRegisterVal(&#39;$a1&#39;, status);
+			}
+		},
+		&#39;54&#39;: {
+			description: &#39;Input dialog string&#39;,
+			execute: function() {
+				var stackPointer = ME.getRegisterUnsignedVal(&#39;$a0&#39;);
+				var message = MSYS.getStringAtAddress(stackPointer);
+
+				var addressOfInputBuffer = ME.getRegisterUnsignedVal(&#39;$a1&#39;);
+				var maxCharCount = ME.getRegisterUnsignedVal(&#39;$a2&#39;) - 1;
+
+				var inputStatus = { tooLong: false };
+				var result = getInputStringAndSaveToStack(message, maxCharCount, addressOfInputBuffer, inputStatus);
+				var status;
+
+				// TODO: for -2 and -3, it isn&#39;t supposed to change the input buffer
+				if (result === null) {
+					// cancel was chosen
+					status = -2;
+				} else if (result === &#39;&#39;) {
+					// OK was chosen, but no data was input into the field
+					status = -3;
+				} else if (inputStatus.tooLong) {
+					// length of the input string exceeded the specified maximum.
+					status = -4;
+				} else {
+					// valid input
+					status = 0;
+				}
+				ME.setRegisterVal(&#39;$a1&#39;, status);
+			}
+		},
+		&#39;55&#39;: {
+			description: &#39;Alert&#39;,
+			execute: function() {
+				var stackPointer = ME.getRegisterUnsignedVal(&#39;$a0&#39;);
+				var string = MSYS.getStringAtAddress(stackPointer);
+				ME.alert(string);
+			}
+		},
+		&#39;56&#39;: {
+			description: &#39;Alert int&#39;,
+			execute: function() {
+				var stackPointer = ME.getRegisterUnsignedVal(&#39;$a0&#39;);
+				var string = MSYS.getStringAtAddress(stackPointer);
+				var number = ME.getRegisterUnsignedVal(&#39;$a1&#39;);
+				ME.alert(string + number);
+			}
+		},
+		&#39;59&#39;: {
+			description: &#39;Alert string&#39;,
+			execute: function() {
+				var stackPointer = ME.getRegisterUnsignedVal(&#39;$a0&#39;);
+				var string1 = MSYS.getStringAtAddress(stackPointer);
+				stackPointer = ME.getRegisterUnsignedVal(&#39;$a1&#39;);
+				var string2 = MSYS.getStringAtAddress(stackPointer);
+
+				ME.alert(string1 + string2);
+			}
+		},
+		&#39;60&#39;: {
+			description: &#39;Generate save string in stack code&#39;,
+			execute: function() {
+				var stackPointer = ME.getRegisterUnsignedVal(&#39;$a0&#39;);
+				var string = MSYS.getStringAtAddress(stackPointer);
+				var result = &#39;&#39;;
+				var STACK_POINTER_REG = &#39;$t8&#39;;
+				var CHAR_TEMP_REG = &#39;$t9&#39;;
+
+				result += &quot;# Store &#39;&quot; + string + &quot;&#39; at the top of the stack\n&quot;;
+				result += &quot;addiu $sp, $sp, -&quot; + (string.length + 1) + &quot;\n&quot;;
+
+				for (var i = 0; i &lt; string.length; i++) {
+					var char = string[i];
+					var charCode = string.charCodeAt(i);
+					result += &quot;addi &quot; + CHAR_TEMP_REG + &quot;, $zero, &quot; + charCode + &quot; # &#39;&quot; + char + &quot;&#39;\n&quot;;
+					result += &quot;sb &quot; + CHAR_TEMP_REG +&quot;, &quot; + i + &quot;($sp)\n&quot;;
+					//result += &quot;addi &quot; + STACK_POINTER_REG + &quot;, &quot; + STACK_POINTER_REG + &quot;, 1\n&quot;;
+				};
+				result += &quot;sb $zero, &quot; + string.length + &quot;($sp) # &#39;\\0&#39; \n&quot;;
+				ME.output(result);
+			}
+		},
+		&#39;61&#39;: {
+			description: &#39;Binary -&gt; Decimal&#39;,
+			execute: function() {
+				var stackPointer = ME.getRegisterUnsignedVal(&#39;$a0&#39;);
+				var string = MSYS.getStringAtAddress(stackPointer);
+
+				var signedValue = MIPS.binaryStringToNumber(string);
+				var unsignedValue = MIPS.binaryStringToUnsignedNumber(string);
+
+				var result;
+				if (signedValue !== unsignedValue) {
+					result = &#39;{0} in decimal is {1} or {2}.&#39;.format(string, signedValue, unsignedValue);
+				} else {
+					result = &#39;{0} in decimal is {1}.&#39;.format(string, signedValue);
+				}
+
+				ME.output(result);
+			}
+		},
+		&#39;62&#39;: {
+			description: &#39;Decimal -&gt; Binary&#39;,
+			execute: function() {
+				var signedNumber = ME.getRegisterVal(&#39;$a0&#39;);
+				var charCount = ME.getRegisterVal(&#39;$a1&#39;);
+
+				var unsignedNumber = MIPS.signedNumberToUnsignedNumber(signedNumber, charCount);
+				var binaryString = MIPS.numberToBinaryString(signedNumber, charCount);
+
+				var result;
+				if (signedNumber !== unsignedNumber) {
+					result = &#39;{0} (or {1}) in binary is {2}.&#39;.format(signedNumber, unsignedNumber, binaryString);
+				} else {
+					result = &#39;{0} in binary is {1}.&#39;.format(signedNumber, binaryString);
+				}
+
+				ME.output(result);
+			}
+		}
+	};
+
+	return MSYS;
+}</pre>
+</body>
+</html>

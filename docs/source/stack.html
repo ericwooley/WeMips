@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js">function StackError(message) {
+    this.name = StackError.exceptionName();
+    this.message = message;
+}
+StackError.exceptionName = function() {
+    return &#39;Stack Error&#39;;
+}
+StackError.prototype.toString = function() {
+    return &#39;{0}: {1}&#39;.format(StackError.exceptionName(), this.message);
+}
+<span id='Stack'>/**
+</span> * @class Stack
+ * @param {Object} options constructor options
+ * - options.onChange A function to be called when a stack address changes.
+ * - options.baseAddress The default base address.
+ */
+function Stack(options) {
+    var BITS_PER_REGISTER = 32; // TODO: get this from somewhere else?
+    var MIN_STACK_ADDRESS = MIPS.minUnsignedValue(BITS_PER_REGISTER);
+    var MAX_STACK_ADDRESS = MIPS.maxUnsignedValue(BITS_PER_REGISTER - 1); // TODO: shouldn&#39;t need minus 1
+
+    // Returns a random integer between min and max
+    function getRandomInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1) + min);
+    }
+
+    options = options || {};
+    _.defaults(options, {
+<span id='Stack-property-onChange'>        /**
+</span>         * Function to call when the stack changes. (e.g. onChange(indexNumber))
+         * @member Stack
+         * @type {Function}
+         */
+        onChange: null,
+<span id='Stack-property-onAdd'>        /**
+</span>         * Function to call when the stack gets new elements. (e.g. onAdd(indexNumber))
+         * @member Stack
+         * @type {Function}
+         */
+        onAdd: null,
+        baseAddress: getRandomInt(50000, MAX_STACK_ADDRESS)
+    });
+    assert(MIN_STACK_ADDRESS &lt;= options.baseAddress &amp;&amp; options.baseAddress &lt;= MAX_STACK_ADDRESS, &quot;Stack addresses must be able to be stored in a register, thus they cannot exceed the register bounds.&quot;);
+
+    // Private memebers
+
+    var that = this; // see http://javascript.crockford.com/private.html
+
+    // The stack will be implemented as a single array where each
+    // element will store a single byte (e.g. a number between 0 and 255).
+    var data = [];
+
+    function getByteAtAddress(address) {
+        return data[indexForAddress(address)];
+    }
+    function setByteAtAddress(address, byte) {
+        assert(typeof byte === &quot;number&quot;);
+        assert(0 &lt;= byte &amp;&amp; byte &lt;= 255);
+        data[indexForAddress(address)] = byte;
+        if (options.onChange) options.onChange(address, byte);
+    }
+    function indexForAddress(address) {
+        // get the index into the data array which corresponds to a specific address
+        assert(typeof address == &quot;number&quot;);
+        var minValidAddress = 0;
+        var maxValidAddress = that.pointerToBottomOfStack() - 1;
+        if (address &lt; minValidAddress || maxValidAddress &lt; address) {
+            throw new StackError(&#39;Invalid stack address ({0}). Valid stack addresses are between {1} and {2}.&#39;.format(address, minValidAddress, maxValidAddress));
+        }
+
+        // Conversion to index:
+        // 1. Assume a base address of 100.
+        // 2. The first accessible address is 99, which will be stored in 0.
+        // 3. The next accessible address is 98, which will be stored in 1.
+        var index = (options.baseAddress - 1) - address;
+
+        // ensure this index is accessible
+        var numElementsToAdd = index - data.length + 1;
+        for (var i = 0; i &lt; numElementsToAdd; i++) {
+            var randomNumFrom0to255 = Math.floor((Math.random()*256));
+            data.push(randomNumFrom0to255);
+            if (options.onAdd) options.onAdd(data.length - 1);
+        }
+        return index;
+    }
+
+    // Public variables
+
+    this.MIN_BYTE_VALUE = 0;
+    this.MAX_BYTE_VALUE = 255;
+    this.BITS_PER_BYTE = 8;
+    this.BYTES_PER_BYTE = 1;
+    this.BYTES_PER_HALFWORD = 2;
+    this.BYTES_PER_WORD = 4;
+
+    // Privileged methods
+<span id='Stack-method-getDataAtAddress'>    /**
+</span>     * Get a given number of bytes at an address
+     * @param  {Number} address    The starting address for your data
+     * @param  {Number} byteCount  How many bytes of data you want returned
+     * @param  {Boolean} asUnsigned True if you want the number returned without a sign extension.
+     * @return {Number}
+     */
+    this.getDataAtAddress = function (address, byteCount, asUnsigned) {
+        asUnsigned = asUnsigned || false;
+        var result = 0;
+        for (var i = 0; i &lt; byteCount; i++) {
+            var value = getByteAtAddress(address + i);
+            assert(this.MIN_BYTE_VALUE &lt;= value &amp;&amp; value &lt;= this.MAX_BYTE_VALUE);
+            result = result &lt;&lt; this.BITS_PER_BYTE;
+            result += value;
+        };
+        if (asUnsigned) {
+            return result;
+        } else {
+            return MIPS.unsignedNumberToSignedNumber(result, byteCount * this.BITS_PER_BYTE);
+        }
+    };
+<span id='Stack-method-setDataAtAddress'>    /**
+</span>     * Set data at an address
+     * @param {Number} address   The address you want to write
+     * @param {Number} byteCount How many bytes you want to overwrite
+     * @param {Number} data      Number you want to set there.
+     */
+    this.setDataAtAddress = function(address, byteCount, data) {
+        assert(typeof data === &quot;number&quot;, &quot;Only numbers supported.&quot;);
+        var bitCount = byteCount * this.BITS_PER_BYTE;
+        if (data &lt; 0) {
+            // convert negative value to positive one
+            try {
+                data = MIPS.signedNumberToUnsignedNumber(data, bitCount);
+            } catch (e) {
+                if (e instanceof MipsError) {
+                    throw new StackError(e.message);
+                } else {
+                    throw e;
+                }
+            }
+        }
+
+        var minValidValue = MIPS.minUnsignedValue(BITS_PER_REGISTER);
+        var maxValidValue = MIPS.maxUnsignedValue(BITS_PER_REGISTER);
+        if (data &lt; minValidValue || maxValidValue &lt; data) {
+            throw new StackError(&#39;Unable to store out-of-range value ({0}). Valid values are {1} through {2}.&#39;.format(data, minValidValue, maxValidValue));
+        };
+
+        // preserve only the lower N bytes
+        assert(0 &lt;= bitCount &amp;&amp; bitCount &lt;= 32, &quot;The &amp; operator will only work for up to 32 bits.&quot;);
+        data = data &amp; (Math.pow(2, bitCount)-1);
+        minValidValue = 0;
+        maxValidValue = (Math.pow(2, bitCount) - 1);
+        assert(minValidValue &lt;= data &amp;&amp; data &lt;= maxValidValue, &quot;Ensure the above chopping math was performed correctly.&quot;);
+
+        for (var i = byteCount - 1; i &gt;= 0; i--) {
+            var rightMostByte = data &amp; this.MAX_BYTE_VALUE;
+            setByteAtAddress(address + i, rightMostByte);
+            data = data &gt;&gt; this.BITS_PER_BYTE;
+        };
+    };
+<span id='Stack-method-reset'>    /**
+</span>     * Clear the data contained in the stack
+     * @return {null}
+     */
+    this.reset = function() {
+        data = [];
+    };
+<span id='Stack-method-pointerToBottomOfStack'>    /**
+</span>     * Get a pointer to the address at the bottom of the stack
+     * @return {Number} Address to the bottom of the stack
+     */
+    this.pointerToBottomOfStack = function () {
+        // the initial value of the stack pointer. before you read or write to it, you must decrement the stack pointer.
+        return options.baseAddress;
+    };
+}
+
+// Public functions
+<span id='Stack-method-getByte'>/**
+</span> * Get a byte at a specified address
+ * @param  {Number} pointer The address the wanted data lives
+ * @return {Number} Requested data
+ */
+Stack.prototype.getByte = function (pointer) {
+    return this.getDataAtAddress(pointer, this.BYTES_PER_BYTE);
+};
+<span id='Stack-method-getUnsignedByte'>/**
+</span> * Get an unsigned byte at the specified address
+ * @param  {Number} pointer Address where you want data from.
+ * @return {Number} Data at address.
+ */
+Stack.prototype.getUnsignedByte = function (pointer) {
+    return this.getDataAtAddress(pointer, this.BYTES_PER_BYTE, true);
+};
+<span id='Stack-method-getHalfword'>/**
+</span> * Get one half word (16 bits if word is 32) at a given address
+ * @param  {Number} pointer Address where data lives
+ * @return {Number} Retrieved data
+ */
+Stack.prototype.getHalfword = function (pointer) {
+    return this.getDataAtAddress(pointer, this.BYTES_PER_HALFWORD);
+};
+<span id='Stack-method-getUnsignedHalfword'>/**
+</span> * Get unsigned half word (16 bits if word is 32) at a given address
+ * @param  {Number} pointer Address where data lives
+ * @return {Number} Retrieved data
+ */
+Stack.prototype.getUnsignedHalfword = function (pointer) {
+    return this.getDataAtAddress(pointer, this.BYTES_PER_HALFWORD, true);
+};
+<span id='Stack-method-getWord'>/**
+</span> * Get word at a given address
+ * @param  {Number} pointer Address where data lives
+ * @return {Number} Retrieved data
+ */
+Stack.prototype.getWord = function (pointer) {
+    return this.getDataAtAddress(pointer, this.BYTES_PER_WORD);
+};
+<span id='Stack-method-getUnsignedWord'>/**
+</span> * Get unsigned word at a given address
+ * @param  {Number} pointer Address where data lives
+ * @return {Number} Retrieved data
+ */
+Stack.prototype.getUnsignedWord = function (pointer) {
+    return this.getDataAtAddress(pointer, this.BYTES_PER_WORD, true);
+};
+<span id='Stack-method-setByte'>/**
+</span> * Set a byte at given address
+ * @param {Number} pointer The address with data you want to set
+ * @param {Number} data The data you want to write to the address
+ */
+Stack.prototype.setByte = function (pointer, data) {
+    this.setDataAtAddress(pointer, this.BYTES_PER_BYTE, data);
+};
+
+<span id='Stack-method-setHalfword'>/**
+</span> * Set half word at given address
+ * @param {Number} pointer Address to overwrite with half word of data
+ * @param {Number} data Data to write to address
+ */
+Stack.prototype.setHalfword = function (pointer, data) {
+    this.setDataAtAddress(pointer, this.BYTES_PER_HALFWORD, data);
+};
+
+<span id='Stack-method-setWord'>/**
+</span> * Set word at given address
+ * @param {Number} pointer where data will be written
+ * @param {Number} data Data to be written to the address
+ */
+Stack.prototype.setWord = function (pointer, data) {
+    this.setDataAtAddress(pointer, this.BYTES_PER_WORD, data);
+};
+</pre>
+</body>
+</html>

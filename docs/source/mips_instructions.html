@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js">function mipsInstructionExecutor(ME) {
+    var BITS_PER_SHAMT = 5;
+    var BITS_PER_IMMEDIATE = 16;
+	var instructions = {
+        /////////////////////////////////////////////
+        // Mips Arithmetic Instructions
+        /////////////////////////////////////////////
+        &#39;ADD&#39;: {
+            parseMethod: parse_$RD_$rs_$rt,
+            runMethod: function(namedArgs) {
+            	ME.setRegisterVal(namedArgs.$rd, signedAddition(ME.getRegisterVal(namedArgs.$rs), ME.getRegisterVal(namedArgs.$rt)));
+            	ME.incerementPC();
+            }
+        },
+        &#39;ADDI&#39;: {
+            parseMethod: parse_$RT_$rs_immSignExt,
+            runMethod: function(namedArgs) {
+            	ME.setRegisterVal(namedArgs.$rt, signedAddition(ME.getRegisterVal(namedArgs.$rs), namedArgs.imm));
+            	ME.incerementPC();
+            }
+        },
+        &#39;ADDU&#39;: {
+            parseMethod: parse_$RD_$rs_$rt,
+            runMethod: function(namedArgs) {
+                ME.setRegisterVal(namedArgs.$rd, unsignedAddition(ME.getRegisterUnsignedVal(namedArgs.$rs), ME.getRegisterUnsignedVal(namedArgs.$rt)));
+                ME.incerementPC();
+            }
+        },
+        &#39;ADDIU&#39;: {
+            parseMethod: parse_$RT_$rs_immSignExt,
+            runMethod: function(namedArgs) {
+                ME.setRegisterVal(namedArgs.$rt, unsignedAddition(ME.getRegisterUnsignedVal(namedArgs.$rs), namedArgs.imm));
+                ME.incerementPC();
+            } // TODO: make some tests
+        },
+        &#39;SUB&#39;: {
+            parseMethod: parse_$RD_$rs_$rt,
+            runMethod: null // TODO: implement this and make some tests
+        },
+        &#39;SUBU&#39;: {
+            parseMethod: parse_$RD_$rs_$rt,
+            runMethod: function(namedArgs) {
+                ME.setRegisterVal(namedArgs.$rd, unsignedAddition(ME.getRegisterUnsignedVal(namedArgs.$rs), -ME.getRegisterUnsignedVal(namedArgs.$rt)));
+                ME.incerementPC();
+            }
+        },
+        &#39;LUI&#39;: {
+            parseMethod: parse_$RT_imm,
+            runMethod: function(namedArgs){
+                ME.setRegisterVal(namedArgs.$rt, (namedArgs.imm &lt;&lt; 16));
+                ME.incerementPC();
+            }
+        },
+        /////////////////////////////////////////////
+        // Mips Logical Instructions
+        /////////////////////////////////////////////
+        &#39;AND&#39;: {
+            parseMethod: parse_$RD_$rs_$rt,
+            runMethod: function(namedArgs){
+                ME.setRegisterVal(namedArgs.$rd,
+                    ME.getRegisterVal(namedArgs.$rs) &amp; ME.getRegisterVal(namedArgs.$rt)
+                );
+                ME.incerementPC();
+            }
+        },
+        &#39;ANDI&#39;: {
+            parseMethod: parse_$RT_$rs_immZeroExt,
+            runMethod: function(namedArgs){
+                ME.setRegisterVal(namedArgs.$rt,
+                    ME.getRegisterVal(namedArgs.$rs) &amp; namedArgs.imm
+                );
+                ME.incerementPC();
+            }
+        },
+        &#39;NOR&#39;: {
+            parseMethod: parse_$RD_$rs_$rt,
+            runMethod: function(namedArgs){
+                ME.setRegisterVal(namedArgs.$rd,
+                    ~(ME.getRegisterVal(namedArgs.$rs) | ME.getRegisterVal(namedArgs.$rt))
+                );
+                ME.incerementPC();
+            } // TODO: make some tests
+        },
+        &#39;OR&#39;: {
+            parseMethod: parse_$RD_$rs_$rt,
+            runMethod: function(namedArgs){
+                ME.setRegisterVal(namedArgs.$rd,
+                    (ME.getRegisterVal(namedArgs.$rs) | ME.getRegisterVal(namedArgs.$rt))
+                );
+                ME.incerementPC();
+            } // TODO: make some tests
+        },
+        &#39;ORI&#39;: {
+            parseMethod: parse_$RT_$rs_immZeroExt,
+            runMethod: function(namedArgs){
+                ME.setRegisterVal(namedArgs.$rt,
+                    (ME.getRegisterVal(namedArgs.$rs) | namedArgs.imm)
+                );
+                ME.incerementPC();
+            } // TODO: make some tests
+        },
+        &#39;SLL&#39;: {
+            parseMethod: parse_$RD_$rt_shamt,
+            runMethod: function(namedArgs) {
+                ME.setRegisterVal(namedArgs.$rd, ME.getRegisterVal(namedArgs.$rt) &lt;&lt; namedArgs.shamt);
+                ME.incerementPC();
+            }
+        },
+        &#39;SRL&#39;: {
+            parseMethod: parse_$RD_$rt_shamt,
+            runMethod: function(namedArgs) {
+                ME.setRegisterVal(namedArgs.$rd, ME.getRegisterVal(namedArgs.$rt) &gt;&gt; namedArgs.shamt);
+                ME.incerementPC();
+            } // TODO: make some tests
+        },
+        /////////////////////////////////////////////
+        // Mips Branch and Jump Instructions
+        /////////////////////////////////////////////
+        &#39;BEQ&#39;: {
+            parseMethod: parse_$rs_$rt_label,
+            runMethod: function(namedArgs) {
+                if (ME.getRegisterVal(namedArgs.$rs) === ME.getRegisterVal(namedArgs.$rt))
+                    ME.goToLabel(namedArgs.label);
+                else
+                    ME.incerementPC();
+            }
+        },
+        &#39;BNE&#39;: {
+            parseMethod: parse_$rs_$rt_label,
+            runMethod: function(namedArgs) {
+                if (ME.getRegisterVal(namedArgs.$rs) !== ME.getRegisterVal(namedArgs.$rt))
+                    ME.goToLabel(namedArgs.label);
+                else
+                    ME.incerementPC();
+            }
+        },
+        &#39;J&#39;: {
+            parseMethod: parse_label,
+            runMethod: function(namedArgs) {
+                ME.goToLabel(namedArgs.label);
+            }
+        },
+        &#39;JAL&#39;: {
+            parseMethod: parse_label,
+            runMethod: function(namedArgs) {
+                ME.setRegisterVal(&#39;$ra&#39;, ME.getLineNumber() + 1);
+                ME.goToLabel(namedArgs.label);
+            } // TODO: make some tests
+        },
+        &#39;JR&#39;: {
+            parseMethod: parse_$rs,
+            runMethod: function(namedArgs) {
+                // TODO: the line numbers should be random and not start at 0
+                // Also, blank lines should probably have a line number associated with them
+                var lineNumber = ME.getRegisterUnsignedVal(namedArgs.$rs);
+                ME.setLine(lineNumber);
+            } // TODO: make some tests
+        },
+        /////////////////////////////////////////////
+        // Mips Memory Access Instructions
+        /////////////////////////////////////////////
+        &#39;LW&#39;: {
+            parseMethod: parse_$RT_imm_$rs,
+            runMethod: function(namedArgs) {
+                ME.setRegisterVal(namedArgs.$rt, ME.stack.getWord(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm));
+                ME.incerementPC();
+            } // TODO: make some tests
+        },
+        &#39;SW&#39;: {
+            parseMethod: parse_$rt_imm_$rs,
+            runMethod: function(namedArgs) {
+                ME.stack.setWord(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm, ME.getRegisterVal(namedArgs.$rt));
+                ME.incerementPC();
+            } // TODO: make some tests
+        },
+        &#39;LH&#39;: {
+            parseMethod: parse_$RT_imm_$rs,
+            runMethod: function(namedArgs) {
+                ME.setRegisterVal(namedArgs.$rt, ME.stack.getHalfword(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm));
+                ME.incerementPC();
+            } // TODO: make some tests
+        },
+        &#39;LHU&#39;: {
+            parseMethod: parse_$RT_imm_$rs,
+            runMethod: function(namedArgs) {
+                ME.setRegisterVal(namedArgs.$rt, ME.stack.getUnsignedHalfword(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm));
+                ME.incerementPC();
+            } // TODO: make some tests
+        },
+        &#39;SH&#39;: {
+            parseMethod: parse_$rt_imm_$rs,
+            runMethod: function(namedArgs) {
+                ME.stack.setHalfword(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm, ME.getRegisterVal(namedArgs.$rt));
+                ME.incerementPC();
+            } // TODO: make some tests
+        },
+        &#39;LB&#39;: {
+            parseMethod: parse_$RT_imm_$rs,
+            runMethod: function(namedArgs) {
+            	ME.setRegisterVal(namedArgs.$rt, ME.stack.getByte(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm));
+            	ME.incerementPC();
+            }
+        },
+        &#39;LBU&#39;: {
+            parseMethod: parse_$RT_imm_$rs,
+            runMethod: function(namedArgs) {
+            	ME.setRegisterVal(namedArgs.$rt, ME.stack.getUnsignedByte(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm));
+            	ME.incerementPC();
+            }
+        },
+        &#39;SB&#39;: {
+            parseMethod: parse_$rt_imm_$rs,
+            runMethod: function(namedArgs) {
+                // TODO: should these be using unsignedAdd so that the appropriate flags are set?
+            	ME.stack.setByte(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm, ME.getRegisterVal(namedArgs.$rt));
+            	ME.incerementPC();
+            }
+        },
+        /////////////////////////////////////////////
+        // Mips Comparison Instructions
+        /////////////////////////////////////////////
+        &#39;SLT&#39;: {
+            parseMethod: parse_$RD_$rs_$rt,
+            runMethod: function(namedArgs) {
+                var value = ME.getRegisterVal(namedArgs.$rs) &lt; ME.getRegisterVal(namedArgs.$rt);
+                ME.setRegisterVal(namedArgs.$rd, value ? 1 : 0);
+                ME.incerementPC();
+            } // TODO: make some tests
+        },
+        &#39;SLTI&#39;: {
+            parseMethod: parse_$RT_$rs_immSignExt,
+            runMethod: function(namedArgs) {
+                var value = ME.getRegisterVal(namedArgs.$rs) &lt; namedArgs.imm;
+                ME.setRegisterVal(namedArgs.$rd, value ? 1 : 0);
+                ME.incerementPC();
+            } // TODO: make some tests
+        },
+        &#39;SLTU&#39;: {
+            parseMethod: parse_$RD_$rs_$rt,
+            runMethod: function(namedArgs) {
+                var value = ME.getRegisterUnsignedVal(namedArgs.$rs) &lt; ME.getRegisterUnsignedVal(namedArgs.$rt);
+                ME.setRegisterVal(namedArgs.$rd, value ? 1 : 0);
+                ME.incerementPC();
+            } // TODO: make some tests
+        },
+        &#39;SLTIU&#39;: {
+            parseMethod: parse_$RT_$rs_immSignExt,
+            runMethod: function(namedArgs) {
+                var value = ME.getRegisterUnsignedVal(namedArgs.$rs) &lt; namedArgs.imm;
+                ME.setRegisterVal(namedArgs.$rd, value ? 1 : 0);
+                ME.incerementPC();
+            } // TODO: make some tests
+        },
+        /////////////////////////////////////////////
+        // Other
+        /////////////////////////////////////////////
+        &#39;SYSCALL&#39;: {
+            parseMethod: parse_noargs,
+            runMethod: function(namedArgs){
+                var syscalls = mipsSyscalls(ME);
+                syscalls.execute();
+                // don&#39;t garbage up the registers, since some of the functions return values in the registers (e.g. $v0)
+                //ME.setUnpreservedRegsToGarbage();
+                ME.incerementPC();
+            }
+        }
+    };
+
+
+    ////////////////////////////////////////////////
+    // Private Methods
+    ////////////////////////////////////////////////
+    // these parse methods simply convert the 1-3 arguments of the instruction into an object that makes them more meaningful (i.e. $rd, $rs, $rt)
+    // these methods are snake_case on purpose, for clarity
+    // uppercase means the register is writable
+    function parse_$RD_$rs_$rt(args) {
+    	return {
+    		&#39;expectedArgCount&#39;: 3,
+    		&#39;$rd&#39;: parseWritableRegister(args[0]),
+    		&#39;$rs&#39;: parseRegister(args[1]),
+    		&#39;$rt&#39;: parseRegister(args[2])
+    	};
+    }
+    function parse_$RT_$rs_immSignExt(args) {
+        return {
+            &#39;expectedArgCount&#39;: 3,
+            &#39;$rt&#39;: parseWritableRegister(args[0]),
+            &#39;$rs&#39;: parseRegister(args[1]),
+            &#39;imm&#39;: parseImmediateAndSignExtend(args[2])
+        };
+    }
+    function parse_$RT_$rs_immZeroExt(args) {
+        return {
+            &#39;expectedArgCount&#39;: 3,
+            &#39;$rt&#39;: parseWritableRegister(args[0]),
+            &#39;$rs&#39;: parseRegister(args[1]),
+            &#39;imm&#39;: parseImmediateAndZeroExtend(args[2])
+        };
+    }
+    function parse_$RT_imm(args){
+    	return {
+    		&#39;expectedArgCount&#39;: 2,
+    		&#39;$rt&#39;: parseWritableRegister(args[0]),
+    		&#39;imm&#39;: parseImmediate16Bit(args[1])
+    	};
+    };
+    function parse_$RD_$rt_shamt(args){
+    	return {
+    		&#39;expectedArgCount&#39;: 3,
+    		&#39;$rd&#39;: parseWritableRegister(args[0]),
+    		&#39;$rt&#39;: parseRegister(args[1]),
+    		&#39;shamt&#39;: parseImmediateAndZeroExtend(args[2], BITS_PER_SHAMT)
+    	};
+    };
+    function parse_$rs_$rt_label(args){
+    	return {
+    		&#39;expectedArgCount&#39;: 3,
+    		&#39;$rs&#39;: parseRegister(args[0]),
+    		&#39;$rt&#39;: parseRegister(args[1]),
+    		&#39;label&#39;: parseLabel(args[2])
+    	};
+    };
+    function parse_label(args){
+    	return {
+    		&#39;expectedArgCount&#39;: 1,
+    		&#39;label&#39;: parseLabel(args[0])
+    	};
+    };
+    function parse_$rs(args){
+    	return {
+    		&#39;expectedArgCount&#39;: 1,
+    		&#39;$rs&#39;: parseRegister(args[0])
+    	};
+    };
+    function parse_$RT_imm_$rs(args){
+    	var immediateAndRegister = parseImmAnd$rs(args[1]);
+    	return {
+    		&#39;expectedArgCount&#39;: 2,
+    		&#39;$rt&#39;: parseWritableRegister(args[0]),
+    		&#39;imm&#39;: parseImmediateAndSignExtend(immediateAndRegister.imm),
+    		&#39;$rs&#39;: parseRegister(immediateAndRegister.$rs)
+    	};
+    };
+    function parse_$rt_imm_$rs(args){
+    	var immediateAndRegister = parseImmAnd$rs(args[1]);
+    	return {
+    		&#39;expectedArgCount&#39;: 2,
+    		&#39;$rt&#39;: parseRegister(args[0]),
+    		&#39;imm&#39;: parseImmediateAndSignExtend(immediateAndRegister.imm),
+    		&#39;$rs&#39;: parseRegister(immediateAndRegister.$rs)
+    	};
+    };
+    function parse_noargs(args) {
+        return {
+            &#39;expectedArgCount&#39;: 0
+        };
+    }
+
+    function parseImmAnd$rs(string) {
+    	var match = /^((?:[-+]\s*)?\d+)\(\s*(\$\w+)\s*\)$/.exec(string);
+    	return {
+    		&#39;imm&#39;: match[1],
+    		&#39;$rs&#39;: match[2]
+    	};
+    }
+    function parseRegister(reg) {
+    	if (ME.isValidRegister(reg))
+    		return reg;
+    	else
+    		return null;
+    }
+    function parseLabel(label) {
+    	if (/^[a-zA-Z]\w*$/.test(label))
+    		return label;
+    	else
+    		return null;
+    }
+    function parseWritableRegister(reg) {
+    	if (ME.isValidWritableRegister(reg))
+    		return reg;
+    	else
+    		return null;
+    }
+
+    function _parseImmediate(arg, bits, extensionRule) {
+        bits = bits || BITS_PER_IMMEDIATE;
+
+        var isNumber = /^([-+]\s*)?\d+$/.test(arg);
+
+        if (!isNumber) {
+            return null;
+        }
+
+        var number = parseInt(arg, 10);
+
+        var minValue;
+        var maxValue;
+        switch (extensionRule) {
+            case &#39;signExtend&#39;:
+                // when we sign extend, we keep the same value, but this means that we are dealing with signed numbers
+                // e.g. -3 is 1101, when we sign extend, we get 111111101, which is still -3.
+                minValue = MIPS.minSignedValue(bits);
+                maxValue = MIPS.maxSignedValue(bits);
+                break;
+            case &#39;zeroExtend&#39;:
+                // when we zero fill, this means we are dealing with unsigned values.
+                // for example, -3 would be 1101, when we zero fill it, we get something like 0000001101, which is no longer the value -3
+                minValue = MIPS.minUnsignedValue(bits);
+                maxValue = MIPS.maxUnsignedValue(bits);
+                break;
+            case &#39;16bit&#39;:
+                // since only 16 bits are taken, it doesn&#39;t matter what we use, thus give the most amount of freedom here
+                minValue = MIPS.minSignedValue(bits);
+                maxValue = MIPS.maxUnsignedValue(bits);
+                break;
+            default:
+                assert(false, &#39;Unhandled case.&#39;);
+        }
+
+        if (number &lt; minValue || maxValue &lt; number) {
+            return null; // TODO: return that it was out of range?
+        }
+
+        return number;
+    }
+    function parseImmediateAndSignExtend(arg, bits) {
+        return _parseImmediate(arg, bits, &#39;signExtend&#39;);
+    }
+    function parseImmediateAndZeroExtend(arg, bits) {
+        return _parseImmediate(arg, bits, &#39;zeroExtend&#39;);
+    }
+    function parseImmediate16Bit(arg, bits) {
+        return _parseImmediate(arg, bits, &#39;16bit&#39;);
+    }
+
+    function signedAddition(value1, value2) {
+        var result = MIPS.signedAddition(value1, value2, ME.BITS_PER_REGISTER);
+        if (result.overflowFlag)
+            ME.onSetOverflowFlag();
+        return result.result;
+    }
+    function unsignedAddition(value1, value2) {
+        var result = MIPS.unsignedAddition(value1, value2, ME.BITS_PER_REGISTER);
+        if (result.carryFlag)
+            ME.onSetCarryFlag();
+        return result.result;
+    }
+
+    var result = {
+    	parseInstruction: function(instructionName, args, outArgs, outError) {
+    		var instruction = instructions[instructionName];
+	        if (!instruction) {
+	            if (outError) outError.message = &quot;Unknown instruction: &quot; + instructionName;
+	            return false;
+	        }
+
+	        var parseMethod = instruction.parseMethod;
+	        assert(parseMethod, &quot;If this is a valid instruction, then it must have a parseMethod.&quot;);
+
+	        // ensure that each of the keys (e.g. $rd, $rs, $rt) contain a non-null value in order to determine if we were successful or not
+        	var validArgs = true;
+        	var namedArgs = parseMethod(args); // e.g. namedArgs has $rd, $rs, imm, etc.
+        	if (namedArgs[&#39;expectedArgCount&#39;] !== args.length) {
+                var invalid = true;
+                if (namedArgs[&#39;expectedArgCount&#39;] === 0 &amp;&amp; args.length === 1) {
+                    if (args[0] === &#39;&#39;) {
+                        // 0 expected args should consider [&#39;&#39;] to be valid as well.
+                        invalid = false;
+                    }
+                }
+
+                if (invalid) {
+    	            if (outError) outError.message = &quot;Incorrect number of arguments {0}, should be {1}.&quot;.format(args.length, namedArgs[&#39;expectedArgCount&#39;]);
+    	            return false;
+                }
+        	}
+			for (var key in namedArgs) {
+				// important check that this is objects own property not from prototype prop inherited
+				if (!namedArgs.hasOwnProperty(key)) continue;
+
+				if (namedArgs[key] === null) {
+					validArgs = false;
+					break;
+				}
+
+				if (outArgs) outArgs[key] = namedArgs[key];
+			}
+
+			if (!validArgs) {
+				if (outError) outError.message = &quot;Invalid arguments: &quot; + args;
+				return false;
+			}
+
+	        return true;
+	    },
+	    runInstruction: function(instructionName, args) {
+	    	var namedArgs = {};
+	    	var parsed = this.parseInstruction(instructionName, args, namedArgs, null);
+	    	assert(parsed, &quot;Instruction did not parse correctly&quot;);
+
+	    	var runMethod = instructions[instructionName].runMethod;
+	    	assert(runMethod);
+	    	runMethod(namedArgs);
+    	}
+    };
+
+    return result;
+}</pre>
+</body>
+</html>

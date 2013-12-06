@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>The source code</title>
+  <link href="../resources/prettify/prettify.css" type="text/css" rel="stylesheet" />
+  <script type="text/javascript" src="../resources/prettify/prettify.js"></script>
+  <style type="text/css">
+    .highlight { display: block; background-color: #ddd; }
+  </style>
+  <script type="text/javascript">
+    function highlight() {
+      document.getElementById(location.hash.replace(/#/, "")).className = "highlight";
+    }
+  </script>
+</head>
+<body onload="prettyPrint(); highlight();">
+  <pre class="prettyprint lang-js">// replace snake case with camel case
+// _([a-zA-Z])([a-zA-Z]*)
+// \U$1\L$2
+
+
+$(document).ready(function(){
+    setupTests();
+    var autoSwitch = true;
+    // If we ever host this, we can enable sharing this way,
+    // as long as the code is short enough to fit in a url.
+    var urlParams = getURLParameters();
+    ///////////////////////////////////////////////////
+    // Mips Emulator Setup
+    ///////////////////////////////////////////////////
+    var me = mipsEmulator({
+        debug: false,
+        /*
+         * Changes the registers visual representation when the mips emulator changes its value
+         * @param  {String} regName the register name
+         * @param  {String/Number} value    The new value of the register
+         * @return {null}
+         */
+        onRegisterChange: function(regName, value){
+            if(regName == &quot;$sp&quot;){
+                return setSP(value);
+            }
+            var reg = $(&quot;#&quot; + regName.replace(&#39;$&#39;, &#39;&#39;) + &quot; .regSpacer&quot;);
+            $(&quot;.lastRegChanged&quot;).removeClass(&#39;lastRegChanged&#39;);
+            reg.html(value);
+            reg.addClass(&#39;lastRegChanged&#39;);
+            // change to correct tab
+            var regLetter = regName.replace(&#39;$&#39;, &#39;&#39;).replace(/\s/, &#39;&#39;).charAt(0);
+            if(autoSwitch) $(&#39;#registers a[href=&quot;#&#39;+regLetter+&#39;-registers&quot;]&#39;).tab(&#39;show&#39;)
+        },
+        /*
+         * runs when the emulator has pushed past the last line
+         * @return {null}
+         */
+        onFinish: function(){
+            addToLog(&#39;success&#39;, &quot;Emulation complete, returning to line 1&quot;);
+            me.setLine(1);
+            setHighlights({lineRan: lastLineNoRun, nextLine: me.getLineNumber()});
+            running = false;
+        },
+        /*
+         * This is run when *the users* program encounters a mips error.
+         * @param  {String} message     The error message
+         * @param  {Number} lineNumber Which line the error occured on
+         * @return {null}
+         */
+        onError: function(message, lineNumber){
+            if(!_.isNumber(lineNumber)) return false;
+            editor.markText(
+                {line: lineNumber-1, ch: 0},
+                {line: lineNumber, ch: 0},
+                {title: message, className: &#39;errorLine&#39;, clearOnEnter: true}
+            );
+        },
+        onOutput: function(message) {
+            addToLog(&#39;success&#39;, message);
+        },
+        onInput: function(message) {
+            return window.prompt(message);
+        },
+        onConfirm: function(message) {
+            return window.confirm(message);
+        },
+        onAlert: function(message) {
+            window.alert(message);
+        },
+        onStackChange: addStackAddress,
+        // Set the starting code to be the defualt in the editor.
+        startingCode: $(&quot;#editor&quot;).val()
+    });
+    var running = false;
+    // the active line, is the one whose results are being examined.
+    var lastLineNoRun;
+    var lastLineAttempted = 0;
+    var nextLine;
+    var linesOfCode = 0;
+
+    ///////////////////////////////////////////////////
+    // Code Mirror Setup
+    ///////////////////////////////////////////////////
+
+    // Code Mirror lines do not match with displayed line number
+    // they start at zero and so are off by  -1
+    var editor = CodeMirror.fromTextArea(
+        document.getElementById(&quot;editor&quot;),{
+          lineNumbers: true,
+          mode: &quot;text/css&quot;,
+          matchBrackets: true,
+    });
+
+    // When the editor changes, we need to mark it as invalid
+    // so it will be reanalyzed upon a step or run
+    editor.on(&#39;change&#39;, markEditorAsInvalid);
+
+    // Keeps track of the last line we ran. To start with we want it
+    // to be null becuase we have not run anything yet.
+    var lastRunMarker;
+    // Keeps track of the next line we will run, we want to set it to the
+    // first valid line.
+    var nextMarker = editor.markText(
+        {line: me.getLineNumber()-1, ch: 0},
+        {line: me.getLineNumber(), ch: 0},
+        {title: &quot;Next line to be run&quot;, className: &#39;nextLine&#39;}
+    );
+
+    ///////////////////////////////////////////////////
+    // Event Handlers setup
+    ///////////////////////////////////////////////////
+    $(&quot;.registers-container li&quot;).each(setupRegisters);
+    $(&#39;.regSpacer&#39;).on(&#39;blur&#39;, manualRegistryEdit);
+    //$(&#39;.regSpacer&#39;).on(&#39;blur&#39;, manualRegistryEditSave);
+    $(&#39;#codeLoaders button&#39;).on(&#39;click&#39;, loadCustomCode);
+    $(&quot;#step&quot;).click(step);
+    $(&quot;#goToLineButton&quot;).on(&#39;click&#39;, setLine);
+    $(&quot;#run&quot;).click(run);
+    $(&quot;#optionShowRelative&quot;).change(switchAddressMode);
+    $(&quot;#autoSwitch&quot;).change(function(e){autoSwitch = $(e.target).is(&#39;:checked&#39;);});
+    $(&quot;#clearLog&quot;).on(&#39;click&#39;, function(){$(&quot;#log&quot;).html(&#39;&#39;)});
+
+    // Functions to respond to events.
+    function setLine(){
+        var newLine = $(&quot;#currentLineInput&quot;).val();
+        // if(debug) console.log(&quot;Setting new line: &quot;+ newLine);
+        if(!_.isNumber(me.setLine(Number(newLine)))) console.error(&quot;Error setting line: &quot; + newLine);
+        // if(debug) console.log(&quot;nextLine&quot;+ me.getLineNumber());
+        setHighlights({lineRan: null, nextLine: me.getLineNumber()})
+        return false;
+    };
+    function markEditorAsInvalid(){
+        me.valid = false;
+    };
+    function step(){
+
+        // if this code is no longer valid, reanalyze.
+        if(!me.valid){
+            try{
+                mipsAnalyze();
+            } catch(e){
+                console.error(&quot;Error analyzing code: &quot;+JSON.stringify(e));
+                addToLog(&#39;error&#39;, e.message, 1);
+            }
+        }
+        try{
+            lastLineAttempted = me.getLineNumber();
+            console.log(&quot;Attempting line: &quot; + lastLineAttempted);
+            lineResult = me.step();
+            if(lineResult){
+                setHighlights(lineResult);
+
+                //addToLog(&#39;info&#39;, &quot;ran line successfully&quot;, lastLineAttempted);
+            }
+
+        } catch(e){
+            addToLog(&#39;error&#39;, e.message, lastLineAttempted);
+            running = false;
+            //me.setLine(lastLineAttempted + 1);
+            //setHighlights();
+        }
+
+    };
+    function loadCustomCode(e){
+        if(!confirm(&quot;This will erase what is in the code editor, are you sure?&quot;)) return;
+        var target = $(e.target);
+        var loadTarget = target.attr(&#39;load&#39;);
+        var newContent = $(loadTarget).html();
+        newContent = newContent.replace(/^\s+|\s+$/g, &#39;&#39;);
+        //newContent = newContent.replace(/\n\s+/g, &#39;\n&#39;);
+        editor.setValue(newContent);
+        mipsAnalyze(true);
+        me.setLine(1);
+        lastLineNoRun = null;
+        setHighlights();
+    };
+    function manualRegistryEditSave(e){
+        var newVal = $(e.target).html();
+        var target =  $(e.target);
+        var regName = target.attr(&quot;reg&quot;);
+        me.setRegisterVal(regName, Number(newVal), false);
+    };
+    function manualRegistryEdit(e){
+        var newVal = $(e.target).html();
+        var target =  $(e.target);
+        var regName = target.attr(&quot;reg&quot;);
+        newVal = parseInt(newVal);
+        try{
+            me.setRegisterVal(regName, newVal, false);
+        } catch(e) {
+            target.html(me.getRegisterVal(regName));
+            addToLog(&#39;error&#39;, e);
+        }
+    };
+    function manualRegistryValidate(e){
+        var newVal = $(e.target).html();
+        var target =  $(e.target);
+        var regName = target.attr(&quot;reg&quot;);
+        if(newVal.search(/[^-\d]/) &gt;= 0){
+            target.html(newVal.replace(/[\D\s]/g, &#39;&#39;));
+            alert(&quot;You cannot enter in characters into registers&quot;);
+        }
+        if(newVal.length &gt; 11){
+            if(newVal.length == 12 &amp;&amp; newVal.charAt(0) == &#39;-&#39;){
+                return true;
+            } else {
+                target.html(newVal.substring(0, 11));
+                alert(&quot;The 32 bit integers can only be 11 digits long.&quot;);
+            }
+
+        }
+
+        return true;
+    };
+    function setHighlights(lines){
+        console.log(&quot;Setting highlights&quot;)
+        lines = lines || {};
+        lastLineNoRun = lines.lineRan || lastLineNoRun || null;
+        nextLine = lines.nextLine || me.getLineNumber();
+        // if(debug) console.log(&quot;Active line: &quot; + lastLineNoRun);
+        // if(debug) console.log(&quot;Next line: &quot; + nextLine);
+        $(&quot;#currentLineInput&quot;).val(nextLine);
+        if(lastRunMarker) lastRunMarker.clear();
+        if(lastLineNoRun)
+            lastRunMarker = editor.markText(
+                {line: lastLineNoRun-1, ch: 0},
+                {line: lastLineNoRun, ch: 0},
+                {title: &quot;last line ran&quot;, className: &#39;lastLineNoRun&#39;, clearOnEnter: true}
+            );
+        if(nextMarker) nextMarker.clear();
+        nextMarker = editor.markText(
+            {line: nextLine-1, ch: 0},
+            {line: nextLine, ch: 0},
+            {title: &quot;Next line to be run&quot;, className: &#39;nextLine&#39;, clearOnEnter: true}
+        );
+
+    };
+    function setupRegisters(index){
+        var reg = $(this);
+        var regName = reg.attr(&#39;id&#39;);
+        reg.html(
+            &quot;&lt;b&gt;&quot;+regName +&quot;:&lt;/b&gt; &quot;
+            + &quot;&lt;span class=&#39;regSpacer&#39; reg=&#39;&quot;+regName+&quot;&#39; id=&#39;&quot;+regName+&quot;-val&#39; contenteditable=&#39;true&#39;&gt;&quot;
+            + me.getRegisterVal(&#39;$&#39; + regName)
+            + &quot;&lt;/span&gt;&quot;
+        );
+    }
+    function run(){
+        // if this code is no longer valid, reanalyze.
+        if(!me.valid){
+            editor.save();
+            me.setCode($(&quot;#editor&quot;).val());
+            me.valid = true;
+        }
+        running = true;
+        var lineRanThisRun = 0;
+        var notInfinite = false;
+
+        if(linesOfCode &lt; 10) LC = 10;
+        else LC = linesOfCode;
+        while(running){
+
+            step();
+            lineRanThisRun++;
+            if(lineRanThisRun &gt; 100 * LC &amp;&amp; !notInfinite)
+                if(confirm(
+                    &quot;Code has run &quot;
+                    + lineRanThisRun
+                    + &quot; lines, are you stuck in an infinite loop? (press OK to stop executing)&quot;))
+                    running = false;
+                else
+                    notInfinite = true;
+        }
+
+    };
+    function mipsAnalyze(goBackToLineOne){
+        editor.save();
+        linesOfCode = editor.lineCount();
+        me.setCode($(&quot;#editor&quot;).val());
+        if(goBackToLineOne) me.setLine(1);
+        me.valid = true;
+    };
+    function getCodeAsString(){
+        editor.save();
+        return $(&quot;#editor&quot;).val();
+    };
+    function unsignInt(num){
+        return (num &lt;&lt; 31) &gt;&gt;&gt; 0;
+    };
+    function setSP(address){
+        addStackAddress(address, &#39;&#39;, false);
+        $(&quot;.glyphicon-arrow-right&quot;).removeClass(&quot;glyphicon-arrow-right&quot;);
+        $(&quot;#stackEntry-&quot; + address + &quot; .glyphicon&quot;).addClass(&quot;glyphicon-arrow-right lastRegChanged&quot;);
+        if(autoSwitch) $(&#39;#registers a[href=&quot;#stack-container-div&quot;]&#39;).tab(&#39;show&#39;);
+            };
+    var colorizeAddrBG = false;
+    function addStackAddress(address, val, visualize){
+        if(!val || val == &#39;&#39;) val = me.stack.getByte(address);
+        if(typeof visualize == &#39;undefined&#39;)
+            visualize = true;
+        console.log(&quot;address: &quot; + address + &quot;\nStackLow: &quot; + stackLow + &quot;\nVal: &quot; + val );
+        showAddReal = &#39;&#39;;
+            showAddRelative = &#39;style=&quot;display: none&quot;&#39;;
+        if(showRelative){
+            showAddReal = &#39;style=&quot;display: none&quot;&#39;;
+            showAddRelative = &#39;&#39;;
+        }
+        while(address &lt;= stackLow){
+            var bgColorClass = &#39;&#39;;
+            if(colorizeAddrBG) bgColorClass = &#39;lightGreyBG&#39;;
+            colorizeAddrBG = !colorizeAddrBG;
+            $(&quot;#stackRep&quot;).prepend(
+                &quot;&lt;div id=&#39;stackEntry-&quot; + stackLow + &quot;&#39; &gt;&quot;
+                + &quot;&lt;span class=&#39;glyphicon&#39;&gt;&lt;/span&gt;&amp;nbsp&quot;
+                    + &quot;&lt;span class=&#39;&quot;+bgColorClass+&quot;&#39;&gt;&quot;
+                        + &quot;&lt;span class=&#39;stackAddrReal&#39; &quot;+ showAddReal +&quot; id=&#39;stackAddr-&quot;+stackLow+&quot;&#39;&gt;&quot;
+                            + stackLow + &quot;: &quot;
+                        + &quot;&lt;/span&gt;&quot;
+                        + &quot;&lt;span class=&#39;regAddrRelative&#39; &quot;+ showAddRelative +&quot; id=&#39;stackAddrRelative-&quot;+stackLow+&quot;&#39;&gt;&quot;
+                            + (stackLow - stackEnd) + &quot;: &quot;
+                        + &quot;&lt;/span&gt;&quot;
+                        + &quot;&lt;span class=&#39;regSpacer&#39; id=&#39;stackVal-&quot;+stackLow+&quot;&#39;&gt;&quot;
+                            + me.stack.getByte(stackLow)
+                        +&quot;&lt;/span&gt;&quot;
+                        + &quot;&lt;span class=&#39;regSpacer charBin&#39; id=&#39;stackChar-&quot;+stackLow+&quot;&#39;&gt;&quot;
+                            + asChar(me.stack.getByte(stackLow))
+                        +&quot;&lt;/span&gt;&quot;
+                        + &quot;&lt;span class=&#39;regSpacer charBin&#39; id=&#39;stackBin-&quot;+stackLow+&quot;&#39; style=&#39;display: none&#39;&gt;&quot;
+                            + asBin(me.stack.getByte(stackLow))
+                        +&quot;&lt;/span&gt;&quot;
+                    + &quot;&lt;/span&gt;&quot;
+                + &quot;&lt;/div&gt;&quot;
+            );
+            stackLow--;
+        }
+        console.log(&quot;stack Change: &quot; + address + &quot; - &quot; + val);
+
+        $(&quot;#stackVal-&quot;+address).html(val);
+        
+
+        $(&quot;#stackChar-&quot;+address).html(asChar(val));
+        $(&quot;#stackBin-&quot;+address).html(asBin(val));
+        if(visualize){
+            if(autoSwitch) $(&#39;#registers a[href=&quot;#stack-container-div&quot;]&#39;).tab(&#39;show&#39;);
+            $(&quot;.lastRegChanged&quot;).removeClass(&#39;lastRegChanged&#39;);
+            $(&quot;#stackVal-&quot;+address).addClass(&#39;lastRegChanged&#39;);
+            $(&quot;#stackChar-&quot;+address).addClass(&#39;lastRegChanged&#39;);
+            $(&quot;#stackBin-&quot;+address).addClass(&#39;lastRegChanged&#39;);
+        }
+    };
+    var stackLow = me.stack.pointerToBottomOfStack()-1;
+    var stackEnd = me.stack.pointerToBottomOfStack();
+    addStackAddress(stackLow, me.stack.getByte(stackLow), false);
+    //setSP(stackEnd);
+    function setupTests(){
+        // &lt;div id=&#39;additionDoubler&#39;&gt;&lt;/div&gt;
+        // &lt;button type=&quot;button&quot; load=&quot;#additionDoubler&quot; class=&quot;btn btn-default&quot;&gt;Addition Doubler&lt;/button&gt;
+        $.each(examples, function(index, func){
+            index = index.replace(&#39;Example&#39;, &#39;&#39;);
+            indexNice = index.replace(/([A-Z])/g, &quot; \$1&quot;);
+            indexNice = indexNice.charAt(0).toUpperCase() + indexNice.slice(1);;
+
+            $(&quot;#exampleHolder&quot;).append(
+                &quot;&lt;div id=&#39;&quot;+index+&quot;&#39;&gt;&quot;
+                + func().join(&#39;\n&#39;)
+                + &quot;&lt;/div&gt;&quot;
+            );
+            $(&quot;#codeLoaders&quot;).append(
+                &#39;&lt;button type=&quot;button&quot; load=&quot;#&#39;
+                + index + &#39;&quot; class=&quot;btn btn-default&quot;&gt;&#39;
+                + indexNice + &#39;&lt;/button&gt;&#39;
+            );
+        });
+    };
+    var showRelative;
+    function switchAddressMode(e){
+        showRelative = $(e.target).is(&#39;:checked&#39;);
+        if(showRelative){
+            $(&#39;.stackAddrRelative&#39;).show();
+            $(&#39;.stackAddrReal&#39;).hide();
+        } else {
+            $(&#39;.stackAddrRelative&#39;).hide();
+            $(&#39;.stackAddrReal&#39;).show();
+        }
+    }
+    function asChar(num){
+        num = MIPS.signedNumberToUnsignedNumber(num, 8);
+        console.log(num)
+        if(!num)
+            return &#39;-&#39;;
+        if(num &gt; 32 &amp;&amp; num &lt; 127)
+            return String.fromCharCode(num);
+        return &#39;-&#39;;
+    }
+    function asBin(num){
+        return MIPS.numberToBinaryString(num, 8);
+    }
+    function addToLog(type, message, line_no){
+        message = message.replace(/\n/g, &quot;&lt;br /&gt;&quot;);
+        if(type == &#39;error&#39;) type = &#39;danger&#39;;
+        if(line_no){
+            message = &quot;Line &quot; + line_no + &quot;: &quot; + message;
+            if(type == &#39;danger&#39;){
+                editor.markText(
+                    {line: line_no-1, ch: 0},
+                    {line: line_no, ch: 0},
+                    {title: message, className: &#39;errorLine&#39;, clearOnEnter: true}
+                );
+            }
+        }
+        $(&quot;#log&quot;).prepend(
+            &#39;&lt;div class=&quot;alert alert-&#39;+type+&#39;&quot;&gt;&#39;+message+&#39;&lt;/div&gt;&#39;
+        );
+        if(autoSwitch) $(&#39;#registers a[href=&quot;#logWrapper&quot;]&#39;).tab(&#39;show&#39;);
+
+    }
+
+});</pre>
+</body>
+</html>
