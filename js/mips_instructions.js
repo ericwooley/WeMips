@@ -31,11 +31,14 @@ function mipsInstructionExecutor(ME) {
             runMethod: function(namedArgs) {
                 ME.setRegisterVal(namedArgs.$rt, unsignedAddition(ME.getRegisterUnsignedVal(namedArgs.$rs), namedArgs.imm));
                 ME.incerementPC();
-            } // TODO: make some tests
+            }
         },
         'SUB': {
             parseMethod: parse_$RD_$rs_$rt,
-            runMethod: null // TODO: implement this and make some tests
+            runMethod: function(namedArgs) {
+                ME.setRegisterVal(namedArgs.$rd, signedAddition(ME.getRegisterVal(namedArgs.$rs), -ME.getRegisterVal(namedArgs.$rt)));
+                ME.incerementPC();
+            } // TODO: make some tests
         },
         'SUBU': {
             parseMethod: parse_$RD_$rs_$rt,
