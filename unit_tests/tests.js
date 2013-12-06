@@ -500,6 +500,21 @@ test("ADDU", function() {
 	equal(ME.getRegisterUnsignedVal('$t0'), 0);
 });
 
+test("ADDIU", function() {
+	ok(!ME.isValidLine('ADDIU $t0, $t0, $t0'), "Must have an immediate.");
+
+	ME.runLine("ADDI $t1, $zero, 1");
+	ME.runLine("SLL $t2, $t1, 31 	# $t2 = 2147483648");
+	ME.runLine("SUBU $t2, $t2, $t1 	# $t2 = 2147483647 (max signed int)");
+
+	resetFlags();
+	ME.runLine("ADDIU $t0, $t2, 1");
+	equal(overflowFlag, false, "Adding one would cause the number to become negative.");
+	equal(carryFlag, false);
+	equal(ME.getRegisterVal('$t0'), -2147483648, "Signed addition will overflow.");
+	equal(ME.getRegisterUnsignedVal('$t0'), 2147483648, "Unsigned addition will not overflow.");
+});
+
 test("LB, LBU, SB", function() {
 	var ME2 = new mipsEmulator({ baseStackAddress: MIPS.maxUnsignedValue(ME.BITS_PER_REGISTER - 1) }); // TODO: don't need the -1 here
 	equal(ME2.stack.pointerToBottomOfStack(), MIPS.maxUnsignedValue(ME.BITS_PER_REGISTER - 1), 'Ensure the stack is actually at the max value.');
