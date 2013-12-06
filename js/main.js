@@ -317,7 +317,7 @@ $(document).ready(function(){
                         + "<span class='stackAddrReal' "+ showAddReal +" id='stackAddr-"+stackLow+"'>"
                             + stackLow + ": "
                         + "</span>"
-                        + "<span class='regAddrRelative' "+ showAddRelative +" id='stackAddrRelative-"+stackLow+"'>"
+                        + "<span class='stackAddrRelative' "+ showAddRelative +" id='stackAddrRelative-"+stackLow+"'>"
                             + (stackLow - stackEnd) + ": "
                         + "</span>"
                         + "<span class='regSpacer' id='stackVal-"+stackLow+"'>"
@@ -376,6 +376,7 @@ $(document).ready(function(){
     var showRelative;
     function switchAddressMode(e){
         showRelative = $(e.target).is(':checked');
+        console.log(showRelative);
         if(showRelative){
             $('.stackAddrRelative').show();
             $('.stackAddrReal').hide();
