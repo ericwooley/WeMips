@@ -387,13 +387,16 @@ $(document).ready(function(){
         var newVal = $(e.target).html();
         switch(stackDisplayMode) {
             case "integer":
-                me.stack.setByte(address, parseInt(newVal));
-                $(e.target).html(me.stack.getByte(address)); 
                 break;
             case "ascii":
-                
+                newVal = newVal.charCodeAt(0);
+                break;
+            case "binary":
+                newVal = parseInt(newVal, 2);
                 break;
         }
+        me.stack.setByte(address, parseInt(newVal));
+        addStackAddress(address, newVal);
     };
     //setSP(stackEnd);
     function setupTests(){
@@ -428,6 +431,7 @@ $(document).ready(function(){
         }
     }
     function asChar(num){
+        if(typeof num != "Number") num = parseInt(num);
         num = MIPS.signedNumberToUnsignedNumber(num, 8);
         console.log(num)
         if(!num)
@@ -437,6 +441,7 @@ $(document).ready(function(){
         return '-';
     }
     function asBin(num){
+        if(typeof num != "Number") num = parseInt(num);
         return MIPS.numberToBinaryString(num, 8);
     }
     function addToLog(type, message, line_no){
