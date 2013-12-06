@@ -141,13 +141,11 @@ $(document).ready(function(){
             try{
                 mipsAnalyze();
             } catch(e){
-                console.error("Error analyzing code: "+JSON.stringify(e));
                 addToLog('error', e.message, 1);
             }
         }
         try{
             lastLineAttempted = me.getLineNumber();
-            console.log("Attempting line: " + lastLineAttempted);
             lineResult = me.step();
             if(lineResult){
                 setHighlights(lineResult);
@@ -210,7 +208,6 @@ $(document).ready(function(){
         return true;
     };
     function setHighlights(lines){
-        console.log("Setting highlights")
         lines = lines || {};
         lastLineNoRun = lines.lineRan || lastLineNoRun || null;
         nextLine = lines.nextLine || me.getLineNumber();
@@ -296,7 +293,6 @@ $(document).ready(function(){
         if(!val || val == '') val = me.stack.getByte(address);
         if(typeof visualize == 'undefined')
             visualize = true;
-        console.log("address: " + address + "\nStackLow: " + stackLow + "\nVal: " + val );
         showAddReal = '';
             showAddRelative = 'style="display: none"';
         if(showRelative){
@@ -369,7 +365,7 @@ $(document).ready(function(){
         });
     }; 
     function changeToStackRep(v){
-        console.log(stackDisplayMode);
+        //console.log(stackDisplayMode);
         switch(stackDisplayMode) {
             case "integer":
                 return v;
@@ -378,7 +374,7 @@ $(document).ready(function(){
                 return asChar(v);
                 break;
             case "binary":
-                return asChar(v);
+                return asBin(v);
                 break;
         }
     }
@@ -392,10 +388,11 @@ $(document).ready(function(){
                 newVal = newVal.charCodeAt(0);
                 break;
             case "binary":
-                newVal = parseInt(newVal, 2);
+                newVal = Number(parseInt(newVal, 2));
                 break;
         }
-        me.stack.setByte(address, parseInt(newVal));
+        if(typeof newVal != "Number") newVal = Number(newVal);
+        me.stack.setByte(address, newVal);
         addStackAddress(address, newVal);
     };
     //setSP(stackEnd);
@@ -431,17 +428,17 @@ $(document).ready(function(){
         }
     }
     function asChar(num){
-        if(typeof num != "Number") num = parseInt(num);
+        if(typeof num != "Number") num = Number(parseInt(num));
         num = MIPS.signedNumberToUnsignedNumber(num, 8);
-        console.log(num)
+        console.log("unsignedInt: "+num);
         if(!num)
-            return '';
+            return 'None';
         if(num > 32 && num < 127)
             return String.fromCharCode(num);
-        return '-';
+        return 'None';
     }
     function asBin(num){
-        if(typeof num != "Number") num = parseInt(num);
+        if(typeof num != "Number") num = Number(num);
         return MIPS.numberToBinaryString(num, 8);
     }
     function addToLog(type, message, line_no){
