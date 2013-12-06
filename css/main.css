@@ -18,8 +18,12 @@ li{
 .stackSpacer{
     margin: 0px 20px 0px 10px;
     text-align: right;
-    width: 40px;
+    min-width: 100px;
     display:  inline-block;
+}
+.stackAddr{
+    /*width: 100;*/
+    text-align: right;
 }
 .CodeMirror {
     border: 1px solid #eee;
@@ -32,7 +36,7 @@ li{
 .lastLineNoRun, .lastRegChanged {background-color:#61FA9C; }
 .nextLine {background-color:#dadae3; }
 .errorLine{background-color: red;}
-.stackAddrReal, .stackAddrRelative {display: inline-block; text-align: right; width: 60px;}
+.stackAddrReal, .stackAddrRelative {display: inline-block; text-align: right; min-width: 60px;}
 .lightGreyBG{background-color: #DDDDDD}
 #stackRep{height: 300px; overflow: auto;}
 #log{height: 300px; overflow: auto;}
