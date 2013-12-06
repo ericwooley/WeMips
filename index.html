@@ -136,12 +136,17 @@ LB $s3, 0($sp)</textarea>
               <div class='stack-container' id="stack">
                 <div id='stackOptions'>
                   <input type="checkbox" id='optionShowRelative'> <span id="addrTypeText">show relative address<span>
+                  <select class="form-control">
+                    <option>Integer</option>
+                    <option>Ascii</option>
+                    <option>Binary</option>
+                  </select>
                 </div>
                 <div id='stackRep'>
                   <span class="glyphicon glyphicon-arrow-right"></span>
                   <span class='' id="stackBottom">
                     ------------ Frame Pointer ------------
-                    <button onclick="$('.charBin').toggle()">Bin/Char</button>
+
                   </span>
                 </div>
               </div>
