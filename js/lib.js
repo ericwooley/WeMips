@@ -28,7 +28,7 @@ function getURLParameters()
 
 function assert(condition, message) {
     if (!condition) {
-        throw message || "Assertion failed";
+        throw new Error(message) || new Error("Assertion failed");
     }
 }
 
