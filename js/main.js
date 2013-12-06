@@ -120,6 +120,8 @@ $(document).ready(function(){
     $("#optionShowRelative").change(switchAddressMode);
     $("#autoSwitch").change(function(e){autoSwitch = $(e.target).is(':checked');});
     $("#clearLog").on('click', function(){$("#log").html('')});
+    $("#stackDisplayType").change(changeStackType);
+    $('.stackVal').on('blur', manualStackEdit);
 
     // Functions to respond to events.
     function setLine(){
@@ -314,21 +316,29 @@ $(document).ready(function(){
                 "<div id='stackEntry-" + stackLow + "' >"
                 + "<span class='glyphicon'></span>&nbsp"
                     + "<span class='"+bgColorClass+"'>"
-                        + "<span class='stackAddrReal' "+ showAddReal +" id='stackAddr-"+stackLow+"'>"
+                        + "<span class='stackAddrReal stackAddr' "+ showAddReal +" id='stackAddr-"+stackLow+"'>"
                             + stackLow + ": "
                         + "</span>"
-                        + "<span class='stackAddrRelative' "+ showAddRelative +" id='stackAddrRelative-"+stackLow+"'>"
+                        + "<span class='stackAddrRelative stackAddr' "+ showAddRelative +" id='stackAddrRelative-"+stackLow+"'>"
                             + (stackLow - stackEnd) + ": "
                         + "</span>"
-                        + "<span class='regSpacer' id='stackVal-"+stackLow+"'>"
+                        + "<span "
+                            + "class='stackVal stackSpacer' "
+                            + "id='stackVal-"+stackLow+"' "
+                            + "address='"+stackLow+"' "
+                            + "contenteditable=true "
+                            + "integer='"+me.stack.getByte(stackLow)+"' "
+                            + "ascii='"+asChar(me.stack.getByte(stackLow))+"' "
+                            + "binary='"+asBin(me.stack.getByte(stackLow))+"' "
+                        + ">"
                             + me.stack.getByte(stackLow)
                         +"</span>"
-                        + "<span class='regSpacer charBin' id='stackChar-"+stackLow+"'>"
-                            + asChar(me.stack.getByte(stackLow))
-                        +"</span>"
-                        + "<span class='regSpacer charBin' id='stackBin-"+stackLow+"' style='display: none'>"
-                            + asBin(me.stack.getByte(stackLow))
-                        +"</span>"
+                        // + "<span class='regSpacer charBin' id='stackChar-"+stackLow+"'>"
+                        //     + asChar(me.stack.getByte(stackLow))
+                        // +"</span>"
+                        // + "<span class='regSpacer charBin' id='stackBin-"+stackLow+"' style='display: none'>"
+                        //     + asBin(me.stack.getByte(stackLow))
+                        // +"</span>"
                     + "</span>"
                 + "</div>"
             );
@@ -352,6 +362,18 @@ $(document).ready(function(){
     var stackLow = me.stack.pointerToBottomOfStack()-1;
     var stackEnd = me.stack.pointerToBottomOfStack();
     addStackAddress(stackLow, me.stack.getByte(stackLow), false);
+
+    var stackDisplayMode = "integer";
+    function changeStackType(e){
+       stackDisplayMode = $("#stackDisplayType option:selected").html().toLowerCase();
+       $(".stackVal").each(function(){
+            console.log(stackDisplayMode + " - " + $(this).attr(stackDisplayMode));
+            $(this).html($(this).attr(stackDisplayMode));
+        });
+    }; 
+    function manualStackEdit(){
+        alert("stack display mode" + stackDisplayMode);
+    };
     //setSP(stackEnd);
     function setupTests(){
         // <div id='additionDoubler'></div>
@@ -376,7 +398,6 @@ $(document).ready(function(){
     var showRelative;
     function switchAddressMode(e){
         showRelative = $(e.target).is(':checked');
-        console.log(showRelative);
         if(showRelative){
             $('.stackAddrRelative').show();
             $('.stackAddrReal').hide();
