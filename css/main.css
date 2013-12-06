@@ -15,6 +15,12 @@ li{
     text-align: right;
     display:  inline-block;
 }
+.stackSpacer{
+    margin: 0px 20px 0px 10px;
+    text-align: right;
+    width: 40px;
+    display:  inline-block;
+}
 .CodeMirror {
     border: 1px solid #eee;
     height: auto !important; 
