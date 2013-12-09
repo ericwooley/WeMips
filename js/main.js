@@ -12,6 +12,7 @@ $(document).ready(function(){
     ///////////////////////////////////////////////////
     // Mips Emulator Setup
     ///////////////////////////////////////////////////
+
     var me = mipsEmulator({
         debug: false,
         /*
@@ -169,6 +170,7 @@ $(document).ready(function(){
         newContent = newContent.replace(/^\s+|\s+$/g, '');
         //newContent = newContent.replace(/\n\s+/g, '\n');
         editor.setValue(newContent);
+
         mipsAnalyze(true);
         me.setLine(1);
         lastLineNoRun = null;
@@ -393,7 +395,7 @@ $(document).ready(function(){
         }
         if(typeof newVal != "Number") newVal = Number(newVal);
         me.stack.setByte(address, newVal);
-        addStackAddress(address, newVal);
+        addStackAddress(address, newVal, false);
     };
     //setSP(stackEnd);
     function setupTests(){
@@ -430,12 +432,11 @@ $(document).ready(function(){
     function asChar(num){
         if(typeof num != "Number") num = Number(parseInt(num));
         num = MIPS.signedNumberToUnsignedNumber(num, 8);
-        console.log("unsignedInt: "+num);
         if(!num)
-            return 'None';
+            return '';
         if(num > 32 && num < 127)
             return String.fromCharCode(num);
-        return 'None';
+        return '';
     }
     function asBin(num){
         if(typeof num != "Number") num = Number(num);
