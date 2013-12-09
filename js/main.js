@@ -13,7 +13,7 @@ $(document).ready(function(){
     // Mips Emulator Setup
     ///////////////////////////////////////////////////
 
-    var me = mipsEmulator({
+    var me = MipsEmulator({
         debug: false,
         /*
          * Changes the registers visual representation when the mips emulator changes its value

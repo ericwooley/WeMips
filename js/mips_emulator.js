@@ -19,7 +19,7 @@ function MipsError(message) {
  * @return {mipsEmulator}
  * @member mipsEmulator
  */
-function mipsEmulator(mipsArgs){
+function MipsEmulator(mipsArgs){
     mipsArgs = mipsArgs || {};
     var ME = this;
     mipsArgs = _.defaults(mipsArgs, {
