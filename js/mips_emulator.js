@@ -21,6 +21,7 @@ function MipsError(message) {
  */
 function mipsEmulator(mipsArgs){
     mipsArgs = mipsArgs || {};
+    var ME = this;
     mipsArgs = _.defaults(mipsArgs, {
         startingCode: null,
         debug: false,
@@ -144,298 +145,296 @@ function mipsEmulator(mipsArgs){
          */
         labels: {}
     };
+    
     // Public methods
     /**
      * @class mipsEmulator
      * Mips Emulation engine.
+     */    
+    this.FINISHED_EMULATION = 'FINISHED_EMULATION',
+    this.BYTES_PER_REGISTER = 4,
+    this.BITS_PER_REGISTER = 32,
+    this.running = false,
+    this.stack = stack,
+    /**
+     * Returns a specified registers value
+     * @member mipsEmulator
+     * @param  {String} reg
+     * @return {Number}
      */
-    var ME = {
-        FINISHED_EMULATION: 'FINISHED_EMULATION',
-        BYTES_PER_REGISTER: 4,
-        BITS_PER_REGISTER: 32,
-        running: false,
-        stack: stack,
-        /**
-         * Returns a specified registers value
-         * @member mipsEmulator
-         * @param  {String} reg
-         * @return {Number}
-         */
-        getRegisterVal: function(reg) {
-            if(!reg)throw new Error("Register must be non empty");
-            if(reg.charAt(0) != '$') reg = '$'+reg;
-            var regval = MIPS.unsignedNumberToSignedNumber(this.getRegister(reg).val, this.BITS_PER_REGISTER);
-            if(debug) console.log("Getting signed register value: " + regval );
-            return regval;
-        },
-        /**
-         * Returns a specified registers unsigned value
-         * @member mipsEmulator
-         * @param  {String} reg
-         * @return {Number}
-         */
-        getRegisterUnsignedVal: function(reg) {
-            if(reg.charAt(0) != '$') reg = '$'+reg;
-            var regval = MIPS.signedNumberToUnsignedNumber(this.getRegisterVal(reg), this.BITS_PER_REGISTER);
-            if(debug) console.log("Getting unsigned register value: " + regval);
-            return regval;
-        },
-        /**
-         * Returns a specified register
-         * @member mipsEmulator
-         * @param  {String} reg
-         * @return {Object} register object.
-         */
-        getRegister: function(reg) {
-            if(reg.charAt(0) != '$') reg = '$'+reg;
-            if(!this.isValidRegister(reg)) throw new RegisterError('Non existant register: {0}'.format(reg));
-            return registers[reg];
-        },
-        /**
-         * Checks if a register exists
-         * @member mipsEmulator
-         * @param  {String}  reg Name of a register ex: '$ra'
-         * @return {Boolean}
-         */
-        isValidRegister: function(reg) {
-            return typeof registers[reg] !== "undefined";
-        },
-        /**
-         * checks if a register is writable
-         * @member mipsEmulator
-         * @param  {String}  reg Register name
-         * @return {Boolean}
-         */
-        isValidWritableRegister: function(reg) {
-            return this.isValidRegister(reg) && this.getRegister(reg).writable === true;
-        },
-        /**
-         * Set a register value, and call onChange function for that register
-         * @member mipsEmulator
-         * @param {String} reg
-         * @param {Number} value
-         */
-        setRegisterVal: function(reg, value, enableCallback) {
-            if(debug) console.log("Setting register " + reg + " to " + value);
-            if(reg.charAt(0) != '$') reg = '$'+reg; // TODO: I think we should enforce that the reg always has the $ symbol
-            var minRegisterValue = MIPS.minSignedValue(this.BITS_PER_REGISTER);
-            var maxRegisterValue = MIPS.maxUnsignedValue(this.BITS_PER_REGISTER);
-            if (value < minRegisterValue || maxRegisterValue < value) {
-                throw new RegisterError('Value out of range: {0}. Must be between {1} and {2}.'.format(value, minRegisterValue, maxRegisterValue));
-            }
-
-            enableCallback = enableCallback || true;
-            assert(reg[0] === '$');
-
-
-            var register = registers[reg];
-            if(!register) return error("Line " + currentLine + " register: '" + reg + "' does not exist", currentLine);
-
-            if (!register.writable) {
-                throw new RegisterError('Register "{0}" is readonly.'.format(reg));
-            }
-
-            if(register.onChange && enableCallback) {
-                register.onChange();
-            }
-            register.val = value;
-            if(mipsArgs.onRegisterChange && enableCallback) {
-                mipsArgs.onRegisterChange(reg, value);
-            }
-            if(debug) console.log("----> New value: "+ ME.getRegister(reg));
-        },
-        /**
-         * Set an Onchange function for a register
-         * @member mipsEmulator
-         * @param  {String} reg
-         * @param  {Function} func
-         * @return {null}
-         */
-        onChange: function(reg, func){
-            registers[reg].onChange = func;
-        },
-        /**
-         * Set which line to run next.
-         * @member mipsEmulator
-         * @param {Number} lineNo
-         * @return {Number} Returns the number the line was set too.
-         */
-        setLine: function(lineNo){
-            var line = mipsCode.code[lineNo];
-            if(debug) console.log("setting line: "+ lineNo + " - " + JSON.stringify(line));
-            if(!line) return false;
-            currentLine = lineNo;
-            if(line.ignore) incrementLine();
-            return currentLine;
-        },
-        /**
-         * Checks if a string is a valid mips line
-         * @member mipsEmulator
-         * @param  {String}  line
-         * @return {Boolean}
-         */
-        isValidLine: function(line){
-            return !(new mipsLine(line).error);
-        },
-        /**
-         * Resets mips labes, code, and stack
-         * @member mipsEmulator
-         * @return {null}
-         */
-        reset: function() {
-            mipsCode.labels = {};
-            mipsCode.code = [null];
-            stack.reset();
-            registers.$sp.val = stack.pointerToBottomOfStack();
-        },
-        /**
-         * Set the debug option for the mips_emulator
-         * @member mipsEmulator
-         * @param {Boolean} dbg
-         */
-        setDebug: function(dbg){
-            debug = dbg;
-        },
-        /**
-         * Set code to be emulated
-         * @member mipsEmulator
-         * @param {String} mc
-         */
-        setCode: function(mc){
-            ME.reset();
-            if(debug) console.log("Analyzing...");
-
-            $.each(mc.split('\n'), function(index, val){
-                var line = new mipsLine(val, mipsCode.code.length);
-                line.lineNo = mipsCode.code.length; // save the line number
-                // if(debug) console.log(JSON.stringify(line));
-                mipsCode.code.push(line);
-            });
-            if(mipsCode.code[currentLine] && mipsCode.code[currentLine].ignore){
-                incrementLine();
-                if(debug) console.log("First line is to be ignored, first line set to: " + currentLine);
-            }
-        },
-        /**
-         * Run an individual line
-         * @member mipsEmulator
-         * @param  {String} inputLine
-         * @return {null}
-         */
-        runLine: function(inputLine) {
-            var line = new mipsLine(inputLine);
-            // This refers to the private method, private method should probably be renamed.
-            runLine(line);
-        },
-        /**
-         * Run an array of lines
-         * @member mipsEmulator
-         * @param  {Array} lines Array of mips code, one line per index
-         * @return {null}
-         */
-        runLines: function(lines) {
-            // lines is an array of strings
-            lines = lines.join('\n');
-            this.setCode(lines);
-            this.setLine(1);
-            this.run();
-        },
-        /**
-         * runs the current set of code in the mips emulator non-stop;
-         * @member mipsEmulator
-         * @return {null}
-         */
-        run: function() {
-            // run the current set of instructions which were set via setCode
-            assert(mipsCode.code !== null, 'Must have already set the code to run.');
-            this.running = true;
-            while (this.running) {
-                this.step();
-            }
-        },
-        /**
-         * execute the line PC is pointing to.
-         * @member mipsEmulator
-         * @return {Object}
-         * returns object.lineRan which is the line that was just run
-         * and object.nextLine which is the line that is about to be run.
-         */
-        step: function(){
-            if(debug) console.log("Running line: " + currentLine + " - " + JSON.stringify(mipsCode.code[currentLine]));
-            // check if we are finished with the emulation
-            if(currentLine > mipsCode.code.length - 1) return finishEmulation();
-            if(!mipsCode.code[currentLine]) throw new MipsError("Line " + currentLine + " does not exist");
-            if(mipsCode.code[currentLine].error) throw new MipsError(mipsCode.code[currentLine].error);
-            if(mipsCode.code[currentLine].ignore) incrementLine();
-            // we need to check again, because the remainder of the lines could have been comments or blank.
-
-
-            var ret = {
-                lineRan: Number(currentLine)
-            };
-            runLine(mipsCode.code[currentLine]);
-            ret.nextLine = currentLine;
-            if(currentLine > mipsCode.code.length - 1) finishEmulation();
-            return ret;
-        },
-        /**
-         * Returns the current line number (the next to be run)
-         * @member mipsEmulator
-         * @return {Number}
-         */
-        getLineNumber: function(){
-            return currentLine;
-        },
-        /**
-         * Increments the line to be executed until it finds a valid line.
-         * @member mipsEmulator
-         * @return {null}
-         */
-        incerementPC: function() {
-            incrementLine();
-        },
-        /**
-         * Jump to a specified label
-         * @member mipsEmulator
-         * @param  {String} label The label to jump too
-         * @return {Number} The line number you jumped too.
-         */
-        goToLabel: function(label){
-            var line = mipsCode.labels[label];
-            if(debug) console.log("Getting label: "+ label + " - " +JSON.stringify(line) );
-            if(line){
-                ME.setLine(line.lineNo);
-                return currentLine; // TODO: probably don't need a return value here, instead, listen for an onChangeLineNumber handler
-            } else {
-                throw new JumpError('Unknown label: {0}'.format(label));
-            }
-        },
-        onSetOverflowFlag: function() {}, // e.g. for 8 bit registers signed, 127 + 1 causes an overflow, since we can't store 128, so it wraps around to -128.
-        onSetCarryFlag: function() {}, // e.g. for 8 bit registers unsigned, 255 + 1 causes a carry flag, since we can't store 256, so it wraps around to 0.
-        setUnpreservedRegsToGarbage: function() {
-            for (var i = 0; i < allRegs.length; i++) {
-                var register = this.getRegister(allRegs[i]);
-                if (register.preserved) {
-                    continue;
-                }
-
-                this.setRegisterVal(register.regName, getGarbageRegisterData());
-            };
-        },
-        output: function(string) {
-            mipsArgs.onOutput(string);
-        },
-        getInput: function(message) {
-            return mipsArgs.onInput(message);
-        },
-        confirm: function(message) {
-            return mipsArgs.onConfirm(message);
-        },
-        alert: function(message) {
-            mipsArgs.onAlert(message);
+    this.getRegisterVal = function(reg) {
+        if(!reg)throw new Error("Register must be non empty");
+        if(reg.charAt(0) != '$') reg = '$'+reg;
+        var regval = MIPS.unsignedNumberToSignedNumber(this.getRegister(reg).val, this.BITS_PER_REGISTER);
+        if(debug) console.log("Getting signed register value: " + regval );
+        return regval;
+    },
+    /**
+     * Returns a specified registers unsigned value
+     * @member mipsEmulator
+     * @param  {String} reg
+     * @return {Number}
+     */
+    this.getRegisterUnsignedVal = function(reg) {
+        if(reg.charAt(0) != '$') reg = '$'+reg;
+        var regval = MIPS.signedNumberToUnsignedNumber(this.getRegisterVal(reg), this.BITS_PER_REGISTER);
+        if(debug) console.log("Getting unsigned register value: " + regval);
+        return regval;
+    },
+    /**
+     * Returns a specified register
+     * @member mipsEmulator
+     * @param  {String} reg
+     * @return {Object} register object.
+     */
+    this.getRegister = function(reg) {
+        if(reg.charAt(0) != '$') reg = '$'+reg;
+        if(!this.isValidRegister(reg)) throw new RegisterError('Non existant register: {0}'.format(reg));
+        return registers[reg];
+    },
+    /**
+     * Checks if a register exists
+     * @member mipsEmulator
+     * @param  {String}  reg Name of a register ex: '$ra'
+     * @return {Boolean}
+     */
+    this.isValidRegister = function(reg) {
+        return typeof registers[reg] !== "undefined";
+    },
+    /**
+     * checks if a register is writable
+     * @member mipsEmulator
+     * @param  {String}  reg Register name
+     * @return {Boolean}
+     */
+    this.isValidWritableRegister = function(reg) {
+        return this.isValidRegister(reg) && this.getRegister(reg).writable === true;
+    },
+    /**
+     * Set a register value, and call onChange function for that register
+     * @member mipsEmulator
+     * @param {String} reg
+     * @param {Number} value
+     */
+    this.setRegisterVal = function(reg, value, enableCallback) {
+        if(debug) console.log("Setting register " + reg + " to " + value);
+        if(reg.charAt(0) != '$') reg = '$'+reg; // TODO: I think we should enforce that the reg always has the $ symbol
+        var minRegisterValue = MIPS.minSignedValue(this.BITS_PER_REGISTER);
+        var maxRegisterValue = MIPS.maxUnsignedValue(this.BITS_PER_REGISTER);
+        if (value < minRegisterValue || maxRegisterValue < value) {
+            throw new RegisterError('Value out of range: {0}. Must be between {1} and {2}.'.format(value, minRegisterValue, maxRegisterValue));
         }
-    };
 
+        enableCallback = enableCallback || true;
+        assert(reg[0] === '$');
+
+
+        var register = registers[reg];
+        if(!register) return error("Line " + currentLine + " register: '" + reg + "' does not exist", currentLine);
+
+        if (!register.writable) {
+            throw new RegisterError('Register "{0}" is readonly.'.format(reg));
+        }
+
+        if(register.onChange && enableCallback) {
+            register.onChange();
+        }
+        register.val = value;
+        if(mipsArgs.onRegisterChange && enableCallback) {
+            mipsArgs.onRegisterChange(reg, value);
+        }
+        if(debug) console.log("----> New value: "+ ME.getRegister(reg));
+    },
+    /**
+     * Set an Onchange function for a register
+     * @member mipsEmulator
+     * @param  {String} reg
+     * @param  {Function} func
+     * @return {null}
+     */
+    this.onChange = function(reg, func){
+        registers[reg].onChange = func;
+    },
+    /**
+     * Set which line to run next.
+     * @member mipsEmulator
+     * @param {Number} lineNo
+     * @return {Number} Returns the number the line was set too.
+     */
+    this.setLine = function(lineNo){
+        var line = mipsCode.code[lineNo];
+        if(debug) console.log("setting line: "+ lineNo + " - " + JSON.stringify(line));
+        if(!line) return false;
+        currentLine = lineNo;
+        if(line.ignore) incrementLine();
+        return currentLine;
+    },
+    /**
+     * Checks if a string is a valid mips line
+     * @member mipsEmulator
+     * @param  {String}  line
+     * @return {Boolean}
+     */
+    this.isValidLine = function(line){
+        return !(new mipsLine(line).error);
+    },
+    /**
+     * Resets mips labes, code, and stack
+     * @member mipsEmulator
+     * @return {null}
+     */
+    this.reset = function() {
+        mipsCode.labels = {};
+        mipsCode.code = [null];
+        stack.reset();
+        registers.$sp.val = stack.pointerToBottomOfStack();
+    },
+    /**
+     * Set the debug option for the mips_emulator
+     * @member mipsEmulator
+     * @param {Boolean} dbg
+     */
+    this.setDebug = function(dbg){
+        debug = dbg;
+    },
+    /**
+     * Set code to be emulated
+     * @member mipsEmulator
+     * @param {String} mc
+     */
+    this.setCode = function(mc){
+        ME.reset();
+        if(debug) console.log("Analyzing...");
+
+        $.each(mc.split('\n'), function(index, val){
+            var line = new mipsLine(val, mipsCode.code.length);
+            line.lineNo = mipsCode.code.length; // save the line number
+            // if(debug) console.log(JSON.stringify(line));
+            mipsCode.code.push(line);
+        });
+        if(mipsCode.code[currentLine] && mipsCode.code[currentLine].ignore){
+            incrementLine();
+            if(debug) console.log("First line is to be ignored, first line set to: " + currentLine);
+        }
+    },
+    /**
+     * Run an individual line
+     * @member mipsEmulator
+     * @param  {String} inputLine
+     * @return {null}
+     */
+    this.runLine = function(inputLine) {
+        var line = new mipsLine(inputLine);
+        // This refers to the private method, private method should probably be renamed.
+        runLine(line);
+    },
+    /**
+     * Run an array of lines
+     * @member mipsEmulator
+     * @param  {Array} lines Array of mips code, one line per index
+     * @return {null}
+     */
+    this.runLines = function(lines) {
+        // lines is an array of strings
+        lines = lines.join('\n');
+        this.setCode(lines);
+        this.setLine(1);
+        this.run();
+    },
+    /**
+     * runs the current set of code in the mips emulator non-stop;
+     * @member mipsEmulator
+     * @return {null}
+     */
+    this.run = function() {
+        // run the current set of instructions which were set via setCode
+        assert(mipsCode.code !== null, 'Must have already set the code to run.');
+        this.running = true;
+        while (this.running) {
+            this.step();
+        }
+    },
+    /**
+     * execute the line PC is pointing to.
+     * @member mipsEmulator
+     * @return {Object}
+     * returns object.lineRan which is the line that was just run
+     * and object.nextLine which is the line that is about to be run.
+     */
+    this.step = function(){
+        if(debug) console.log("Running line: " + currentLine + " - " + JSON.stringify(mipsCode.code[currentLine]));
+        // check if we are finished with the emulation
+        if(currentLine > mipsCode.code.length - 1) return finishEmulation();
+        if(!mipsCode.code[currentLine]) throw new MipsError("Line " + currentLine + " does not exist");
+        if(mipsCode.code[currentLine].error) throw new MipsError(mipsCode.code[currentLine].error);
+        if(mipsCode.code[currentLine].ignore) incrementLine();
+        // we need to check again, because the remainder of the lines could have been comments or blank.
+
+
+        var ret = {
+            lineRan: Number(currentLine)
+        };
+        runLine(mipsCode.code[currentLine]);
+        ret.nextLine = currentLine;
+        if(currentLine > mipsCode.code.length - 1) finishEmulation();
+        return ret;
+    },
+    /**
+     * Returns the current line number (the next to be run)
+     * @member mipsEmulator
+     * @return {Number}
+     */
+    this.getLineNumber = function(){
+        return currentLine;
+    },
+    /**
+     * Increments the line to be executed until it finds a valid line.
+     * @member mipsEmulator
+     * @return {null}
+     */
+    this.incerementPC = function() {
+        incrementLine();
+    },
+    /**
+     * Jump to a specified label
+     * @member mipsEmulator
+     * @param  {String} label The label to jump too
+     * @return {Number} The line number you jumped too.
+     */
+    this.goToLabel = function(label){
+        var line = mipsCode.labels[label];
+        if(debug) console.log("Getting label: "+ label + " - " +JSON.stringify(line) );
+        if(line){
+            ME.setLine(line.lineNo);
+            return currentLine; // TODO: probably don't need a return value here, instead, listen for an onChangeLineNumber handler
+        } else {
+            throw new JumpError('Unknown label: {0}'.format(label));
+        }
+    },
+    this.onSetOverflowFlag = function() {}, // e.g. for 8 bit registers signed, 127 + 1 causes an overflow, since we can't store 128, so it wraps around to -128.
+    this.onSetCarryFlag = function() {}, // e.g. for 8 bit registers unsigned, 255 + 1 causes a carry flag, since we can't store 256, so it wraps around to 0.
+    this.setUnpreservedRegsToGarbage = function() {
+        for (var i = 0; i < allRegs.length; i++) {
+            var register = this.getRegister(allRegs[i]);
+            if (register.preserved) {
+                continue;
+            }
+
+            this.setRegisterVal(register.regName, getGarbageRegisterData());
+        };
+    },
+    this.output = function(string) {
+        mipsArgs.onOutput(string);
+    },
+    this.getInput = function(message) {
+        return mipsArgs.onInput(message);
+    },
+    this.confirm = function(message) {
+        return mipsArgs.onConfirm(message);
+    },
+    this.alert = function(message) {
+        mipsArgs.onAlert(message);
+    }
 
     ////////////////////////////////////////////////
     // Private Methods
@@ -659,5 +658,5 @@ function mipsEmulator(mipsArgs){
 
     // Set the starting code if there was any.
     if(mipsArgs.startingCode) ME.setCode(mipsArgs.startingCode);
-    return ME;
+    return this;
 }
