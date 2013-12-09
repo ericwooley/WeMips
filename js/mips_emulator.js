@@ -145,7 +145,7 @@ function mipsEmulator(mipsArgs){
          */
         labels: {}
     };
-    
+
     // Public methods
     /**
      * @class mipsEmulator
@@ -429,10 +429,10 @@ function mipsEmulator(mipsArgs){
     this.getInput = function(message) {
         return mipsArgs.onInput(message);
     },
-    this.confirm = function(message) {
+    this.mipsConfirm = function(message) {
         return mipsArgs.onConfirm(message);
     },
-    this.alert = function(message) {
+    this.mipsAlert = function(message) {
         mipsArgs.onAlert(message);
     }
 
