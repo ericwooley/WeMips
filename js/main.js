@@ -89,7 +89,7 @@ $(document).ready(function(){
     var editor = CodeMirror.fromTextArea(
         document.getElementById("editor"),{
           lineNumbers: true,
-          mode: "text/css",
+          mode: "mips",
           matchBrackets: true,
     });
 
