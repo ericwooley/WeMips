@@ -1,4 +1,4 @@
-var ME = new mipsEmulator({debug: false});
+var ME = new MipsEmulator({debug: false});
 var stack = new Stack({debug: true});
 
 module("Library");
@@ -362,7 +362,7 @@ function resetFlags() {
 module("Execution", {
 	setup: function() {
 		// fill up some of the registers with predictable, usable data, and reset the emulator's state
-		ME = new mipsEmulator({debug: false});
+		ME = new MipsEmulator({debug: false});
 		ME.setRegisterVal('$t0', 10);
 		ME.setRegisterVal('$t1', 11);
 		ME.setRegisterVal('$t2', 12);
@@ -516,7 +516,7 @@ test("ADDIU", function() {
 });
 
 test("LB, LBU, SB", function() {
-	var ME2 = new mipsEmulator({ baseStackAddress: MIPS.maxUnsignedValue(ME.BITS_PER_REGISTER - 1) }); // TODO: don't need the -1 here
+	var ME2 = new MipsEmulator({ baseStackAddress: MIPS.maxUnsignedValue(ME.BITS_PER_REGISTER - 1) }); // TODO: don't need the -1 here
 	equal(ME2.stack.pointerToBottomOfStack(), MIPS.maxUnsignedValue(ME.BITS_PER_REGISTER - 1), 'Ensure the stack is actually at the max value.');
 	// make sure that accessing high addresses causes no problems (i.e. that we are using unsigned, rather than signed values.)
 	ME2.runLine("ADDI $t5, $zero, 120");
@@ -705,7 +705,7 @@ function resetOutput() {
 var input = '';
 module("Syscalls", {
 	setup: function() {
-		ME = new mipsEmulator({
+		ME = new MipsEmulator({
 			onOutput: function(message) {
 				output = message;
 			},
@@ -838,7 +838,7 @@ test('Read/write string', function() {
 
 module("Examples", {
 	setup: function() {
-		ME = new mipsEmulator({
+		ME = new MipsEmulator({
 			onOutput: function(message) {
 				output = message;
 			}
