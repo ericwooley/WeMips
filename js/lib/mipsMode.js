@@ -91,4 +91,4 @@ CodeMirror.defineMode("mips", function() {
   };
 });
 
-CodeMirror.defineMIME("text/x-pascal", "mips");
+CodeMirror.defineMIME("text/x-mips", "mips");
