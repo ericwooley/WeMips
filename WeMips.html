@@ -21,6 +21,7 @@
     <script src="js/lib/codemirror.js"></script>
     <script src="js/lib/jquery.min.js"></script>
     <script src="js/lib/underscore-min.js"></script>
+    <script src="js/lib/mipsMode.js"></script>
     <script src="js/lib.js"></script>
     <script src="js/examples.js"></script>
     <script src="js/mips_syscalls.js"></script>
@@ -56,6 +57,7 @@
       </div>
       <div class="row">
         <div class="col-lg-8">
+
           <div id="editorContainer" class="CodeMirror">
             <textarea id="editor" >
 # Not sure what to do now? Enter your mips code here 
@@ -88,7 +90,9 @@ ADDI $sp, $sp, -37
 LB $s3, 0($sp)</textarea>
           </div>
           <br />
-
+          <span class='pull-right'>
+            Created by: <a href="" target="about_blank">Ortal Yahdav</a> &amp; <a target="about_blank" href="http://www.ericwooley.com">Eric Wooley</a>
+          </span>
           <hr />
         </div>
 
