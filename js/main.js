@@ -9,6 +9,8 @@ $(document).ready(function(){
     // If we ever host this, we can enable sharing this way,
     // as long as the code is short enough to fit in a url.
     var urlParams = getURLParameters();
+
+    console.log("url params: " + JSON.stringify(urlParams));
     ///////////////////////////////////////////////////
     // Mips Emulator Setup
     ///////////////////////////////////////////////////
@@ -92,6 +94,11 @@ $(document).ready(function(){
           mode: "mips",
           matchBrackets: true,
     });
+    // set code to be from url paramater if it is set
+    if(urlParams['initialCode']){
+        editor.setValue(decodeURIComponent(urlParams['initialCode']));
+        update_linkEmbed();
+    }
 
     // When the editor changes, we need to mark it as invalid
     // so it will be reanalyzed upon a step or run
@@ -133,8 +140,16 @@ $(document).ready(function(){
         return false;
     };
     function markEditorAsInvalid(){
+        update_linkEmbed();
         me.valid = false;
     };
+    (function update_linkEmbed(){
+        editor.save();
+        var linkToCode = "http://wemips.herokuapp.com/" + '?initialCode='+ encodeURIComponent($("#editor").val());
+        $("#linkToCode").val(linkToCode);
+        $("#embedCode").val('<iframe src="'+linkToCode+'" width="100%" height=600></iframe>');
+    })();
+
     function step(){
 
         // if this code is no longer valid, reanalyze.

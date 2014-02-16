@@ -22,6 +22,7 @@ function getURLParameters()
                 params[sParam[0]] = null;
         }
     }
+    params['baseURL'] = sURL.split('?')[0];
     return params;
 
 }
