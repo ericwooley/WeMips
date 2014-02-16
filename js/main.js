@@ -143,12 +143,13 @@ $(document).ready(function(){
         update_linkEmbed();
         me.valid = false;
     };
-    (function update_linkEmbed(){
+    function update_linkEmbed(){
         editor.save();
         var linkToCode = "http://wemips.herokuapp.com/" + '?initialCode='+ encodeURIComponent($("#editor").val());
         $("#linkToCode").val(linkToCode);
         $("#embedCode").val('<iframe src="'+linkToCode+'" width="100%" height=600></iframe>');
-    })();
+    };
+    update_linkEmbed();
 
     function step(){
 
