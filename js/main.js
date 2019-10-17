@@ -157,6 +157,10 @@ $(document).ready(function(){
         if(!me.valid){
             try{
                 mipsAnalyze();
+                  mipsAnalyze(true);
+                  me.setLine(1);
+                  lastLineNoRun = null;
+                  setHighlights();
             } catch(e){
                 addToLog('error', e.message, 1);
             }
@@ -262,7 +266,10 @@ $(document).ready(function(){
         if(!me.valid){
             editor.save();
             me.setCode($("#editor").val());
-            me.valid = true;
+            mipsAnalyze(true);
+            me.setLine(1);
+            lastLineNoRun = null;
+            setHighlights();
         }
         running = true;
         var lineRanThisRun = 0;
