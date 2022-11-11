@@ -459,6 +459,7 @@ $(document).ready(function(){
         return MIPS.numberToBinaryString(num, 8);
     }
     function addToLog(type, message, line_no){
+        message = String(message);
         message = message.replace(/\n/g, "<br />");
         if(type == 'error') type = 'danger';
         if(line_no){
