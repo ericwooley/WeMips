@@ -145,7 +145,7 @@ $(document).ready(function(){
     };
     function update_linkEmbed(){
         editor.save();
-        var linkToCode = "http://wemips.herokuapp.com/" + '?initialCode='+ encodeURIComponent($("#editor").val());
+        var linkToCode = "https://wemips.ralfgerlich.biz/" + '?initialCode='+ encodeURIComponent($("#editor").val());
         $("#linkToCode").val(linkToCode);
         $("#embedCode").val('<iframe src="'+linkToCode+'" width="100%" height=600></iframe>');
     };
