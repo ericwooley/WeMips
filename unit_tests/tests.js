@@ -525,7 +525,7 @@ test("LB, LBU, SB", function() {
 	ME2.runLine("LBU $t5, -2($fp)");
 
 	// TODO: move these tests elsewhere
-	ME2.runLine("ADDIU $sp, $sp, -10");
+	ME2.runLine("ADDI $sp, $sp, -10");
 	ME2.runLine("SB $t5, 0($sp)"); // should not cause any problems
 	// ME2.runLine("ADDI $sp, $sp, -100");
 	// throws(function() { ME2.runLine('SB $t5, 0($sp)'); }, StackError, "When the stack address starts high, you should never use addi, use addiu instead.");
