@@ -9,15 +9,15 @@
   
 
   <link rel="shortcut icon" type="image/ico" href="favicon.ico" />
-  <link rel="stylesheet" href="resources/css/app-4689d2a5522dcd3c9e9923ca59c33f27.css" type="text/css" />
-  <link rel="stylesheet" href="styles-3eba09980fa05ead185cb17d9c0deb0f.css" type="text/css" />
+  <link rel="stylesheet" href="resources/css/app-de670120f43fdad3091a0cc2c10daadb.css" type="text/css" />
+  <link rel="stylesheet" href="styles-ffa675a506f502109ac7b028808d7e53.css" type="text/css" />
 
   <script type="text/javascript" src="extjs/ext-all.js"></script>
-  <script type="text/javascript" src="data-53a2fe210dd7d8ca495a1b46ee08cf58.js"></script>
+  <script type="text/javascript" src="data-224298ab5bc7166d09f5edfc1f95de5b.js"></script>
 
-  <script type="text/javascript" src="app-0c945a27f43452df695771ddb60b3d14.js"></script>
+  <script type="text/javascript" src="app-0f524ddd276c4019a11a6128932a9c96.js"></script>
 
-  <link rel="stylesheet" href="../css/weMipsStyle.css" type="text/css">
+  <link rel=stylesheet href=../css/weMipsStyle.css type=text/css>
 
 </head>
 <body id="ext-body">
@@ -29,11 +29,6 @@
 <body>
     <p>Use the gear ^ to see the code documentation</p>
     <h1>WeMips Usage Guide</h1>
-    <h3>Installation Guide</h3>
-        <ol>
-            <li >Copy all the files to a directory on your computer.</li>
-            <li >Drag and drop the index.html file onto Google Chrome.</li>
-        </ol>
     <h3 name="supportedOps">Features</h3>
     <ul>
         <li class='wemips_li'>Nothing here yet</li>
@@ -44,8 +39,8 @@
         <li class='wemips_li'>ADD</li>
         <li class='wemips_li'>ADDI</li>
         <li class='wemips_li'>ADDU</li>
-        <li class='wemips_li'>ADDIU <i>Expiramental</i></li>
-        <li class='wemips_li'>SUB <i>Expiramental</i></li>
+        <li class='wemips_li'>ADDIU <i>Unimplemented</i></li>
+        <li class='wemips_li'>SUB <i>Unimplemented</i></li>
         <li class='wemips_li'>SUBU</li>
         <li class='wemips_li'>LUI</li>
     </ul>
@@ -62,246 +57,26 @@
         <li class='wemips_li'>BNE</li>
         <li class='wemips_li'>J</li>
         <li class='wemips_li'>JAL</li>
-        <li class='wemips_li'>JR <i>Expiramental</i></li>
+        <li class='wemips_li'>JR <i>Unimplemented</i></li>
     </ul>
     <h2 class='wemips_h2'>Mips Memory Access Instructions</h2>
     <ul>
-        <li class='wemips_li'>LW <i>Expiramental</i></li>
-        <li class='wemips_li'>SW <i>Expiramental</i></li>
-        <li class='wemips_li'>LH <i>Expiramental</i></li>
-        <li class='wemips_li'>LHU <i>Expiramental</i></li>
-        <li class='wemips_li'>SH <i>Expiramental</i></li>
+        <li class='wemips_li'>LW <i>Unimplemented</i></li>
+        <li class='wemips_li'>SW <i>Unimplemented</i></li>
+        <li class='wemips_li'>LH <i>Unimplemented</i></li>
+        <li class='wemips_li'>LHU <i>Unimplemented</i></li>
+        <li class='wemips_li'>SH <i>Unimplemented</i></li>
         <li class='wemips_li'>LB</li>
         <li class='wemips_li'>LBU</li>
         <li class='wemips_li'>SB</li>
     </ul>
     <h2 class='wemips_h2'>Mips Comparison Instructions</h2>
     <ul>
-        <li class='wemips_li'>SLT <i>Expiramental</i></li>
-        <li class='wemips_li'>SLTI <i>Expiramental</i></li>
-        <li class='wemips_li'>SLTU <i>Expiramental</i></li>
-        <li class='wemips_li'>SLTIU <i>Expiramental</i></li>
+        <li class='wemips_li'>SLT <i>Unimplemented</i></li>
+        <li class='wemips_li'>SLTI <i>Unimplemented</i></li>
+        <li class='wemips_li'>SLTU <i>Unimplemented</i></li>
+        <li class='wemips_li'>SLTIU <i>Unimplemented</i></li>
     </ul>
-    <h3>Mars like system calls</h3>
-    <table cellpadding="20" border=1 cellspacing="20">
-         <tbody>
-            <tr>
-               <td class="c9">
-                  <p class="c7"><span class="c14">Description</span></p>
-               </td>
-               <td class="c10">
-                  <p class="c7"><span class="c14">$v0 code</span></p>
-               </td>
-               <td class="c12">
-                  <p class="c7"><span class="c14">Arguments</span></p>
-               </td>
-               <td class="c4">
-                  <p class="c2"><span class="c14">Return Value</span></p>
-               </td>
-            </tr>
-            <tr class="c3">
-               <td class="c9">
-                  <p class="c2"><span>Print Integer</span></p>
-               </td>
-               <td class="c10">
-                  <p class="c2"><span>1</span></p>
-               </td>
-               <td class="c12">
-                  <p class="c2"><span>$a0 = integer to print</span></p>
-               </td>
-               <td class="c4">
-                  <p class="c2 c6"><span class="c1"></span></p>
-               </td>
-            </tr>
-            <tr>
-               <td class="c9">
-                  <p class="c7"><span>Print String</span></p>
-               </td>
-               <td class="c10">
-                  <p class="c7"><span>4</span></p>
-               </td>
-               <td class="c12">
-                  <p class="c7"><span>$a0 = stack address of null-terminated string to print to console</span></p>
-               </td>
-               <td class="c4">
-                  <p class="c2 c6"><span class="c1"></span></p>
-               </td>
-            </tr>
-            <tr class="c3">
-               <td class="c9">
-                  <p class="c2"><span>Read Integer</span></p>
-               </td>
-               <td class="c10">
-                  <p class="c2"><span>5</span></p>
-               </td>
-               <td class="c12">
-                  <p class="c2 c6"><span class="c1"></span></p>
-               </td>
-               <td class="c4">
-                  <p class="c2"><span>$v0 = contains integer read</span></p>
-               </td>
-            </tr>
-            <tr class="c3">
-               <td class="c9">
-                  <p class="c2"><span>Read String</span></p>
-               </td>
-               <td class="c10">
-                  <p class="c2"><span>8</span></p>
-               </td>
-               <td class="c12">
-                  <p class="c2"><span>$a0 = address of input buffer</span></p>
-                  <p class="c2"><span>$a1 = maximum number of characters to read (this will be one less than the allowed string since it needs space for the null terminator)</span></p>
-               </td>
-               <td class="c4">
-                  <p class="c2"><span>$v0 = contains the length of the input string</span></p>
-               </td>
-            </tr>
-            <tr class="c3">
-               <td class="c9">
-                  <p class="c2"><span>Confirm Dialog</span></p>
-               </td>
-               <td class="c10">
-                  <p class="c2"><span>50</span></p>
-               </td>
-               <td class="c12">
-                  <p class="c2"><span>$a0 = address of null-terminated string that is the message to user</span></p>
-               </td>
-               <td class="c4">
-                  <p class="c2"><span>$a0 contains value of user-chosen option</span></p>
-                  <p class="c2"><span>0: OK</span></p>
-                  <p class="c2"><span>1: Cancel</span></p>
-               </td>
-            </tr>
-            <tr class="c3">
-               <td class="c9">
-                  <p class="c2"><span>Input Dialog Int</span></p>
-               </td>
-               <td class="c10">
-                  <p class="c2"><span>51</span></p>
-               </td>
-               <td class="c12">
-                  <p class="c11 c15"><span>$a0 = address of null-terminated string that is the message to user</span></p>
-                  <p class="c11 c6 c15"><span></span></p>
-               </td>
-               <td class="c4">
-                  <p class="c2"><span>$a0 contains int read</span></p>
-                  <p class="c2"><span>$a1 contains status value</span></p>
-                  <p class="c2"><span>0: OK status</span></p>
-                  <p class="c2"><span>-1: input data cannot be correctly parsed</span></p>
-                  <p class="c2"><span>-2: Cancel was chosen</span></p>
-                  <p class="c2"><span>-3: OK was chosen but no data had been input into field</span></p>
-               </td>
-            </tr>
-            <tr class="c3">
-               <td class="c9">
-                  <p class="c2"><span>Input Dialog String</span></p>
-               </td>
-               <td class="c10">
-                  <p class="c2"><span>54</span></p>
-               </td>
-               <td class="c12">
-                  <p class="c2"><span>$a0 = address of null-terminated string that is the message to user</span></p>
-                  <p class="c2"><span>$a1 = address of input buffer</span></p>
-                  <p class="c2"><span>$a2 = maximum number of characters to read</span></p>
-               </td>
-               <td class="c4">
-                  <p class="c2"><span>$a1 contains status value</span></p>
-                  <p class="c2"><span>0: OK status. Buffer contains the input string.</span></p>
-                  <p class="c2"><span>-2: Cancel was chosen. </span><span class="c0">No change to buffer. </span></p>
-                  <p class="c2"><span>-3: OK was chosen but no data had been input into field. </span><span class="c0">No change to buffer.</span></p>
-                  <p class="c2"><span>-4: length of the input string exceeded the specified maximum. Buffer contains the maximum allowable input string plus a terminating null.</span></p>
-               </td>
-            </tr>
-            <tr class="c3">
-               <td class="c9">
-                  <p class="c2"><span>Alert</span></p>
-               </td>
-               <td class="c10">
-                  <p class="c2"><span>55</span></p>
-               </td>
-               <td class="c12">
-                  <p class="c2"><span>$a0 = address of null-terminated string that is the message to user</span></p>
-               </td>
-               <td class="c4">
-                  <p class="c2 c6"><span class="c1"></span></p>
-               </td>
-            </tr>
-            <tr class="c3">
-               <td class="c9">
-                  <p class="c2"><span>Alert Int</span></p>
-               </td>
-               <td class="c10">
-                  <p class="c2"><span>56</span></p>
-               </td>
-               <td class="c12">
-                  <p class="c2"><span>$a0 = address of null-terminated string that is an information-type message to user</span></p>
-                  <p class="c2"><span>$a1 = int value to display in string form after the first string</span></p>
-               </td>
-               <td class="c4">
-                  <p class="c2 c6"><span class="c1"></span></p>
-               </td>
-            </tr>
-            <tr class="c3">
-               <td class="c9">
-                  <p class="c2"><span>Alert String</span></p>
-               </td>
-               <td class="c10">
-                  <p class="c2"><span>59</span></p>
-               </td>
-               <td class="c12">
-                  <p class="c2"><span>$a0 = address of null-terminated string that is an information-type message to user</span></p>
-                  <p class="c2"><span>$a1 = address of null-terminated string to display after the first string</span></p>
-               </td>
-               <td class="c4">
-                  <p class="c2 c6"><span class="c1"></span></p>
-               </td>
-            </tr>
-            <tr class="c3">
-               <td class="c9">
-                  <p class="c2"><span>Generate Save String Code</span></p>
-               </td>
-               <td class="c10">
-                  <p class="c2"><span>60</span></p>
-               </td>
-               <td class="c12">
-                  <p class="c2"><span>$a0 = stack address of null-terminated string to generate code for</span></p>
-               </td>
-               <td class="c4">
-                  <p class="c2 c6"><span class="c1"></span></p>
-               </td>
-            </tr>
-            <tr class="c3">
-               <td class="c9">
-                  <p class="c2"><span>Binary -&gt; Decimal</span></p>
-               </td>
-               <td class="c10">
-                  <p class="c2"><span>61</span></p>
-               </td>
-               <td class="c12">
-                  <p class="c2"><span>$a0 = stack address of binary string</span></p>
-               </td>
-               <td class="c4">
-                  <p class="c2 c6"><span></span></p>
-               </td>
-            </tr>
-            <tr class="c3">
-               <td class="c9">
-                  <p class="c2"><span>Decimal -&gt; Binary</span></p>
-               </td>
-               <td class="c10">
-                  <p class="c2"><span>62</span></p>
-               </td>
-               <td class="c12">
-                  <p class="c2"><span>$a0 = decimal number to convert</span></p>
-                  <p class="c2"><span>$a1 = number of chars to output</span></p>
-                  <p class="c2"><span>$a2 = size of each block to output</span></p>
-               </td>
-               <td class="c4">
-                  <p class="c2 c6"><span class="c1"></span></p>
-               </td>
-            </tr>
-         </tbody>
-      </table>
 </body></div>
             <div id='categories-content' style='display:none'>
             <div class='section'>
@@ -316,10 +91,7 @@
 <li><a href="#!/api/Number" rel="Number" class="docClass">Number</a></li>
 <li><a href="#!/api/Object" rel="Object" class="docClass">Object</a></li>
 <li><a href="#!/api/RegExp" rel="RegExp" class="docClass">RegExp</a></li>
-<li><a href="#!/api/Stack" rel="Stack" class="docClass">Stack</a></li>
 <li><a href="#!/api/String" rel="String" class="docClass">String</a></li>
-<li><a href="#!/api/mipsEmulator" rel="mipsEmulator" class="docClass">mipsEmulator</a></li>
-<li><a href="#!/api/register" rel="register" class="docClass">register</a></li>
 </ul>
 </div>
 <div class='middle-column'>
@@ -332,7 +104,7 @@
 
   
   
-  <div id='footer-content' style='display: none'>Generated on Thu 05 Dec 2013 17:36:16 by <a href='https://github.com/senchalabs/jsduck'>JSDuck</a> 5.3.4.</div>
+  <div id='footer-content' style='display: none'>Generated on Tue 04 Apr 2023 22:30:32 by <a href='https://github.com/senchalabs/jsduck'>JSDuck</a> 6.0.0beta.</div>
 
   
 

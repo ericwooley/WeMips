@@ -100,9 +100,7 @@ function MipsEmulator(mipsArgs){
      * @type {Array}
      */
     var readonlyRegs = [
-        '$zero', '$at',
-        '$k0', '$k1',
-        '$gp', '$ra'
+        '$zero', '$k0', '$k1', '$gp'
     ];
     // The intial line where we start the emulation.
     /**

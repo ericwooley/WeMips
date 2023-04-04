@@ -426,7 +426,20 @@ test("ADDI", function() {
 test("SLL", function() {
 	ME.runLine("ADDI $t1, $zero, 1");
 	ME.runLine("SLL $t1, $t1, 5");
-	equal(ME.getRegisterVal('$t1'), 32, "2^5 = 32");
+	equal(ME.getRegisterVal('$t1'), 32, "1<<5 = 32");
+});
+
+test("SRL", function() {
+	ME.runLine("ADDI $t1, $zero, 5");
+	ME.runLine("SRL $t1, $t1, 2");
+	equal(ME.getRegisterVal('$t1'), 1, "5>>2 = 1");
+});
+
+test("SUB", function() {
+	ME.runLine("ADDI $t1, $zero, 9");
+	ME.runLine("ADDI $t2, $zero, 19");
+	ME.runLine("SUB $t3, $t1, $t2");
+	equal(ME.getRegisterVal('$t3'), -10, "9-19 = -10");
 });
 
 test("SUBU", function() {
@@ -563,6 +576,54 @@ test("LB, LBU, SB", function() {
 	equal(ME.getRegisterVal('$t5'), 1, 'LBU should zero extend.');
 });
 
+test('SLT', function() {
+	ME.runLines([
+		"ADDI $t1, $zero, -1",
+		"SLT $t2, $t1, $zero",
+		"SLT $t3, $zero, $t1",
+		"SLT $t4, $zero, $zero"
+	]);
+	equal(ME.getRegisterVal('$t2'), 1, '(-1<0)==1');
+	equal(ME.getRegisterVal('$t3'), 0, '(0<-1)==0');
+	equal(ME.getRegisterVal('$t4'), 0, '(0<0)==0');
+});
+
+test('SLTI', function() {
+	ME.runLines([
+		"ADDI $t1, $zero, -1",
+		"SLTI $t2, $t1, 0",
+		"SLTI $t3, $zero, -1",
+		"SLTI $t4, $zero, 0"
+	]);
+	equal(ME.getRegisterVal('$t2'), 1, '(-1<0)==1');
+	equal(ME.getRegisterVal('$t3'), 0, '(0<-1)==0');
+	equal(ME.getRegisterVal('$t4'), 0, '(0<0)==0');
+});
+
+test('SLTU', function() {
+	ME.runLines([
+		"ADDI $t1, $zero, -1",
+		"SLTU $t2, $t1, $zero",
+		"SLTU $t3, $zero, $t1",
+		"SLTU $t4, $zero, $zero"
+	]);
+	equal(ME.getRegisterVal('$t2'), 0, '(2^32-1<0)==0');
+	equal(ME.getRegisterVal('$t3'), 1, '(0<2^32-1)==1');
+	equal(ME.getRegisterVal('$t4'), 0, '(0<0)==0');
+});
+
+test('SLTIU', function() {
+	ME.runLines([
+		"ADDI $t1, $zero, -1",
+		"SLTIU $t2, $t1, 0",
+		"SLTIU $t3, $zero, 65535",
+		"SLTIU $t4, $zero, 0"
+	]);
+	equal(ME.getRegisterVal('$t2'), 0, '(2^32-1<0)==0');
+	equal(ME.getRegisterVal('$t3'), 1, '(0<65535)==1');
+	equal(ME.getRegisterVal('$t4'), 0, '(0<0)==0');
+});
+
 test("J", function() {
 	ME.runLines([
 		"ADDI $t2, $zero, 1",
@@ -617,6 +678,79 @@ test("LW, SW", function() {
 	]);
 	equal(ME.getRegisterVal('$t1'), -65536);
 	equal(ME.getRegisterVal('$t3'), -65535);
+});
+
+test("JAL, JR", function() {
+	throws(function() {
+		ME.runLines([
+			"JAL foo"
+		]);
+	}, JumpError, "There is no foo label.");
+
+	ME.runLines([
+		"ADDI $t0, $zero, 1",
+		"JAL sub",
+		"ADDI $t0, $t0, 1",
+		"J end",
+		"sub: ADDI $t0, $t0, 1",
+		"JR $ra",
+		"end:"
+	]);
+	equal(ME.getRegisterVal('$t0'), 3);
+});
+
+test("LW, SW", function() {
+	ME.runLines([
+		"ADDI $sp, $sp, -4",
+		"ADDI $t1, $zero, 2",
+		"ADDI $t3, $t1, 1",
+		"LUI $t0, 65535",
+		"SW $t0, 0($sp)",
+		"LW $t1, 0($sp)",
+		"ADDI $t2, $t0, 1",
+		"SW $t2, 0($sp)",
+		"LW $t3, 0($sp)"
+	]);
+	equal(ME.getRegisterVal('$t1'), -65536);
+	equal(ME.getRegisterVal('$t3'), -65535);
+});
+
+test("LH", function() {
+	ME.runLines([
+		"ADDI $sp, $sp, -4",
+		"LUI $t0, 1025",
+		"ADDI $t0, $t0, -4096",
+		"SW $t0, 0($sp)",
+		"LH $t1, 0($sp)",
+		"LH $t2, 2($sp)"
+	]);
+	equal(ME.getRegisterVal('$t1'), 1024);
+	equal(ME.getRegisterVal('$t2'), -4096);
+});
+
+test("LHU", function() {
+	ME.runLines([
+		"ADDI $sp, $sp, -4",
+		"LUI $t0, 1025",
+		"ADDI $t0, $t0, -32768",
+		"SW $t0, 0($sp)",
+		"LHU $t1, 0($sp)",
+		"LHU $t2, 2($sp)"
+	]);
+	equal(ME.getRegisterVal('$t1'), 1024);
+	equal(ME.getRegisterVal('$t2'), 32768);
+});
+
+test("SH", function() {
+	ME.runLines([
+		"ADDI $sp, $sp, -4",
+		"ADDI $t0, $zero, 1024",
+		"ADDI $t1, $zero, 4096",
+		"SH $t0, 0($sp)",
+		"SH $t1, 2($sp)",
+		"LW $t2, 0($sp)",
+	]);
+	equal(ME.getRegisterVal('$t2'), 1024*65536+4096);
 });
 
 test("BEQ", function() {
@@ -694,23 +828,71 @@ test("LUI", function(){
 test("AND", function(){
 	ME.runLines([
 		"ADDI $s0, $zero, 1",
-		"AND $t0, $zero, $s0",
-		"ADDI $s0, $zero, 1",
-		"AND $t1, $s0, $s0"
+		"AND $t0, $zero, $zero",
+		"AND $t1, $zero, $s0",
+		"AND $t2, $s0, $zero",
+		"AND $t3, $s0, $s0",
 	]);
-	equal(ME.getRegisterVal("$t0"), 0, "0 & 1 is 1");
-	equal(ME.getRegisterVal("$t1"), 1, "1 & 1 is 1");
+	equal(ME.getRegisterVal("$t0"), 0, "0 & 0 is 0");
+	equal(ME.getRegisterVal("$t1"), 0, "0 & 1 is 0");
+	equal(ME.getRegisterVal("$t2"), 0, "1 & 0 is 0");
+	equal(ME.getRegisterVal("$t3"), 1, "1 & 1 is 1");
 });
 
 test("ANDI", function(){
 	ME.runLines([
-		"ADDI $s0, $zero, 0",
-		"ANDI $s0, $s0, 1",
-		"ADDI $s1, $zero, 1",
-		"ANDI $s1, $s1, 1"
+		"ADDI $s0, $zero, 1",
+		"ANDI $t0, $zero, 0",
+		"ANDI $t1, $zero, 1",
+		"ANDI $t2, $s0, 0",
+		"ANDI $t3, $s0, 1",
 	]);
-	equal(ME.getRegisterVal("$s0"), 0, "0 & 1 is 1");
-	equal(ME.getRegisterVal("$s1"), 1, "1 & 1 is 1");
+	equal(ME.getRegisterVal("$t0"), 0, "0 & 0 is 0");
+	equal(ME.getRegisterVal("$t1"), 0, "0 & 1 is 0");
+	equal(ME.getRegisterVal("$t2"), 0, "1 & 0 is 0");
+	equal(ME.getRegisterVal("$t3"), 1, "1 & 1 is 1");
+});
+
+test("NOR", function(){
+	ME.runLines([
+		"ADDI $s0, $zero, 1",
+		"NOR $t0, $zero, $zero",
+		"NOR $t1, $zero, $s0",
+		"NOR $t2, $s0, $zero",
+		"NOR $t3, $s0, $s0",
+	]);
+	equal(ME.getRegisterVal("$t0"), -1, "~(0 | 0) is -1");
+	equal(ME.getRegisterVal("$t1"), -2, "~(0 | 1) is -2");
+	equal(ME.getRegisterVal("$t2"), -2, "~(1 | 0) is -2");
+	equal(ME.getRegisterVal("$t3"), -2, "~(1 | 1) is -2");
+});
+
+test("OR", function(){
+	ME.runLines([
+		"ADDI $s0, $zero, 1",
+		"OR $t0, $zero, $zero",
+		"OR $t1, $zero, $s0",
+		"OR $t2, $s0, $zero",
+		"OR $t3, $s0, $s0",
+	]);
+	equal(ME.getRegisterVal("$t0"), 0, "0 | 0 is 0");
+	equal(ME.getRegisterVal("$t1"), 1, "0 | 1 is 1");
+	equal(ME.getRegisterVal("$t2"), 1, "1 | 0 is 1");
+	equal(ME.getRegisterVal("$t3"), 1, "1 | 1 is 1");
+});
+
+test("ORI", function(){
+	ME.runLines([
+		"ADDI $s0, $zero, 1",
+		"ORI $t0, $zero, 0",
+		"ORI $t1, $zero, 1",
+		"ORI $t2, $s0, 0",
+		"ORI $t3, $s0, 1",
+	]);
+	equal(ME.getRegisterVal("$t0"), 0, "0 | 0 is 0");
+	equal(ME.getRegisterVal("$t1"), 1, "0 | 1 is 1");
+	equal(ME.getRegisterVal("$t2"), 1, "1 | 0 is 1");
+	equal(ME.getRegisterVal("$t3"), 1, "1 | 1 is 1");
 });
 
 var output = '';
@@ -906,7 +1088,7 @@ test("helloWorldExample", function() {
 // 	equal(output, 'Hello world!');
 // });
 
-// TODO: add tests for the rest of the examples
+// 'TODO': add tests for the rest of the examples
 
 module("API");
 
