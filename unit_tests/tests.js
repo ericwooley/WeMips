@@ -604,6 +604,22 @@ test("J", function() {
 
 });
 
+test("LW, SW", function() {
+	ME.runLines([
+		"ADDI $sp, $sp, -4",
+		"ADDI $t1, $zero, 2",
+		"ADDI $t3, $t1, 1",
+		"LUI $t0, 65535",
+		"SW $t0, 0($sp)",
+		"LW $t1, 0($sp)",
+		"ADDI $t2, $t0, 1",
+		"SW $t2, 0($sp)",
+		"LW $t3, 0($sp)"
+	]);
+	equal(ME.getRegisterVal('$t1'), -65536);
+	equal(ME.getRegisterVal('$t3'), -65535);
+});
+
 test("BEQ", function() {
 	throws(function() {
 		ME.runLines([
