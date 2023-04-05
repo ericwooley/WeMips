@@ -895,6 +895,34 @@ test("ORI", function(){
 	equal(ME.getRegisterVal("$t3"), 1, "1 | 1 is 1");
 });
 
+test("XOR", function(){
+	ME.runLines([
+		"ADDI $s0, $zero, 1",
+		"XOR $t0, $zero, $zero",
+		"XOR $t1, $zero, $s0",
+		"XOR $t2, $s0, $zero",
+		"XOR $t3, $s0, $s0",
+	]);
+	equal(ME.getRegisterVal("$t0"), 0, "0 ^ 0 is 0");
+	equal(ME.getRegisterVal("$t1"), 1, "0 ^ 1 is 1");
+	equal(ME.getRegisterVal("$t2"), 1, "1 ^ 0 is 1");
+	equal(ME.getRegisterVal("$t3"), 0, "1 ^ 1 is 0");
+});
+
+test("XORI", function(){
+	ME.runLines([
+		"ADDI $s0, $zero, 1",
+		"XORI $t0, $zero, 0",
+		"XORI $t1, $zero, 1",
+		"XORI $t2, $s0, 0",
+		"XORI $t3, $s0, 1",
+	]);
+	equal(ME.getRegisterVal("$t0"), 0, "0 ^ 0 is 0");
+	equal(ME.getRegisterVal("$t1"), 1, "0 ^ 1 is 1");
+	equal(ME.getRegisterVal("$t2"), 1, "1 ^ 0 is 1");
+	equal(ME.getRegisterVal("$t3"), 0, "1 ^ 1 is 0");
+});
+
 var output = '';
 function resetOutput() {
 	output = '';

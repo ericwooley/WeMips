@@ -102,6 +102,24 @@ function mipsInstructionExecutor(ME) {
                 ME.incerementPC();
             }
         },
+        'XOR': {
+            parseMethod: parse_$RD_$rs_$rt,
+            runMethod: function(namedArgs){
+                ME.setRegisterVal(namedArgs.$rd,
+                    (ME.getRegisterVal(namedArgs.$rs) ^ ME.getRegisterVal(namedArgs.$rt))
+                );
+                ME.incerementPC();
+            }
+        },
+        'XORI': {
+            parseMethod: parse_$RT_$rs_immZeroExt,
+            runMethod: function(namedArgs){
+                ME.setRegisterVal(namedArgs.$rt,
+                    (ME.getRegisterVal(namedArgs.$rs) ^ namedArgs.imm)
+                );
+                ME.incerementPC();
+            }
+        },
         'SLL': {
             parseMethod: parse_$RD_$rt_shamt,
             runMethod: function(namedArgs) {

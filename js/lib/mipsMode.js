@@ -4,7 +4,7 @@ CodeMirror.defineMode("mips", function() {
     for (var i = 0; i < words.length; ++i) obj[words[i]] = true;
     return obj;
   }
-  var keywords = words("ADD ADDI ADDU ADDIU SUB SUBU LUI AND ANDI NOR OR ORI SLL SRL " +
+  var keywords = words("ADD ADDI ADDU ADDIU SUB SUBU LUI AND ANDI NOR OR ORI XOR XORI SLL SRL " +
                        "BEQ BNE J JAL JR LW SW LH LHU SH LB LBU SB SLT SLTI SLTU SLTIU SYSCALL");
   var atoms = words("$zero $at $v0 $v1 $a0 $a1 $a2 $a3 " +
                     "$t0 $t1 $t2 $t3 $t4 $t5 $t6 $t7 " +
