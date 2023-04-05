@@ -183,6 +183,26 @@ function mipsInstructionExecutor(ME) {
                     ME.incerementPC();
             }
         },
+        'BGEZAL': {
+            parseMethod: parse_$rs_label,
+            runMethod: function(namedArgs) {
+                if (ME.getRegisterVal(namedArgs.$rs) >= 0) {
+                    ME.setRegisterVal('$ra', ME.getLineNumber() + 1);
+                    ME.goToLabel(namedArgs.label);
+                } else
+                    ME.incerementPC();
+            }
+        },
+        'BLTZAL': {
+            parseMethod: parse_$rs_label,
+            runMethod: function(namedArgs) {
+                if (ME.getRegisterVal(namedArgs.$rs) < 0) {
+                    ME.setRegisterVal('$ra', ME.getLineNumber() + 1);
+                    ME.goToLabel(namedArgs.label);
+                } else
+                    ME.incerementPC();
+            }
+        },
         'J': {
             parseMethod: parse_label,
             runMethod: function(namedArgs) {
@@ -377,6 +397,13 @@ function mipsInstructionExecutor(ME) {
     		'$rs': parseRegister(args[0]),
     		'$rt': parseRegister(args[1]),
     		'label': parseLabel(args[2])
+    	};
+    };
+    function parse_$rs_label(args){
+    	return {
+    		'expectedArgCount': 2,
+    		'$rs': parseRegister(args[0]),
+    		'label': parseLabel(args[1])
     	};
     };
     function parse_label(args){

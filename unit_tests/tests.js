@@ -850,6 +850,38 @@ test("BNE", function() {
 	equal(ME.getRegisterVal('$t2'), 21, "Fibonnaci's 6th number is 21.");
 });
 
+test("BGEZAL", function() {
+	throws(function() {
+		ME.runLines([
+			"ADDI $t0, $zero, 1",
+			"BGEZAL $t0, foo"
+		]);
+	}, JumpError, "There is no foo label.");
+
+	ME.runLines([
+		"ADDI $t0, $zero, 1",
+		"BGEZAL $t0, tgt",
+		"tgt:"
+	]);
+	equal(ME.getRegisterVal('$ra'), 3);
+});
+
+test("BLTZAL", function() {
+       throws(function() {
+               ME.runLines([
+                       "ADDI $t0, $zero, -1",
+                       "BLTZAL $t0, foo"     
+               ]);
+       }, JumpError, "There is no foo label.");
+
+       ME.runLines([
+               "ADDI $t0, $zero, -1",
+               "BLTZAL $t0, tgt",
+               "tgt:"
+       ]);
+       equal(ME.getRegisterVal('$ra'), 3);
+});
+	
 test("LUI", function(){
 	ME.runLines([
 	"ADDI $t0, $zero, 10",
