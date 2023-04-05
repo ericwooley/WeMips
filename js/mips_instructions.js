@@ -196,6 +196,16 @@ function mipsInstructionExecutor(ME) {
                 ME.goToLabel(namedArgs.label);
             }
         },
+        'JALR': {
+            parseMethod: parse_$rs,
+            runMethod: function(namedArgs) {
+                ME.setRegisterVal('$ra', ME.getLineNumber() + 1);
+                // TODO: the line numbers should be random and not start at 0
+                // Also, blank lines should probably have a line number associated with them
+                var lineNumber = ME.getRegisterUnsignedVal(namedArgs.$rs);
+                ME.setLine(lineNumber);
+            }
+        },
         'JR': {
             parseMethod: parse_$rs,
             runMethod: function(namedArgs) {

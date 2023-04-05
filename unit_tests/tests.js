@@ -726,6 +726,20 @@ test("JAL, JR", function() {
 	equal(ME.getRegisterVal('$t0'), 3);
 });
 
+test("JALR", function() {
+	ME.runLines([
+		"ADDI $t0, $zero, 1",
+		"ADDI $t1, $zero, 6",
+		"JALR $t1",
+		"ADDI $t0, $t0, 1",
+		"J end",
+		"ADDI $t0, $t0, 1",
+		"JR $ra",
+		"end:"
+	]);
+	equal(ME.getRegisterVal('$t0'), 3);
+});
+
 test("LW, SW", function() {
 	ME.runLines([
 		"ADDI $sp, $sp, -4",

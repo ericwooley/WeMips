@@ -48,5 +48,5 @@ var mipsRegisters = cretaeRegisters([
 	{ name: "$gp", readonly: true, userdata: { preserved: true } },
 	{ name: "$sp", userdata: { preserved: true } },
 	{ name: "$fp", userdata: { preserved: true } },
-	{ name: "$ra", readonly: true, userdata: { preserved: true } },
+	{ name: "$ra", userdata: { preserved: true } },
 ]);
