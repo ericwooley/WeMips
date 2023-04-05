@@ -127,10 +127,38 @@ function mipsInstructionExecutor(ME) {
                 ME.incerementPC();
             }
         },
+        'SLLV': {
+            parseMethod: parse_$RD_$rs_$rt,
+            runMethod: function(namedArgs) {
+                ME.setRegisterVal(namedArgs.$rd, ME.getRegisterVal(namedArgs.$rs) << (ME.getRegisterVal(namedArgs.$rt) & 31));
+                ME.incerementPC();
+            }
+        },
         'SRL': {
             parseMethod: parse_$RD_$rt_shamt,
             runMethod: function(namedArgs) {
+                ME.setRegisterVal(namedArgs.$rd, ME.getRegisterVal(namedArgs.$rt) >>> namedArgs.shamt);
+                ME.incerementPC();
+            }
+        },
+        'SRLV': {
+            parseMethod: parse_$RD_$rs_$rt,
+            runMethod: function(namedArgs) {
+                ME.setRegisterVal(namedArgs.$rd, ME.getRegisterVal(namedArgs.$rs) >>> (ME.getRegisterVal(namedArgs.$rt) & 31));
+                ME.incerementPC();
+            }
+        },
+        'SRA': {
+            parseMethod: parse_$RD_$rt_shamt,
+            runMethod: function(namedArgs) {
                 ME.setRegisterVal(namedArgs.$rd, ME.getRegisterVal(namedArgs.$rt) >> namedArgs.shamt);
+                ME.incerementPC();
+            }
+        },
+        'SRAV': {
+            parseMethod: parse_$RD_$rs_$rt,
+            runMethod: function(namedArgs) {
+                ME.setRegisterVal(namedArgs.$rd, ME.getRegisterVal(namedArgs.$rs) >> (ME.getRegisterUnsignedVal(namedArgs.$rt) & 31));
                 ME.incerementPC();
             }
         },

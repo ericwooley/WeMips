@@ -426,6 +426,13 @@ test("ADDI", function() {
 test("SLL", function() {
 	ME.runLine("ADDI $t1, $zero, 1");
 	ME.runLine("SLL $t1, $t1, 5");
+	equal(ME.getRegisterVal('$t1'), 32, "2^5 = 32");
+});
+
+test("SLLV", function() {
+	ME.runLine("ADDI $t1, $zero, 1");
+	ME.runLine("ADDI $t2, $zero, 5");
+	ME.runLine("SLLV $t1, $t1, $t2");
 	equal(ME.getRegisterVal('$t1'), 32, "1<<5 = 32");
 });
 
@@ -433,6 +440,26 @@ test("SRL", function() {
 	ME.runLine("ADDI $t1, $zero, 5");
 	ME.runLine("SRL $t1, $t1, 2");
 	equal(ME.getRegisterVal('$t1'), 1, "5>>2 = 1");
+});
+
+test("SRLV", function() {
+	ME.runLine("ADDI $t1, $zero, -5");
+	ME.runLine("ADDI $t2, $zero, 2");
+	ME.runLine("SRLV $t1, $t1, $t2");
+	equal(ME.getRegisterVal('$t1'), 1073741822, "-5>>>2 = 1073741822");
+});
+
+test("SRA", function() {
+	ME.runLine("ADDI $t1, $zero, -5");
+	ME.runLine("SRA $t1, $t1, 2");
+	equal(ME.getRegisterVal('$t1'), -2, "-5>>2 = -2");
+});
+
+test("SRAV", function() {
+	ME.runLine("ADDI $t1, $zero, -5");
+	ME.runLine("ADDI $t2, $zero, 2");
+	ME.runLine("SRAV $t1, $t1, $t2");
+	equal(ME.getRegisterVal('$t1'), -2, "-5>>2 = -2");
 });
 
 test("SUB", function() {
