@@ -271,6 +271,29 @@ function mipsInstructionExecutor(ME) {
                 ME.incerementPC();
             }
         },
+        'SWL': {
+            parseMethod: parse_$RT_imm_$rs,
+            runMethod: function(namedArgs) {
+                var addr = ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm;
+                var offset = addr & 3;
+                var bitOffset = offset*8;
+                var value = ME.getRegisterVal(namedArgs.$rt) >>> bitOffset;
+                ME.stack.setDataAtAddress(addr, 4-offset, value);
+                ME.incerementPC();
+            }
+        },
+        'SWR': {
+            parseMethod: parse_$RT_imm_$rs,
+            runMethod: function(namedArgs) {
+                var addr = ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm;
+                var offset = addr & 3;
+                var bitOffset = (offset+1)*8;
+                var lowerMask = Math.pow(2, bitOffset)-1;
+                var value = ME.getRegisterVal(namedArgs.$rt) & lowerMask;
+                ME.stack.setDataAtAddress(addr & ~3, offset+1, value);
+                ME.incerementPC();
+            }
+        },
         'SW': {
             parseMethod: parse_$rt_imm_$rs,
             runMethod: function(namedArgs) {
