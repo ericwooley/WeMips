@@ -235,13 +235,12 @@ test("Save/load integers to stack", function() {
 
 	stackPointer -= 1;
 	throws(function() { stack.setByte(stackPointer, -129); }, StackError, "Out of range.");
+	throws(function() { stack.setByte(stackPointer, 257); }, StackError, "Out of range.");
+	throws(function() { stack.setByte(stackPointer, Math.pow(2, 32)); }, StackError, "Out of range.");
 	stack.setByte(stackPointer, -128);
 	stack.setByte(stackPointer, 0);
 	stack.setByte(stackPointer, 127);
 	stack.setByte(stackPointer, 255);
-	stack.setByte(stackPointer, 257);
-	equal(stack.getByte(stackPointer), 1, "Should save only the bottom 8 bits.");
-	throws(function() { stack.setByte(stackPointer, Math.pow(2, 32)); }, StackError, "Out of range.");
 
 	var twoToThe24 = 16777216;
 	var twoToThe23 = 8388608;

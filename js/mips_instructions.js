@@ -193,7 +193,7 @@ function mipsInstructionExecutor(ME) {
         'SH': {
             parseMethod: parse_$rt_imm_$rs,
             runMethod: function(namedArgs) {
-                ME.stack.setHalfword(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm, ME.getRegisterVal(namedArgs.$rt));
+                ME.stack.setHalfword(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm, ME.getRegisterVal(namedArgs.$rt) & 65535);
                 ME.incerementPC();
             } // TODO: make some tests
         },
@@ -215,7 +215,7 @@ function mipsInstructionExecutor(ME) {
             parseMethod: parse_$rt_imm_$rs,
             runMethod: function(namedArgs) {
                 // TODO: should these be using unsignedAdd so that the appropriate flags are set?
-            	ME.stack.setByte(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm, ME.getRegisterVal(namedArgs.$rt));
+            	ME.stack.setByte(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm, ME.getRegisterVal(namedArgs.$rt) & 255);
             	ME.incerementPC();
             }
         },
