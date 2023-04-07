@@ -794,6 +794,40 @@ test("SH", function() {
 	equal(ME.getRegisterVal('$t2'), 1024*65536+4096);
 });
 
+test("LWL", function() {
+	ME.runLines([
+		"ADDI $sp, $sp, -4",
+		"LUI $t0, 4660",            /* 0x1234 */
+		"ADDIU $t0, $t0, 22136",    /* 0x5678 */
+		"SW $t0, 0($sp)",
+		"LWL $t0, 0($sp)",
+		"LWL $t1, 1($sp)",
+		"LWL $t2, 2($sp)",
+		"LWL $t3, 3($sp)"
+	]);
+	equal(ME.getRegisterVal('$t0') & 0xFFFFFFFF, 0x12345678);
+	equal(ME.getRegisterVal('$t1') & 0xFFFFFF00, 0x34567800);
+	equal(ME.getRegisterVal('$t2') & 0xFFFF0000, 0x56780000);
+	equal(ME.getRegisterVal('$t3') & 0xFF000000, 0x78000000);
+});
+
+test("LWR", function() {
+	ME.runLines([
+		"ADDI $sp, $sp, -4",
+		"LUI $t0, 4660",            /* 0x1234 */
+		"ADDIU $t0, $t0, 22136",    /* 0x5678 */
+		"SW $t0, 0($sp)",
+		"LWR $t0, 0($sp)",
+		"LWR $t1, 1($sp)",
+		"LWR $t2, 2($sp)",
+		"LWR $t3, 3($sp)"
+	]);
+	equal(ME.getRegisterVal('$t0') & 0xFF, 0x12);
+	equal(ME.getRegisterVal('$t1') & 0xFFFF, 0x1234);
+	equal(ME.getRegisterVal('$t2') & 0xFFFFFF, 0x123456);
+	equal(ME.getRegisterVal('$t3') & 0xFFFFFFFF, 0x12345678);
+});
+
 test("BEQ", function() {
 	throws(function() {
 		ME.runLines([
