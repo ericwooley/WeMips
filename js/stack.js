@@ -125,6 +125,20 @@ function Stack(options) {
     this.setDataAtAddress = function(address, byteCount, data) {
         assert(typeof data === "number", "Only numbers supported.");
         var bitCount = byteCount * this.BITS_PER_BYTE;
+        assert(0 <= bitCount && bitCount <= 32, "The & operator will only work for up to 32 bits.");
+
+        /* We check the range as allowed by the given number of bits in either
+         * unsigned or (twos complement) signed representation.
+         */
+        var minValidValue = MIPS.minSignedValue(bitCount);
+        var maxValidValue = MIPS.maxUnsignedValue(bitCount);
+        if (data < minValidValue || maxValidValue < data) {
+            throw new StackError('Unable to store out-of-range value ({0}). Valid values are {1} through {2}.'.format(data, minValidValue, maxValidValue));
+        };
+
+        /* Ensure that the actual data is unsigned so we can split it up into its bytes.
+         * It will then be in the valid range of bitCount bits unsigned integer due to the
+         * check above. */
         if (data < 0) {
             // convert negative value to positive one
             try {
@@ -138,23 +152,11 @@ function Stack(options) {
             }
         }
 
-        var minValidValue = MIPS.minUnsignedValue(BITS_PER_REGISTER);
-        var maxValidValue = MIPS.maxUnsignedValue(BITS_PER_REGISTER);
-        if (data < minValidValue || maxValidValue < data) {
-            throw new StackError('Unable to store out-of-range value ({0}). Valid values are {1} through {2}.'.format(data, minValidValue, maxValidValue));
-        };
-
-        // preserve only the lower N bytes
-        assert(0 <= bitCount && bitCount <= 32, "The & operator will only work for up to 32 bits.");
-        data = data & (Math.pow(2, bitCount)-1);
-        minValidValue = 0;
-        maxValidValue = (Math.pow(2, bitCount) - 1);
-        assert(minValidValue <= data && data <= maxValidValue, "Ensure the above chopping math was performed correctly.");
-
+        /* Split it up into the respective bytes */
         for (var i = byteCount - 1; i >= 0; i--) {
             var rightMostByte = data & this.MAX_BYTE_VALUE;
             setByteAtAddress(address + i, rightMostByte);
-            data = data >> this.BITS_PER_BYTE;
+            data = data >>> this.BITS_PER_BYTE;
         };
     };
     /**

@@ -235,13 +235,12 @@ test("Save/load integers to stack", function() {
 
 	stackPointer -= 1;
 	throws(function() { stack.setByte(stackPointer, -129); }, StackError, "Out of range.");
+	throws(function() { stack.setByte(stackPointer, 257); }, StackError, "Out of range.");
+	throws(function() { stack.setByte(stackPointer, Math.pow(2, 32)); }, StackError, "Out of range.");
 	stack.setByte(stackPointer, -128);
 	stack.setByte(stackPointer, 0);
 	stack.setByte(stackPointer, 127);
 	stack.setByte(stackPointer, 255);
-	stack.setByte(stackPointer, 257);
-	equal(stack.getByte(stackPointer), 1, "Should save only the bottom 8 bits.");
-	throws(function() { stack.setByte(stackPointer, Math.pow(2, 32)); }, StackError, "Out of range.");
 
 	var twoToThe24 = 16777216;
 	var twoToThe23 = 8388608;
@@ -602,6 +601,22 @@ test("J", function() {
 	]);
 	equal(ME.getRegisterVal('$t2'), 102);
 
+});
+
+test("LW, SW", function() {
+	ME.runLines([
+		"ADDI $sp, $sp, -4",
+		"ADDI $t1, $zero, 2",
+		"ADDI $t3, $t1, 1",
+		"LUI $t0, 65535",
+		"SW $t0, 0($sp)",
+		"LW $t1, 0($sp)",
+		"ADDI $t2, $t0, 1",
+		"SW $t2, 0($sp)",
+		"LW $t3, 0($sp)"
+	]);
+	equal(ME.getRegisterVal('$t1'), -65536);
+	equal(ME.getRegisterVal('$t3'), -65535);
 });
 
 test("BEQ", function() {
