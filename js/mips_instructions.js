@@ -623,13 +623,36 @@ function mipsInstructionExecutor(ME) {
     function _parseImmediate(arg, bits, extensionRule) {
         bits = bits || BITS_PER_IMMEDIATE;
 
-        var isNumber = /^([-+]\s*)?\d+$/.test(arg);
+        var regex = /^([-+])?\s*((0[xX]([0-9A-Fa-f]+))|(0[bB]([01]+))|(0([0-7]+))|(([1-9]\d*)|0))$/;
+        // 1 = sign
+        // 4 = hex
+        // 6 = bin
+        // 8 = octal
+        // 9 = decimal
 
-        if (!isNumber) {
+        var numberMatch = arg.match(regex);
+
+        var number;
+
+        if (numberMatch === null) {
             return null;
+        } else if (numberMatch[4]) {
+            // hex
+            number = parseInt(numberMatch[4], 16);
+        } else if (numberMatch[6]) {
+            // binary
+            number = parseInt(numberMatch[6], 2);
+        } else if (numberMatch[8]) {
+            // octal
+            number = parseInt(numberMatch[8], 8);
+        } else if (numberMatch[9]) {
+            // decimal
+            number = parseInt(numberMatch[9], 10);
         }
 
-        var number = parseInt(arg, 10);
+        if (numberMatch[1]==='-') {
+            number = -number;
+        }
 
         var minValue;
         var maxValue;

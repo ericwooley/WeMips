@@ -375,6 +375,23 @@ module("Execution", {
 	}
 });
 
+test("Immediate values", function() {
+	ME.runLines([
+		"ADDI $t0, $zero, -0b1000",
+		"ADDI $t1, $zero, 0xa1",
+		"ADDI $t2, $zero, 0XAb",
+		"ADDI $t3, $zero, +0770",
+		"ADDI $t4, $zero, 123",
+		"ADDI $t5, $zero, 0"
+	]);
+	equal(ME.getRegisterVal('$t0'), -0b1000);
+	equal(ME.getRegisterVal('$t1'), 0xa1);
+	equal(ME.getRegisterVal('$t2'), 0xab);
+	equal(ME.getRegisterVal('$t3'), 0770);
+	equal(ME.getRegisterVal('$t4'), 123);
+	equal(ME.getRegisterVal('$t5'), 0);
+});
+
 
 test("ADD", function() {
 	ME.runLine("ADD $t0, $t1, $t2");
