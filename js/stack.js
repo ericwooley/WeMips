@@ -38,7 +38,7 @@ function Stack(options) {
          * @type {Function}
          */
         onAdd: null,
-        baseAddress: getRandomInt(50000, MAX_STACK_ADDRESS)
+        baseAddress: getRandomInt(12500, MAX_STACK_ADDRESS/4)*4
     });
     assert(MIN_STACK_ADDRESS <= options.baseAddress && options.baseAddress <= MAX_STACK_ADDRESS, "Stack addresses must be able to be stored in a register, thus they cannot exceed the register bounds.");
 

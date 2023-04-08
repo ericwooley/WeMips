@@ -102,6 +102,24 @@ function mipsInstructionExecutor(ME) {
                 ME.incerementPC();
             }
         },
+        'XOR': {
+            parseMethod: parse_$RD_$rs_$rt,
+            runMethod: function(namedArgs){
+                ME.setRegisterVal(namedArgs.$rd,
+                    (ME.getRegisterVal(namedArgs.$rs) ^ ME.getRegisterVal(namedArgs.$rt))
+                );
+                ME.incerementPC();
+            }
+        },
+        'XORI': {
+            parseMethod: parse_$RT_$rs_immZeroExt,
+            runMethod: function(namedArgs){
+                ME.setRegisterVal(namedArgs.$rt,
+                    (ME.getRegisterVal(namedArgs.$rs) ^ namedArgs.imm)
+                );
+                ME.incerementPC();
+            }
+        },
         'SLL': {
             parseMethod: parse_$RD_$rt_shamt,
             runMethod: function(namedArgs) {
@@ -109,10 +127,38 @@ function mipsInstructionExecutor(ME) {
                 ME.incerementPC();
             }
         },
+        'SLLV': {
+            parseMethod: parse_$RD_$rs_$rt,
+            runMethod: function(namedArgs) {
+                ME.setRegisterVal(namedArgs.$rd, ME.getRegisterVal(namedArgs.$rs) << (ME.getRegisterVal(namedArgs.$rt) & 31));
+                ME.incerementPC();
+            }
+        },
         'SRL': {
             parseMethod: parse_$RD_$rt_shamt,
             runMethod: function(namedArgs) {
+                ME.setRegisterVal(namedArgs.$rd, ME.getRegisterVal(namedArgs.$rt) >>> namedArgs.shamt);
+                ME.incerementPC();
+            }
+        },
+        'SRLV': {
+            parseMethod: parse_$RD_$rs_$rt,
+            runMethod: function(namedArgs) {
+                ME.setRegisterVal(namedArgs.$rd, ME.getRegisterVal(namedArgs.$rs) >>> (ME.getRegisterVal(namedArgs.$rt) & 31));
+                ME.incerementPC();
+            }
+        },
+        'SRA': {
+            parseMethod: parse_$RD_$rt_shamt,
+            runMethod: function(namedArgs) {
                 ME.setRegisterVal(namedArgs.$rd, ME.getRegisterVal(namedArgs.$rt) >> namedArgs.shamt);
+                ME.incerementPC();
+            }
+        },
+        'SRAV': {
+            parseMethod: parse_$RD_$rs_$rt,
+            runMethod: function(namedArgs) {
+                ME.setRegisterVal(namedArgs.$rd, ME.getRegisterVal(namedArgs.$rs) >> (ME.getRegisterUnsignedVal(namedArgs.$rt) & 31));
                 ME.incerementPC();
             }
         },
@@ -137,6 +183,26 @@ function mipsInstructionExecutor(ME) {
                     ME.incerementPC();
             }
         },
+        'BGEZAL': {
+            parseMethod: parse_$rs_label,
+            runMethod: function(namedArgs) {
+                if (ME.getRegisterVal(namedArgs.$rs) >= 0) {
+                    ME.setRegisterVal('$ra', ME.getLineNumber() + 1);
+                    ME.goToLabel(namedArgs.label);
+                } else
+                    ME.incerementPC();
+            }
+        },
+        'BLTZAL': {
+            parseMethod: parse_$rs_label,
+            runMethod: function(namedArgs) {
+                if (ME.getRegisterVal(namedArgs.$rs) < 0) {
+                    ME.setRegisterVal('$ra', ME.getLineNumber() + 1);
+                    ME.goToLabel(namedArgs.label);
+                } else
+                    ME.incerementPC();
+            }
+        },
         'J': {
             parseMethod: parse_label,
             runMethod: function(namedArgs) {
@@ -148,6 +214,16 @@ function mipsInstructionExecutor(ME) {
             runMethod: function(namedArgs) {
                 ME.setRegisterVal('$ra', ME.getLineNumber() + 1);
                 ME.goToLabel(namedArgs.label);
+            }
+        },
+        'JALR': {
+            parseMethod: parse_$rs,
+            runMethod: function(namedArgs) {
+                ME.setRegisterVal('$ra', ME.getLineNumber() + 1);
+                // TODO: the line numbers should be random and not start at 0
+                // Also, blank lines should probably have a line number associated with them
+                var lineNumber = ME.getRegisterUnsignedVal(namedArgs.$rs);
+                ME.setLine(lineNumber);
             }
         },
         'JR': {
@@ -166,6 +242,55 @@ function mipsInstructionExecutor(ME) {
             parseMethod: parse_$RT_imm_$rs,
             runMethod: function(namedArgs) {
                 ME.setRegisterVal(namedArgs.$rt, ME.stack.getWord(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm));
+                ME.incerementPC();
+            }
+        },
+        'LWL': {
+            parseMethod: parse_$RT_imm_$rs,
+            runMethod: function(namedArgs) {
+                var addr = ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm;
+                var offset = addr & 3;
+                var value = ME.stack.getDataAtAddress(addr, 4 - offset);
+                var bitOffset = offset*8;
+                var lowerMask = Math.pow(2,bitOffset)-1;
+                var upperMask = ~lowerMask;
+                ME.setRegisterVal(namedArgs.$rt, ((value << bitOffset) & upperMask) | (ME.getRegisterVal(namedArgs.$rt) & lowerMask));
+                ME.incerementPC();
+            }
+        },
+        'LWR': {
+            parseMethod: parse_$RT_imm_$rs,
+            runMethod: function(namedArgs) {
+                var addr = ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm;
+                var offset = addr & 3;
+                var value = ME.stack.getDataAtAddress(addr & ~3, offset+1);
+                var bitOffset = (offset+1)*8;
+                var lowerMask = Math.pow(2,bitOffset)-1;
+                var upperMask = ~lowerMask;
+                ME.setRegisterVal(namedArgs.$rt, (ME.getRegisterVal(namedArgs.$rt) & upperMask) | (value & lowerMask));
+                ME.incerementPC();
+            }
+        },
+        'SWL': {
+            parseMethod: parse_$RT_imm_$rs,
+            runMethod: function(namedArgs) {
+                var addr = ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm;
+                var offset = addr & 3;
+                var bitOffset = offset*8;
+                var value = ME.getRegisterVal(namedArgs.$rt) >>> bitOffset;
+                ME.stack.setDataAtAddress(addr, 4-offset, value);
+                ME.incerementPC();
+            }
+        },
+        'SWR': {
+            parseMethod: parse_$RT_imm_$rs,
+            runMethod: function(namedArgs) {
+                var addr = ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm;
+                var offset = addr & 3;
+                var bitOffset = (offset+1)*8;
+                var lowerMask = Math.pow(2, bitOffset)-1;
+                var value = ME.getRegisterVal(namedArgs.$rt) & lowerMask;
+                ME.stack.setDataAtAddress(addr & ~3, offset+1, value);
                 ME.incerementPC();
             }
         },
@@ -321,6 +446,13 @@ function mipsInstructionExecutor(ME) {
     		'$rs': parseRegister(args[0]),
     		'$rt': parseRegister(args[1]),
     		'label': parseLabel(args[2])
+    	};
+    };
+    function parse_$rs_label(args){
+    	return {
+    		'expectedArgCount': 2,
+    		'$rs': parseRegister(args[0]),
+    		'label': parseLabel(args[1])
     	};
     };
     function parse_label(args){

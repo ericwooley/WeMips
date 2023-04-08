@@ -426,6 +426,13 @@ test("ADDI", function() {
 test("SLL", function() {
 	ME.runLine("ADDI $t1, $zero, 1");
 	ME.runLine("SLL $t1, $t1, 5");
+	equal(ME.getRegisterVal('$t1'), 32, "2^5 = 32");
+});
+
+test("SLLV", function() {
+	ME.runLine("ADDI $t1, $zero, 1");
+	ME.runLine("ADDI $t2, $zero, 5");
+	ME.runLine("SLLV $t1, $t1, $t2");
 	equal(ME.getRegisterVal('$t1'), 32, "1<<5 = 32");
 });
 
@@ -433,6 +440,26 @@ test("SRL", function() {
 	ME.runLine("ADDI $t1, $zero, 5");
 	ME.runLine("SRL $t1, $t1, 2");
 	equal(ME.getRegisterVal('$t1'), 1, "5>>2 = 1");
+});
+
+test("SRLV", function() {
+	ME.runLine("ADDI $t1, $zero, -5");
+	ME.runLine("ADDI $t2, $zero, 2");
+	ME.runLine("SRLV $t1, $t1, $t2");
+	equal(ME.getRegisterVal('$t1'), 1073741822, "-5>>>2 = 1073741822");
+});
+
+test("SRA", function() {
+	ME.runLine("ADDI $t1, $zero, -5");
+	ME.runLine("SRA $t1, $t1, 2");
+	equal(ME.getRegisterVal('$t1'), -2, "-5>>2 = -2");
+});
+
+test("SRAV", function() {
+	ME.runLine("ADDI $t1, $zero, -5");
+	ME.runLine("ADDI $t2, $zero, 2");
+	ME.runLine("SRAV $t1, $t1, $t2");
+	equal(ME.getRegisterVal('$t1'), -2, "-5>>2 = -2");
 });
 
 test("SUB", function() {
@@ -699,6 +726,20 @@ test("JAL, JR", function() {
 	equal(ME.getRegisterVal('$t0'), 3);
 });
 
+test("JALR", function() {
+	ME.runLines([
+		"ADDI $t0, $zero, 1",
+		"ADDI $t1, $zero, 6",
+		"JALR $t1",
+		"ADDI $t0, $t0, 1",
+		"J end",
+		"ADDI $t0, $t0, 1",
+		"JR $ra",
+		"end:"
+	]);
+	equal(ME.getRegisterVal('$t0'), 3);
+});
+
 test("LW, SW", function() {
 	ME.runLines([
 		"ADDI $sp, $sp, -4",
@@ -751,6 +792,80 @@ test("SH", function() {
 		"LW $t2, 0($sp)",
 	]);
 	equal(ME.getRegisterVal('$t2'), 1024*65536+4096);
+});
+
+test("LWL", function() {
+	ME.runLines([
+		"ADDI $sp, $sp, -4",
+		"LUI $t0, 4660",            /* 0x1234 */
+		"ADDIU $t0, $t0, 22136",    /* 0x5678 */
+		"SW $t0, 0($sp)",
+		"LWL $t0, 0($sp)",
+		"LWL $t1, 1($sp)",
+		"LWL $t2, 2($sp)",
+		"LWL $t3, 3($sp)"
+	]);
+	equal(ME.getRegisterVal('$t0') & 0xFFFFFFFF, 0x12345678);
+	equal(ME.getRegisterVal('$t1') & 0xFFFFFF00, 0x34567800);
+	equal(ME.getRegisterVal('$t2') & 0xFFFF0000, 0x56780000);
+	equal(ME.getRegisterVal('$t3') & 0xFF000000, 0x78000000);
+});
+
+test("LWR", function() {
+	ME.runLines([
+		"ADDI $sp, $sp, -4",
+		"LUI $t0, 4660",            /* 0x1234 */
+		"ADDIU $t0, $t0, 22136",    /* 0x5678 */
+		"SW $t0, 0($sp)",
+		"LWR $t0, 0($sp)",
+		"LWR $t1, 1($sp)",
+		"LWR $t2, 2($sp)",
+		"LWR $t3, 3($sp)"
+	]);
+	equal(ME.getRegisterVal('$t0') & 0xFF, 0x12);
+	equal(ME.getRegisterVal('$t1') & 0xFFFF, 0x1234);
+	equal(ME.getRegisterVal('$t2') & 0xFFFFFF, 0x123456);
+	equal(ME.getRegisterVal('$t3') & 0xFFFFFFFF, 0x12345678);
+});
+
+test("SWL", function() {
+	ME.runLines([
+		"ADDI $sp, $sp, -20",
+		"LUI $t0, 4660",            /* 0x1234 */
+		"ADDIU $t0, $t0, 22136",    /* 0x5678 */
+		"SWL $t0, 0($sp)",
+		"SWL $t0, 5($sp)",
+		"SWL $t0, 10($sp)",
+		"SWL $t0, 15($sp)",
+		"LW $t0, 0($sp)",
+		"LW $t1, 4($sp)",
+		"LW $t2, 8($sp)",
+		"LW $t3, 12($sp)"
+	]);
+	equal(ME.getRegisterVal('$t0') & 0xFFFFFFFF, 0x12345678);
+	equal(ME.getRegisterVal('$t1') & 0xFFFFFF, 0x123456);
+	equal(ME.getRegisterVal('$t2') & 0xFFFF, 0x1234);
+	equal(ME.getRegisterVal('$t3') & 0xFF, 0x12);
+});
+
+test("SWR", function() {
+	ME.runLines([
+		"ADDI $sp, $sp, -20",
+		"LUI $t0, 4660",            /* 0x1234 */
+		"ADDIU $t0, $t0, 22136",    /* 0x5678 */
+		"SWR $t0, 0($sp)",
+		"SWR $t0, 5($sp)",
+		"SWR $t0, 10($sp)",
+		"SWR $t0, 15($sp)",
+		"LW $t0, 0($sp)",
+		"LW $t1, 4($sp)",
+		"LW $t2, 8($sp)",
+		"LW $t3, 12($sp)"
+	]);
+	equal(ME.getRegisterVal('$t0') & 0xFF000000, 0x78000000);
+	equal(ME.getRegisterVal('$t1') & 0xFFFF0000, 0x56780000);
+	equal(ME.getRegisterVal('$t2') & 0xFFFFFF00, 0x34567800);
+	equal(ME.getRegisterVal('$t3') & 0xFFFFFFFF, 0x12345678);
 });
 
 test("BEQ", function() {
@@ -809,6 +924,38 @@ test("BNE", function() {
 	equal(ME.getRegisterVal('$t2'), 21, "Fibonnaci's 6th number is 21.");
 });
 
+test("BGEZAL", function() {
+	throws(function() {
+		ME.runLines([
+			"ADDI $t0, $zero, 1",
+			"BGEZAL $t0, foo"
+		]);
+	}, JumpError, "There is no foo label.");
+
+	ME.runLines([
+		"ADDI $t0, $zero, 1",
+		"BGEZAL $t0, tgt",
+		"tgt:"
+	]);
+	equal(ME.getRegisterVal('$ra'), 3);
+});
+
+test("BLTZAL", function() {
+       throws(function() {
+               ME.runLines([
+                       "ADDI $t0, $zero, -1",
+                       "BLTZAL $t0, foo"     
+               ]);
+       }, JumpError, "There is no foo label.");
+
+       ME.runLines([
+               "ADDI $t0, $zero, -1",
+               "BLTZAL $t0, tgt",
+               "tgt:"
+       ]);
+       equal(ME.getRegisterVal('$ra'), 3);
+});
+	
 test("LUI", function(){
 	ME.runLines([
 	"ADDI $t0, $zero, 10",
@@ -893,6 +1040,34 @@ test("ORI", function(){
 	equal(ME.getRegisterVal("$t1"), 1, "0 | 1 is 1");
 	equal(ME.getRegisterVal("$t2"), 1, "1 | 0 is 1");
 	equal(ME.getRegisterVal("$t3"), 1, "1 | 1 is 1");
+});
+
+test("XOR", function(){
+	ME.runLines([
+		"ADDI $s0, $zero, 1",
+		"XOR $t0, $zero, $zero",
+		"XOR $t1, $zero, $s0",
+		"XOR $t2, $s0, $zero",
+		"XOR $t3, $s0, $s0",
+	]);
+	equal(ME.getRegisterVal("$t0"), 0, "0 ^ 0 is 0");
+	equal(ME.getRegisterVal("$t1"), 1, "0 ^ 1 is 1");
+	equal(ME.getRegisterVal("$t2"), 1, "1 ^ 0 is 1");
+	equal(ME.getRegisterVal("$t3"), 0, "1 ^ 1 is 0");
+});
+
+test("XORI", function(){
+	ME.runLines([
+		"ADDI $s0, $zero, 1",
+		"XORI $t0, $zero, 0",
+		"XORI $t1, $zero, 1",
+		"XORI $t2, $s0, 0",
+		"XORI $t3, $s0, 1",
+	]);
+	equal(ME.getRegisterVal("$t0"), 0, "0 ^ 0 is 0");
+	equal(ME.getRegisterVal("$t1"), 1, "0 ^ 1 is 1");
+	equal(ME.getRegisterVal("$t2"), 1, "1 ^ 0 is 1");
+	equal(ME.getRegisterVal("$t3"), 0, "1 ^ 1 is 0");
 });
 
 var output = '';
