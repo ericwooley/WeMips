@@ -38,7 +38,7 @@ function mipsInstructionExecutor(ME) {
             runMethod: function(namedArgs) {
                 ME.setRegisterVal(namedArgs.$rd, signedAddition(ME.getRegisterVal(namedArgs.$rs), -ME.getRegisterVal(namedArgs.$rt)));
                 ME.incerementPC();
-            } // TODO: make some tests
+            }
         },
         'SUBU': {
             parseMethod: parse_$RD_$rs_$rt,
@@ -82,7 +82,7 @@ function mipsInstructionExecutor(ME) {
                     ~(ME.getRegisterVal(namedArgs.$rs) | ME.getRegisterVal(namedArgs.$rt))
                 );
                 ME.incerementPC();
-            } // TODO: make some tests
+            }
         },
         'OR': {
             parseMethod: parse_$RD_$rs_$rt,
@@ -91,7 +91,7 @@ function mipsInstructionExecutor(ME) {
                     (ME.getRegisterVal(namedArgs.$rs) | ME.getRegisterVal(namedArgs.$rt))
                 );
                 ME.incerementPC();
-            } // TODO: make some tests
+            }
         },
         'ORI': {
             parseMethod: parse_$RT_$rs_immZeroExt,
@@ -100,7 +100,7 @@ function mipsInstructionExecutor(ME) {
                     (ME.getRegisterVal(namedArgs.$rs) | namedArgs.imm)
                 );
                 ME.incerementPC();
-            } // TODO: make some tests
+            }
         },
         'SLL': {
             parseMethod: parse_$RD_$rt_shamt,
@@ -114,7 +114,7 @@ function mipsInstructionExecutor(ME) {
             runMethod: function(namedArgs) {
                 ME.setRegisterVal(namedArgs.$rd, ME.getRegisterVal(namedArgs.$rt) >> namedArgs.shamt);
                 ME.incerementPC();
-            } // TODO: make some tests
+            }
         },
         /////////////////////////////////////////////
         // Mips Branch and Jump Instructions
@@ -148,7 +148,7 @@ function mipsInstructionExecutor(ME) {
             runMethod: function(namedArgs) {
                 ME.setRegisterVal('$ra', ME.getLineNumber() + 1);
                 ME.goToLabel(namedArgs.label);
-            } // TODO: make some tests
+            }
         },
         'JR': {
             parseMethod: parse_$rs,
@@ -157,7 +157,7 @@ function mipsInstructionExecutor(ME) {
                 // Also, blank lines should probably have a line number associated with them
                 var lineNumber = ME.getRegisterUnsignedVal(namedArgs.$rs);
                 ME.setLine(lineNumber);
-            } // TODO: make some tests
+            }
         },
         /////////////////////////////////////////////
         // Mips Memory Access Instructions
@@ -167,35 +167,35 @@ function mipsInstructionExecutor(ME) {
             runMethod: function(namedArgs) {
                 ME.setRegisterVal(namedArgs.$rt, ME.stack.getWord(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm));
                 ME.incerementPC();
-            } // TODO: make some tests
+            }
         },
         'SW': {
             parseMethod: parse_$rt_imm_$rs,
             runMethod: function(namedArgs) {
                 ME.stack.setWord(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm, ME.getRegisterVal(namedArgs.$rt));
                 ME.incerementPC();
-            } // TODO: make some tests
+            }
         },
         'LH': {
             parseMethod: parse_$RT_imm_$rs,
             runMethod: function(namedArgs) {
                 ME.setRegisterVal(namedArgs.$rt, ME.stack.getHalfword(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm));
                 ME.incerementPC();
-            } // TODO: make some tests
+            }
         },
         'LHU': {
             parseMethod: parse_$RT_imm_$rs,
             runMethod: function(namedArgs) {
                 ME.setRegisterVal(namedArgs.$rt, ME.stack.getUnsignedHalfword(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm));
                 ME.incerementPC();
-            } // TODO: make some tests
+            }
         },
         'SH': {
             parseMethod: parse_$rt_imm_$rs,
             runMethod: function(namedArgs) {
                 ME.stack.setHalfword(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm, ME.getRegisterVal(namedArgs.$rt) & 65535);
                 ME.incerementPC();
-            } // TODO: make some tests
+            }
         },
         'LB': {
             parseMethod: parse_$RT_imm_$rs,
@@ -228,15 +228,15 @@ function mipsInstructionExecutor(ME) {
                 var value = ME.getRegisterVal(namedArgs.$rs) < ME.getRegisterVal(namedArgs.$rt);
                 ME.setRegisterVal(namedArgs.$rd, value ? 1 : 0);
                 ME.incerementPC();
-            } // TODO: make some tests
+            }
         },
         'SLTI': {
             parseMethod: parse_$RT_$rs_immSignExt,
             runMethod: function(namedArgs) {
                 var value = ME.getRegisterVal(namedArgs.$rs) < namedArgs.imm;
-                ME.setRegisterVal(namedArgs.$rd, value ? 1 : 0);
+                ME.setRegisterVal(namedArgs.$rt, value ? 1 : 0);
                 ME.incerementPC();
-            } // TODO: make some tests
+            }
         },
         'SLTU': {
             parseMethod: parse_$RD_$rs_$rt,
@@ -244,15 +244,15 @@ function mipsInstructionExecutor(ME) {
                 var value = ME.getRegisterUnsignedVal(namedArgs.$rs) < ME.getRegisterUnsignedVal(namedArgs.$rt);
                 ME.setRegisterVal(namedArgs.$rd, value ? 1 : 0);
                 ME.incerementPC();
-            } // TODO: make some tests
+            }
         },
         'SLTIU': {
-            parseMethod: parse_$RT_$rs_immSignExt,
+            parseMethod: parse_$RT_$rs_immZeroExt,
             runMethod: function(namedArgs) {
                 var value = ME.getRegisterUnsignedVal(namedArgs.$rs) < namedArgs.imm;
-                ME.setRegisterVal(namedArgs.$rd, value ? 1 : 0);
+                ME.setRegisterVal(namedArgs.$rt, value ? 1 : 0);
                 ME.incerementPC();
-            } // TODO: make some tests
+            }
         },
         /////////////////////////////////////////////
         // Other
