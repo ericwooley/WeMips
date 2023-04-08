@@ -433,6 +433,9 @@ function MipsEmulator(mipsArgs){
     this.mipsAlert = function(message) {
         mipsArgs.onAlert(message);
     }
+    this.setPseudoInstructionsEnabled = function(value) {
+        instructionExecutor.setPseudoInstructionsEnabled(value)
+    }
 
     ////////////////////////////////////////////////
     // Private Methods

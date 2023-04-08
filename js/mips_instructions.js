@@ -1,6 +1,7 @@
 function mipsInstructionExecutor(ME) {
     var BITS_PER_SHAMT = 5;
     var BITS_PER_IMMEDIATE = 16;
+    var pseudoInstructionsEnabled = true;
 	var instructions = {
         /////////////////////////////////////////////
         // Mips Arithmetic Instructions
@@ -169,7 +170,8 @@ function mipsInstructionExecutor(ME) {
             parseMethod: parse_label,
             runMethod: function(namedArgs) {
                 ME.goToLabel(namedArgs.label);
-            }
+            },
+            pseudoInstruction: true
         },
         'BEQ': {
             parseMethod: parse_$rs_$rt_label,
@@ -196,7 +198,8 @@ function mipsInstructionExecutor(ME) {
                     ME.goToLabel(namedArgs.label);
                 else
                     ME.incerementPC();
-            }
+            },
+            pseudoInstruction: true
         },
         'BGE': {
             parseMethod: parse_$rs_$rt_label,
@@ -205,7 +208,8 @@ function mipsInstructionExecutor(ME) {
                     ME.goToLabel(namedArgs.label);
                 else
                     ME.incerementPC();
-            }
+            },
+            pseudoInstruction: true
         },
         'BLT': {
             parseMethod: parse_$rs_$rt_label,
@@ -214,7 +218,8 @@ function mipsInstructionExecutor(ME) {
                     ME.goToLabel(namedArgs.label);
                 else
                     ME.incerementPC();
-            }
+            },
+            pseudoInstruction: true
         },
         'BLE': {
             parseMethod: parse_$rs_$rt_label,
@@ -232,7 +237,8 @@ function mipsInstructionExecutor(ME) {
                     ME.goToLabel(namedArgs.label);
                 else
                     ME.incerementPC();
-            }
+            },
+            pseudoInstruction: true
         },
         'BNEZ': {
             parseMethod: parse_$rs_label,
@@ -241,7 +247,8 @@ function mipsInstructionExecutor(ME) {
                     ME.goToLabel(namedArgs.label);
                 else
                     ME.incerementPC();
-            }
+            },
+            pseudoInstruction: true
         },
         'BGTZ': {
             parseMethod: parse_$rs_label,
@@ -678,12 +685,20 @@ function mipsInstructionExecutor(ME) {
     }
 
     var result = {
+        setPseudoInstructionsEnabled: function(value) {
+            pseudoInstructionsEnabled = value;
+        },
     	parseInstruction: function(instructionName, args, outArgs, outError) {
     		var instruction = instructions[instructionName];
 	        if (!instruction) {
 	            if (outError) outError.message = "Unknown instruction: " + instructionName;
 	            return false;
 	        }
+            if (!pseudoInstructionsEnabled && ('pseudoInstruction' in instruction) && instruction['pseudoInstruction']) {
+                if (outError) outError.message = "Pseudo-instruction "+instructionName+" is disabled";
+                return false;
+            }
+
 
 	        var parseMethod = instruction.parseMethod;
 	        assert(parseMethod, "If this is a valid instruction, then it must have a parseMethod.");
@@ -726,8 +741,9 @@ function mipsInstructionExecutor(ME) {
 	    },
 	    runInstruction: function(instructionName, args) {
 	    	var namedArgs = {};
-	    	var parsed = this.parseInstruction(instructionName, args, namedArgs, null);
-	    	assert(parsed, "Instruction did not parse correctly");
+            var error = {};
+	    	var parsed = this.parseInstruction(instructionName, args, namedArgs, error);
+	    	assert(parsed, "Instruction did not parse correctly:" + error.message);
 
 	    	var runMethod = instructions[instructionName].runMethod;
 	    	assert(runMethod);

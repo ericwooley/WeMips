@@ -111,7 +111,10 @@ LB $s3, 0($sp)</textarea>
         <div id="registers" class="col-lg-4">
           <button id="step"> Step </button>
           <button id="run"> Run </button>
-          <input type="checkbox" id='autoSwitch' checked> Enable auto switching
+          <ul>
+            <li><input type="checkbox" id="autoSwitch" checked><label for="autoSwitch">Enable auto switching</label></li>
+            <li><input type="checkbox" id="pseudoSwitch" checked><label for="pseudoSwitch">Enable pseudo-instructions</label></li>
+          </ul>
           <!-- Nav tabs -->
           <ul class="nav nav-tabs">
             <li class='active'><a href="#s-registers" data-toggle="tab">S</a></li>

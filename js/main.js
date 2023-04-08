@@ -126,6 +126,7 @@ $(document).ready(function(){
     $("#run").click(run);
     $("#optionShowRelative").change(switchAddressMode);
     $("#autoSwitch").change(function(e){autoSwitch = $(e.target).is(':checked');});
+    $("#pseudoSwitch").change(function(e){me.setPseudoInstructionsEnabled($(e.target).is(':checked'));});
     $("#clearLog").on('click', function(){$("#log").html('')});
     $("#stackDisplayType").change(changeStackType);
     //$(".stackVal").on('blur', manualStackEdit); This has to be setup after the stack has been created
