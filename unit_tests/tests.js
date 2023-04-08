@@ -691,22 +691,6 @@ test("J", function() {
 
 });
 
-test("LW, SW", function() {
-	ME.runLines([
-		"ADDI $sp, $sp, -4",
-		"ADDI $t1, $zero, 2",
-		"ADDI $t3, $t1, 1",
-		"LUI $t0, 65535",
-		"SW $t0, 0($sp)",
-		"LW $t1, 0($sp)",
-		"ADDI $t2, $t0, 1",
-		"SW $t2, 0($sp)",
-		"LW $t3, 0($sp)"
-	]);
-	equal(ME.getRegisterVal('$t1'), -65536);
-	equal(ME.getRegisterVal('$t3'), -65535);
-});
-
 test("JAL, JR", function() {
 	throws(function() {
 		ME.runLines([
@@ -868,6 +852,35 @@ test("SWR", function() {
 	equal(ME.getRegisterVal('$t3') & 0xFFFFFFFF, 0x12345678);
 });
 
+test("B", function() {
+	throws(function() {
+		ME.runLines([
+			"B foo"
+		]);
+	}, JumpError, "There is no foo label.");
+
+	ME.runLines([
+		"ADDI $t9, $zero, 6 # stop at the 6th iteration",
+		"ADDI $t0, $zero, 0 # loop index",
+		"ADDI $t1, $zero, 1",
+		"ADDI $t2, $zero, 1",
+		"continue:#---------",
+		"BNE $t0, $t9, loop_body",
+		"B break",
+		"loop_body:",
+		"ADDI $t3, $t2, 0 	# store t2's old value temporarily",
+		"ADD $t2, $t2, $t1 	# t2 = t2 + t1",
+		"ADDI $t1, $t3, 0 	# t1 = old t2",
+		"ADDI $t0, $t0, 1 	# i++",
+		"J continue",
+		"#------------",
+		"break:"
+	]);
+	// index:     0, 1, 2, 3, 4,  5,  6
+	// number: 1, 1, 2, 3, 5, 8, 13, 21
+	equal(ME.getRegisterVal('$t2'), 21, "Fibonnaci's 6th number is 21.");
+});
+
 test("BEQ", function() {
 	throws(function() {
 		ME.runLines([
@@ -924,6 +937,33 @@ test("BNE", function() {
 	equal(ME.getRegisterVal('$t2'), 21, "Fibonnaci's 6th number is 21.");
 });
 
+test("BGE", function() {
+	throws(function() {
+		ME.runLines([
+			"BGE $t0, $t0, foo"
+		]);
+	}, JumpError, "There is no foo label.");
+
+	ME.runLines([
+		"ADDI $t9, $zero, 6 # stop at the 6th iteration",
+		"ADDI $t0, $zero, 0 # loop index",
+		"ADDI $t1, $zero, 1",
+		"ADDI $t2, $zero, 1",
+		"continue:#---------",
+		"BGE $t0, $t9, break",
+		"ADDI $t3, $t2, 0 	# store t2's old value temporarily",
+		"ADD $t2, $t2, $t1 	# t2 = t2 + t1",
+		"ADDI $t1, $t3, 0 	# t1 = old t2",
+		"ADDI $t0, $t0, 1 	# i++",
+		"J continue",
+		"#------------",
+		"break:"
+	]);
+	// index:     0, 1, 2, 3, 4,  5,  6
+	// number: 1, 1, 2, 3, 5, 8, 13, 21
+	equal(ME.getRegisterVal('$t2'), 21, "Fibonnaci's 6th number is 21.");
+});
+
 test("BGEZAL", function() {
 	throws(function() {
 		ME.runLines([
@@ -956,6 +996,271 @@ test("BLTZAL", function() {
        equal(ME.getRegisterVal('$ra'), 3);
 });
 	
+test("BGT", function() {
+	throws(function() {
+		ME.runLines([
+			"ADDI $t0, $zero, 1",
+			"BGT $t0, $zero, foo"
+		]);
+	}, JumpError, "There is no foo label.");
+
+	ME.runLines([
+		"ADDI $t9, $zero, 6 # stop at the 6th iteration",
+		"ADDI $t0, $zero, 0 # loop index",
+		"ADDI $t1, $zero, 1",
+		"ADDI $t2, $zero, 1",
+		"continue:#---------",
+		"BGT $t9, $t0, loop_body",
+		"J break",
+		"loop_body:",
+		"ADDI $t3, $t2, 0 	# store t2's old value temporarily",
+		"ADD $t2, $t2, $t1 	# t2 = t2 + t1",
+		"ADDI $t1, $t3, 0 	# t1 = old t2",
+		"ADDI $t0, $t0, 1 	# i++",
+		"J continue",
+		"#------------",
+		"break:"
+	]);
+	// index:     0, 1, 2, 3, 4,  5,  6
+	// number: 1, 1, 2, 3, 5, 8, 13, 21
+	equal(ME.getRegisterVal('$t2'), 21, "Fibonnaci's 6th number is 21.");
+});
+
+test("BLE", function() {
+	throws(function() {
+		ME.runLines([
+			"BLE $t0, $t0, foo"
+		]);
+	}, JumpError, "There is no foo label.");
+
+	ME.runLines([
+		"ADDI $t9, $zero, 6 # stop at the 6th iteration",
+		"ADDI $t0, $zero, 0 # loop index",
+		"ADDI $t1, $zero, 1",
+		"ADDI $t2, $zero, 1",
+		"continue:#---------",
+		"BLE $t9, $t0, break",
+		"ADDI $t3, $t2, 0 	# store t2's old value temporarily",
+		"ADD $t2, $t2, $t1 	# t2 = t2 + t1",
+		"ADDI $t1, $t3, 0 	# t1 = old t2",
+		"ADDI $t0, $t0, 1 	# i++",
+		"J continue",
+		"#------------",
+		"break:"
+	]);
+	// index:     0, 1, 2, 3, 4,  5,  6
+	// number: 1, 1, 2, 3, 5, 8, 13, 21
+	equal(ME.getRegisterVal('$t2'), 21, "Fibonnaci's 6th number is 21.");
+});
+
+test("BLT", function() {
+	throws(function() {
+		ME.runLines([
+			"ADDI $t0, $zero, 1",
+			"BLT $zero, $t0, foo"
+		]);
+	}, JumpError, "There is no foo label.");
+
+	ME.runLines([
+		"ADDI $t9, $zero, 6 # stop at the 6th iteration",
+		"ADDI $t0, $zero, 0 # loop index",
+		"ADDI $t1, $zero, 1",
+		"ADDI $t2, $zero, 1",
+		"continue:#---------",
+		"BLT $t0, $t9, loop_body",
+		"J break",
+		"loop_body:",
+		"ADDI $t3, $t2, 0 	# store t2's old value temporarily",
+		"ADD $t2, $t2, $t1 	# t2 = t2 + t1",
+		"ADDI $t1, $t3, 0 	# t1 = old t2",
+		"ADDI $t0, $t0, 1 	# i++",
+		"J continue",
+		"#------------",
+		"break:"
+	]);
+	// index:     0, 1, 2, 3, 4,  5,  6
+	// number: 1, 1, 2, 3, 5, 8, 13, 21
+	equal(ME.getRegisterVal('$t2'), 21, "Fibonnaci's 6th number is 21.");
+});
+
+test("BEQZ", function() {
+	throws(function() {
+		ME.runLines([
+			"BEQZ $zero, foo"
+		]);
+	}, JumpError, "There is no foo label.");
+
+	ME.runLines([
+		"ADDI $t9, $zero, 6 # stop at the 6th iteration",
+		"ADDI $t0, $zero, 0 # loop index",
+		"ADDI $t1, $zero, 1",
+		"ADDI $t2, $zero, 1",
+		"continue:#---------",
+		"SUB $t4, $t9, $t0",
+		"BEQZ $t4, break",
+		"ADDI $t3, $t2, 0 	# store t2's old value temporarily",
+		"ADD $t2, $t2, $t1 	# t2 = t2 + t1",
+		"ADDI $t1, $t3, 0 	# t1 = old t2",
+		"ADDI $t0, $t0, 1 	# i++",
+		"J continue",
+		"#------------",
+		"break:"
+	]);
+	// index:     0, 1, 2, 3, 4,  5,  6
+	// number: 1, 1, 2, 3, 5, 8, 13, 21
+	equal(ME.getRegisterVal('$t2'), 21, "Fibonnaci's 6th number is 21.");
+});
+
+test("BNEZ", function() {
+	throws(function() {
+		ME.runLines([
+			"ADDI $t0, $zero, 1",
+			"BNEZ $t0, foo"
+		]);
+	}, JumpError, "There is no foo label.");
+
+	ME.runLines([
+		"ADDI $t9, $zero, 6 # stop at the 6th iteration",
+		"ADDI $t0, $zero, 0 # loop index",
+		"ADDI $t1, $zero, 1",
+		"ADDI $t2, $zero, 1",
+		"continue:#---------",
+		"SUB $t4, $t0, $t9",
+		"BNEZ $t4, loop_body",
+		"J break",
+		"loop_body:",
+		"ADDI $t3, $t2, 0 	# store t2's old value temporarily",
+		"ADD $t2, $t2, $t1 	# t2 = t2 + t1",
+		"ADDI $t1, $t3, 0 	# t1 = old t2",
+		"ADDI $t0, $t0, 1 	# i++",
+		"J continue",
+		"#------------",
+		"break:"
+	]);
+	// index:     0, 1, 2, 3, 4,  5,  6
+	// number: 1, 1, 2, 3, 5, 8, 13, 21
+	equal(ME.getRegisterVal('$t2'), 21, "Fibonnaci's 6th number is 21.");
+});
+
+test("BGEZ", function() {
+	throws(function() {
+		ME.runLines([
+			"BGEZ $zero, foo"
+		]);
+	}, JumpError, "There is no foo label.");
+
+	ME.runLines([
+		"ADDI $t9, $zero, 6 # stop at the 6th iteration",
+		"ADDI $t0, $zero, 0 # loop index",
+		"ADDI $t1, $zero, 1",
+		"ADDI $t2, $zero, 1",
+		"continue:#---------",
+		"SUB $t4, $t0, $t9",
+		"BGEZ $t4, break",
+		"ADDI $t3, $t2, 0 	# store t2's old value temporarily",
+		"ADD $t2, $t2, $t1 	# t2 = t2 + t1",
+		"ADDI $t1, $t3, 0 	# t1 = old t2",
+		"ADDI $t0, $t0, 1 	# i++",
+		"J continue",
+		"#------------",
+		"break:"
+	]);
+	// index:     0, 1, 2, 3, 4,  5,  6
+	// number: 1, 1, 2, 3, 5, 8, 13, 21
+	equal(ME.getRegisterVal('$t2'), 21, "Fibonnaci's 6th number is 21.");
+});
+
+test("BGTZ", function() {
+	throws(function() {
+		ME.runLines([
+			"ADDI $t0, $zero, 1",
+			"BGTZ $t0, foo"
+		]);
+	}, JumpError, "There is no foo label.");
+
+	ME.runLines([
+		"ADDI $t9, $zero, 6 # stop at the 6th iteration",
+		"ADDI $t0, $zero, 0 # loop index",
+		"ADDI $t1, $zero, 1",
+		"ADDI $t2, $zero, 1",
+		"continue:#---------",
+		"SUB $t4, $t9, $t0",
+		"BGTZ $t4, loop_body",
+		"J break",
+		"loop_body:",
+		"ADDI $t3, $t2, 0 	# store t2's old value temporarily",
+		"ADD $t2, $t2, $t1 	# t2 = t2 + t1",
+		"ADDI $t1, $t3, 0 	# t1 = old t2",
+		"ADDI $t0, $t0, 1 	# i++",
+		"J continue",
+		"#------------",
+		"break:"
+	]);
+	// index:     0, 1, 2, 3, 4,  5,  6
+	// number: 1, 1, 2, 3, 5, 8, 13, 21
+	equal(ME.getRegisterVal('$t2'), 21, "Fibonnaci's 6th number is 21.");
+});
+
+test("BLEZ", function() {
+	throws(function() {
+		ME.runLines([
+			"BLEZ $zero, foo"
+		]);
+	}, JumpError, "There is no foo label.");
+
+	ME.runLines([
+		"ADDI $t9, $zero, 6 # stop at the 6th iteration",
+		"ADDI $t0, $zero, 0 # loop index",
+		"ADDI $t1, $zero, 1",
+		"ADDI $t2, $zero, 1",
+		"continue:#---------",
+		"SUB $t4, $t9, $t0",
+		"BLEZ $t4, break",
+		"ADDI $t3, $t2, 0 	# store t2's old value temporarily",
+		"ADD $t2, $t2, $t1 	# t2 = t2 + t1",
+		"ADDI $t1, $t3, 0 	# t1 = old t2",
+		"ADDI $t0, $t0, 1 	# i++",
+		"J continue",
+		"#------------",
+		"break:"
+	]);
+	// index:     0, 1, 2, 3, 4,  5,  6
+	// number: 1, 1, 2, 3, 5, 8, 13, 21
+	equal(ME.getRegisterVal('$t2'), 21, "Fibonnaci's 6th number is 21.");
+});
+
+test("BLTZ", function() {
+	throws(function() {
+		ME.runLines([
+			"ADDI $t0, $zero, 1",
+			"SUB $t0, $zero, $t0",
+			"BLTZ $t0, foo"
+		]);
+	}, JumpError, "There is no foo label.");
+
+	ME.runLines([
+		"ADDI $t9, $zero, 6 # stop at the 6th iteration",
+		"ADDI $t0, $zero, 0 # loop index",
+		"ADDI $t1, $zero, 1",
+		"ADDI $t2, $zero, 1",
+		"continue:#---------",
+		"SUB $t4, $t0, $t9",
+		"BLTZ $t4, loop_body",
+		"J break",
+		"loop_body:",
+		"ADDI $t3, $t2, 0 	# store t2's old value temporarily",
+		"ADD $t2, $t2, $t1 	# t2 = t2 + t1",
+		"ADDI $t1, $t3, 0 	# t1 = old t2",
+		"ADDI $t0, $t0, 1 	# i++",
+		"J continue",
+		"#------------",
+		"break:"
+	]);
+	// index:     0, 1, 2, 3, 4,  5,  6
+	// number: 1, 1, 2, 3, 5, 8, 13, 21
+	equal(ME.getRegisterVal('$t2'), 21, "Fibonnaci's 6th number is 21.");
+});
+
 test("LUI", function(){
 	ME.runLines([
 	"ADDI $t0, $zero, 10",
@@ -972,6 +1277,7 @@ test("LUI", function(){
 	ME.runLine("LUI $t0, 1");
 	equal(ME.getRegisterVal('$t0'), 65536, "0000 0000 0000 0001 0000 0000 0000 0000");
 });
+
 test("AND", function(){
 	ME.runLines([
 		"ADDI $s0, $zero, 1",

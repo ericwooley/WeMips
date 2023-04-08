@@ -165,6 +165,12 @@ function mipsInstructionExecutor(ME) {
         /////////////////////////////////////////////
         // Mips Branch and Jump Instructions
         /////////////////////////////////////////////
+        'B': {
+            parseMethod: parse_label,
+            runMethod: function(namedArgs) {
+                ME.goToLabel(namedArgs.label);
+            }
+        },
         'BEQ': {
             parseMethod: parse_$rs_$rt_label,
             runMethod: function(namedArgs) {
@@ -183,6 +189,78 @@ function mipsInstructionExecutor(ME) {
                     ME.incerementPC();
             }
         },
+        'BGT': {
+            parseMethod: parse_$rs_$rt_label,
+            runMethod: function(namedArgs) {
+                if (ME.getRegisterVal(namedArgs.$rs) > ME.getRegisterVal(namedArgs.$rt))
+                    ME.goToLabel(namedArgs.label);
+                else
+                    ME.incerementPC();
+            }
+        },
+        'BGE': {
+            parseMethod: parse_$rs_$rt_label,
+            runMethod: function(namedArgs) {
+                if (ME.getRegisterVal(namedArgs.$rs) >= ME.getRegisterVal(namedArgs.$rt))
+                    ME.goToLabel(namedArgs.label);
+                else
+                    ME.incerementPC();
+            }
+        },
+        'BLT': {
+            parseMethod: parse_$rs_$rt_label,
+            runMethod: function(namedArgs) {
+                if (ME.getRegisterVal(namedArgs.$rs) < ME.getRegisterVal(namedArgs.$rt))
+                    ME.goToLabel(namedArgs.label);
+                else
+                    ME.incerementPC();
+            }
+        },
+        'BLE': {
+            parseMethod: parse_$rs_$rt_label,
+            runMethod: function(namedArgs) {
+                if (ME.getRegisterVal(namedArgs.$rs) <= ME.getRegisterVal(namedArgs.$rt))
+                    ME.goToLabel(namedArgs.label);
+                else
+                    ME.incerementPC();
+            }
+        },
+        'BEQZ': {
+            parseMethod: parse_$rs_label,
+            runMethod: function(namedArgs) {
+                if (ME.getRegisterVal(namedArgs.$rs) === 0)
+                    ME.goToLabel(namedArgs.label);
+                else
+                    ME.incerementPC();
+            }
+        },
+        'BNEZ': {
+            parseMethod: parse_$rs_label,
+            runMethod: function(namedArgs) {
+                if (ME.getRegisterVal(namedArgs.$rs) !== 0)
+                    ME.goToLabel(namedArgs.label);
+                else
+                    ME.incerementPC();
+            }
+        },
+        'BGTZ': {
+            parseMethod: parse_$rs_label,
+            runMethod: function(namedArgs) {
+                if (ME.getRegisterVal(namedArgs.$rs) > 0)
+                    ME.goToLabel(namedArgs.label);
+                else
+                    ME.incerementPC();
+            }
+        },
+        'BGEZ': {
+            parseMethod: parse_$rs_label,
+            runMethod: function(namedArgs) {
+                if (ME.getRegisterVal(namedArgs.$rs) >= 0)
+                    ME.goToLabel(namedArgs.label);
+                else
+                    ME.incerementPC();
+            }
+        },
         'BGEZAL': {
             parseMethod: parse_$rs_label,
             runMethod: function(namedArgs) {
@@ -193,6 +271,15 @@ function mipsInstructionExecutor(ME) {
                     ME.incerementPC();
             }
         },
+        'BLTZ': {
+            parseMethod: parse_$rs_label,
+            runMethod: function(namedArgs) {
+                if (ME.getRegisterVal(namedArgs.$rs) < 0)
+                    ME.goToLabel(namedArgs.label);
+                else
+                    ME.incerementPC();
+            }
+        },
         'BLTZAL': {
             parseMethod: parse_$rs_label,
             runMethod: function(namedArgs) {
@@ -200,6 +287,15 @@ function mipsInstructionExecutor(ME) {
                     ME.setRegisterVal('$ra', ME.getLineNumber() + 1);
                     ME.goToLabel(namedArgs.label);
                 } else
+                ME.incerementPC();
+            }
+        },
+        'BLEZ': {
+            parseMethod: parse_$rs_label,
+            runMethod: function(namedArgs) {
+                if (ME.getRegisterVal(namedArgs.$rs) <= 0)
+                    ME.goToLabel(namedArgs.label);
+                else
                     ME.incerementPC();
             }
         },
