@@ -595,11 +595,24 @@ function mipsInstructionExecutor(ME) {
     }
 
     function parseImmAnd$rs(string) {
-    	var match = /^((?:[-+]\s*)?\d+)\(\s*(\$\w+)\s*\)$/.exec(string);
-    	return {
-    		'imm': match[1],
-    		'$rs': match[2]
-    	};
+        let parser = new ExprParser.Parser(string);
+        let imm;
+        try {
+            try {
+                imm = parser.parseExpression();
+            } catch (e) {
+                imm = 0;
+            }
+            parser.consume(ExprParser.Tokens.LParen);
+            let reg = parser.parseRegister();
+            parser.consume(ExprParser.Tokens.RParen);
+            return {
+                'imm': imm.toString(),
+                '$rs': reg
+            };
+        } catch (e) {
+            return null;
+        }
     }
     function parseRegister(reg) {
     	if (ME.isValidRegister(reg))
@@ -623,35 +636,12 @@ function mipsInstructionExecutor(ME) {
     function _parseImmediate(arg, bits, extensionRule) {
         bits = bits || BITS_PER_IMMEDIATE;
 
-        var regex = /^([-+])?\s*((0[xX]([0-9A-Fa-f]+))|(0[bB]([01]+))|(0([0-7]+))|(([1-9]\d*)|0))$/;
-        // 1 = sign
-        // 4 = hex
-        // 6 = bin
-        // 8 = octal
-        // 9 = decimal
-
-        var numberMatch = arg.match(regex);
-
-        var number;
-
-        if (numberMatch === null) {
-            return null;
-        } else if (numberMatch[4]) {
-            // hex
-            number = parseInt(numberMatch[4], 16);
-        } else if (numberMatch[6]) {
-            // binary
-            number = parseInt(numberMatch[6], 2);
-        } else if (numberMatch[8]) {
-            // octal
-            number = parseInt(numberMatch[8], 8);
-        } else if (numberMatch[9]) {
-            // decimal
-            number = parseInt(numberMatch[9], 10);
-        }
-
-        if (numberMatch[1]==='-') {
-            number = -number;
+        let number;
+        try {
+            let parser = new ExprParser.Parser(arg);
+            number = parser.parseExpression();
+        } catch (e) {
+            return null; // TODO: return that it was not a valid expression?
         }
 
         var minValue;

@@ -1,0 +1,75 @@
+module('Expression Parser');
+
+parseSingleToken = function(text) {
+    let lexer = new ExprParser.Lexer(text);
+    return lexer.next();
+}
+
+test("Lexer", function() {
+    let token;
+
+    token = parseSingleToken('$t0');
+    equal(token.type, ExprParser.Tokens.Register);
+    equal(token.value, '$t0');
+
+    token = parseSingleToken(' 102');
+    equal(token.type, ExprParser.Tokens.Number);
+    equal(token.value, 102);
+
+    token = parseSingleToken('0b1011');
+    equal(token.type, ExprParser.Tokens.Number);
+    equal(token.value, 11);
+
+    token = parseSingleToken('0770');
+    equal(token.type, ExprParser.Tokens.Number);
+    equal(token.value, 0770);
+
+    token = parseSingleToken('0xab12');
+    equal(token.type, ExprParser.Tokens.Number);
+    equal(token.value, 0xab12);
+
+    token = parseSingleToken('abc');
+    equal(token.type, ExprParser.Tokens.Identifier);
+    equal(token.value, 'abc');
+
+    token = parseSingleToken('+');
+    equal(token.type, ExprParser.Tokens.Addition);
+
+    token = parseSingleToken('<<');
+    equal(token.type, ExprParser.Tokens.LogicalShiftLeft);
+
+    token = parseSingleToken('>>>');
+    equal(token.type, ExprParser.Tokens.LogicalShiftRight);
+});
+
+parseExpression = function(text) {
+    let parser = new ExprParser.Parser(text);
+    return parser.parseExpression();
+}
+
+test('Expression Parser', function() {
+    equal(parseExpression('5|9'), 13);
+    equal(parseExpression('5&9'), 1);
+    equal(parseExpression('5^9'), 12);
+    equal(parseExpression('1+2'), 3);
+    equal(parseExpression('1-2'), -1);
+    equal(parseExpression('2*3'), 6);
+    equal(parseExpression('5/2'), 2);
+    equal(parseExpression('5%2'), 1);
+    equal(parseExpression('+2'), 2);
+    equal(parseExpression('-2'), -2);
+    equal(parseExpression('~2'), ~2);
+    equal(parseExpression('1+2*3'), 7);
+    equal(parseExpression('(1+2)*3'), 9);
+    equal(parseExpression('lo16(0x12345678)'), 0x5678);
+    equal(parseExpression('hi16(0x12345678)'), 0x1234);
+});
+
+parseRegister = function(text) {
+    let parser = new ExprParser.Parser(text);
+    return parser.parseRegister();
+}
+
+test('Operand Parser', function() {
+    equal(parseRegister('$t0'), '$t0');
+});

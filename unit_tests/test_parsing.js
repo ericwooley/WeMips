@@ -21,6 +21,10 @@ test("General", function() {
 	ok(ME.isValidLine("JAL label"));
 	ok(ME.isValidLine("J label"));
 	ok(ME.isValidLine("LW $s1, 16( $sp )"), "spaces allowed between parens");
+	ok(ME.isValidLine("LUI $t0, hi16(0x12345678)"), "hi16 call allowed");
+	ok(ME.isValidLine("ADDIU $t0, $t0, lo16(0x12345678)"), "lo16 call allowed");
+	ok(!ME.isValidLine("ADDIU $t0, $t0, lo16(0x12345678"), "missing paren leads to error");
+	ok(ME.isValidLine("LW $t0, lo16(0x12345678)($t0)"), "proper parsing of parens for register-relative address");
 	ok(!ME.isValidLine("foobar"), "single word, invalid command (previous failure)");
 	ok(!ME.isValidLine("!=@!="), "random symbols");
 	ok(ME.isValidLine("syscall"));
