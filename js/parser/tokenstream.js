@@ -27,6 +27,12 @@ Parser.TokenStream = function(lexer) {
         this.nextToken();
         return token;
     }
+
+    this.enforceCompletion = function() {
+        if (!this.checkNext(Parser.Tokens.EndOfString)) {
+            throw new Parser.ParseError('Trailing text remaining');
+        }
+    }
 }
 
 Parser.tokenStreamFromString = function(input) {

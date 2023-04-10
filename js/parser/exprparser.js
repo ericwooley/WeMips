@@ -52,8 +52,13 @@ Parser.Builtins = {
     },
 }
 
-Parser.ExprParser = function(input) {
-    this.tokenStream = Parser.tokenStreamFromString(input);
+Parser.exprParserFromString = function(input) {
+    let tokenStream = Parser.tokenStreamFromString(input);
+    return new Parser.ExprParser(tokenStream);
+}
+
+Parser.ExprParser = function(tokenStream) {
+    this.tokenStream = tokenStream;
 
     this.parsePrimaryExpression = function() {
         if (this.tokenStream.checkNext(Parser.Tokens.LParen)) {
@@ -158,10 +163,5 @@ Parser.ExprParser = function(input) {
 
     this.parseExpression = function() {
         return this.parseBinaryExpression();
-    }
-
-    this.parseRegister = function() {
-        let token = this.tokenStream.consume(Parser.Tokens.Register);
-        return token.value;
     }
 }
