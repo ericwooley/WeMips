@@ -330,8 +330,8 @@ ExprParser.Builtins = {
     },
 }
 
-ExprParser.Parser = function(input) {
-    this.lexer = new ExprParser.Lexer(input);
+ExprParser.TokenStream = function(lexer) {
+    this.lexer = lexer;
     this.token = undefined;
 
     this.peekToken = function() {
@@ -359,32 +359,41 @@ ExprParser.Parser = function(input) {
         this.nextToken();
         return token;
     }
+}
+
+ExprParser.tokenStreamFromString = function(input) {
+    let lexer = new ExprParser.Lexer(input);
+    return new ExprParser.TokenStream(lexer);
+}
+
+ExprParser.Parser = function(input) {
+    this.tokenStream = ExprParser.tokenStreamFromString(input);
 
     this.parsePrimaryExpression = function() {
-        if (this.checkNext(ExprParser.Tokens.LParen)) {
-            this.consume();
+        if (this.tokenStream.checkNext(ExprParser.Tokens.LParen)) {
+            this.tokenStream.consume();
             let expr = this.parseExpression();
-            this.consume(ExprParser.Tokens.RParen);
+            this.tokenStream.consume(ExprParser.Tokens.RParen);
             return expr;
         } else {
-            let number = this.consume(ExprParser.Tokens.Number);
+            let number = this.tokenStream.consume(ExprParser.Tokens.Number);
             return number.value;
         }
     }
 
     this.parsePostfixExpression = function() {
-        let token= this.peekToken();
+        let token= this.tokenStream.peekToken();
         if (token.type == ExprParser.Tokens.Identifier) {
             if (token.value in ExprParser.Builtins) {
                 let builtin = ExprParser.Builtins[token.value];
-                this.consume();
-                this.consume(ExprParser.Tokens.LParen);
+                this.tokenStream.consume();
+                this.tokenStream.consume(ExprParser.Tokens.LParen);
                 let params = [this.parseExpression()];
-                while (this.checkNext(ExprParser.Tokens.Comma)) {
-                    this.consume();
+                while (this.tokenStream.checkNext(ExprParser.Tokens.Comma)) {
+                    this.tokenStream.consume();
                     params.push(this.parseExpression());
                 }
-                this.consume(ExprParser.Tokens.RParen);
+                this.tokenStream.consume(ExprParser.Tokens.RParen);
                 return builtin.evaluate(params);
             } else {
                 throw new ExprParser.ParseError('Unknown builtin function', token);
@@ -395,9 +404,9 @@ ExprParser.Parser = function(input) {
     }
 
     this.parseUnaryOperator = function() {
-        let operator = this.peekToken();
+        let operator = this.tokenStream.peekToken();
         if (operator.type in ExprParser.UnaryOperators) {
-            this.consume();
+            this.tokenStream.consume();
             return ExprParser.UnaryOperators[operator.type];
         } else {
             return undefined;
@@ -415,9 +424,9 @@ ExprParser.Parser = function(input) {
     }
 
     this.parseBinaryOperator = function() {
-        let operator = this.peekToken();
+        let operator = this.tokenStream.peekToken();
         if (operator.type in ExprParser.BinaryOperators) {
-            this.consume();
+            this.tokenStream.consume();
             return ExprParser.BinaryOperators[operator.type];
         } else {
             return undefined;
@@ -466,7 +475,7 @@ ExprParser.Parser = function(input) {
     }
 
     this.parseRegister = function() {
-        let token = this.consume(ExprParser.Tokens.Register);
+        let token = this.tokenStream.consume(ExprParser.Tokens.Register);
         return token.value;
     }
 }

@@ -603,9 +603,9 @@ function mipsInstructionExecutor(ME) {
             } catch (e) {
                 imm = 0;
             }
-            parser.consume(ExprParser.Tokens.LParen);
+            parser.tokenStream.consume(ExprParser.Tokens.LParen);
             let reg = parser.parseRegister();
-            parser.consume(ExprParser.Tokens.RParen);
+            parser.tokenStream.consume(ExprParser.Tokens.RParen);
             return {
                 'imm': imm.toString(),
                 '$rs': reg
