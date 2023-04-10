@@ -56,6 +56,10 @@ test('Expression Parser', function() {
     equal(parseExpression('2*3'), 6);
     equal(parseExpression('5/2'), 2);
     equal(parseExpression('5%2'), 1);
+    equal(parseExpression('1<<2'), 1<<2);
+    equal(parseExpression('5>>2'), 5>>2);
+    equal(parseExpression('-5>>2'), -5>>2);
+    equal(parseExpression('-5>>>2'), -5>>>2);
     equal(parseExpression('+2'), 2);
     equal(parseExpression('-2'), -2);
     equal(parseExpression('~2'), ~2);

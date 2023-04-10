@@ -11,6 +11,18 @@ Parser.BinaryOperators[Parser.Tokens.BitwiseAND] = {
     evaluate: function(left, right) { return left & right; },
     precedence: 11
 }
+Parser.BinaryOperators[Parser.Tokens.LogicalShiftLeft] = {
+    evaluate: function(left, right) { return left << right; },
+    precedence: 7
+}
+Parser.BinaryOperators[Parser.Tokens.LogicalShiftRight] = {
+    evaluate: function(left, right) { return left >>> right; },
+    precedence: 7
+}
+Parser.BinaryOperators[Parser.Tokens.ArithmeticShiftRight] = {
+    evaluate: function(left, right) { return left >> right; },
+    precedence: 7
+}
 Parser.BinaryOperators[Parser.Tokens.Addition] = {
     evaluate: function(left, right) { return left + right; },
     precedence: 6

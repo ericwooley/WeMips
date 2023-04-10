@@ -193,6 +193,7 @@ Parser.Lexer = function(input) {
         let ch = this.peekNextChar();
         if (ch == '<') {
             this.skipChar();
+            ch = this.peekNextChar();
             if (ch == '<') {
                 this.skipChar();
                 return this.createToken(Parser.Tokens.LogicalShiftLeft);
@@ -201,8 +202,10 @@ Parser.Lexer = function(input) {
             }
         } else if (ch == '>') {
             this.skipChar();
+            ch = this.peekNextChar();
             if (ch == '>') {
                 this.skipChar();
+                ch = this.peekNextChar();
                 if (ch == '>') {
                     this.skipChar();
                     return this.createToken(Parser.Tokens.LogicalShiftRight);
