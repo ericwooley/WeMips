@@ -595,7 +595,7 @@ function mipsInstructionExecutor(ME) {
     }
 
     function parseImmAnd$rs(string) {
-        let parser = new ExprParser.Parser(string);
+        let parser = new Parser.ExprParser(string);
         let imm;
         try {
             try {
@@ -603,9 +603,9 @@ function mipsInstructionExecutor(ME) {
             } catch (e) {
                 imm = 0;
             }
-            parser.tokenStream.consume(ExprParser.Tokens.LParen);
+            parser.tokenStream.consume(Parser.Tokens.LParen);
             let reg = parser.parseRegister();
-            parser.tokenStream.consume(ExprParser.Tokens.RParen);
+            parser.tokenStream.consume(Parser.Tokens.RParen);
             return {
                 'imm': imm.toString(),
                 '$rs': reg
@@ -638,7 +638,7 @@ function mipsInstructionExecutor(ME) {
 
         let number;
         try {
-            let parser = new ExprParser.Parser(arg);
+            let parser = new Parser.ExprParser(arg);
             number = parser.parseExpression();
         } catch (e) {
             return null; // TODO: return that it was not a valid expression?

@@ -1,7 +1,7 @@
 module('Expression Parser');
 
 parseSingleToken = function(text) {
-    let lexer = new ExprParser.Lexer(text);
+    let lexer = new Parser.Lexer(text);
     return lexer.next();
 }
 
@@ -9,41 +9,41 @@ test("Lexer", function() {
     let token;
 
     token = parseSingleToken('$t0');
-    equal(token.type, ExprParser.Tokens.Register);
+    equal(token.type, Parser.Tokens.Register);
     equal(token.value, '$t0');
 
     token = parseSingleToken(' 102');
-    equal(token.type, ExprParser.Tokens.Number);
+    equal(token.type, Parser.Tokens.Number);
     equal(token.value, 102);
 
     token = parseSingleToken('0b1011');
-    equal(token.type, ExprParser.Tokens.Number);
+    equal(token.type, Parser.Tokens.Number);
     equal(token.value, 11);
 
     token = parseSingleToken('0770');
-    equal(token.type, ExprParser.Tokens.Number);
+    equal(token.type, Parser.Tokens.Number);
     equal(token.value, 0770);
 
     token = parseSingleToken('0xab12');
-    equal(token.type, ExprParser.Tokens.Number);
+    equal(token.type, Parser.Tokens.Number);
     equal(token.value, 0xab12);
 
     token = parseSingleToken('abc');
-    equal(token.type, ExprParser.Tokens.Identifier);
+    equal(token.type, Parser.Tokens.Identifier);
     equal(token.value, 'abc');
 
     token = parseSingleToken('+');
-    equal(token.type, ExprParser.Tokens.Addition);
+    equal(token.type, Parser.Tokens.Addition);
 
     token = parseSingleToken('<<');
-    equal(token.type, ExprParser.Tokens.LogicalShiftLeft);
+    equal(token.type, Parser.Tokens.LogicalShiftLeft);
 
     token = parseSingleToken('>>>');
-    equal(token.type, ExprParser.Tokens.LogicalShiftRight);
+    equal(token.type, Parser.Tokens.LogicalShiftRight);
 });
 
 parseExpression = function(text) {
-    let parser = new ExprParser.Parser(text);
+    let parser = new Parser.ExprParser(text);
     return parser.parseExpression();
 }
 
@@ -66,7 +66,7 @@ test('Expression Parser', function() {
 });
 
 parseRegister = function(text) {
-    let parser = new ExprParser.Parser(text);
+    let parser = new Parser.ExprParser(text);
     return parser.parseRegister();
 }
 
