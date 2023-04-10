@@ -595,103 +595,119 @@ function mipsInstructionExecutor(ME) {
     }
 
     function parseImmAnd$rs(string) {
-    	var match = /^((?:[-+]\s*)?\d+)\(\s*(\$\w+)\s*\)$/.exec(string);
-    	return {
-    		'imm': match[1],
-    		'$rs': match[2]
-    	};
+        try {
+            let parser = Parser.operandParserFromString(string);
+            let loadStoreAddr = parser.parseLoadStoreAddress();
+            parser.tokenStream.enforceCompletion();
+            return loadStoreAddr;
+        } catch (e) {
+            if (e instanceof Parser.ParseError) {
+                return null; // TODO: return that it was not a valid expression?
+            } else if (e instanceof Parser.LexerError) {
+                return null; // TODO: return that it was not a valid expression?
+            } else {
+                throw e;
+            }
+        }
     }
     function parseRegister(reg) {
-    	if (ME.isValidRegister(reg))
-    		return reg;
-    	else
-    		return null;
+        try {
+            let parser = Parser.operandParserFromString(reg);
+            return parser.parseRegister();
+        } catch (e) {
+            if (e instanceof Parser.ParseError) {
+                return null;
+            } else if (e instanceof Parser.LexerError) {
+                return null;
+            } else {
+                throw e;
+            }
+        }
     }
     function parseLabel(label) {
-    	if (/^[a-zA-Z]\w*$/.test(label))
-    		return label;
-    	else
-    		return null;
+        try {
+            let parser = Parser.operandParserFromString(label);
+            return parser.parseLabel();
+        } catch (e) {
+            if (e instanceof Parser.ParseError) {
+                return null;
+            } else if (e instanceof Parser.LexerError) {
+                return null;
+            } else {
+                throw e;
+            }
+        }
     }
     function parseWritableRegister(reg) {
-    	if (ME.isValidWritableRegister(reg))
-    		return reg;
-    	else
-    		return null;
-    }
-
-    function _parseImmediate(arg, bits, extensionRule) {
-        bits = bits || BITS_PER_IMMEDIATE;
-
-        var regex = /^([-+])?\s*((0[xX]([0-9A-Fa-f]+))|(0[bB]([01]+))|(0([0-7]+))|(([1-9]\d*)|0))$/;
-        // 1 = sign
-        // 4 = hex
-        // 6 = bin
-        // 8 = octal
-        // 9 = decimal
-
-        var numberMatch = arg.match(regex);
-
-        var number;
-
-        if (numberMatch === null) {
-            return null;
-        } else if (numberMatch[4]) {
-            // hex
-            number = parseInt(numberMatch[4], 16);
-        } else if (numberMatch[6]) {
-            // binary
-            number = parseInt(numberMatch[6], 2);
-        } else if (numberMatch[8]) {
-            // octal
-            number = parseInt(numberMatch[8], 8);
-        } else if (numberMatch[9]) {
-            // decimal
-            number = parseInt(numberMatch[9], 10);
+        try {
+            let parser = Parser.operandParserFromString(reg);
+            return parser.parseWritableRegister();
+        } catch (e) {
+            if (e instanceof Parser.ParseError) {
+                return null;
+            } else if (e instanceof Parser.LexerError) {
+                return null;
+            } else {
+                throw e;
+            }
         }
-
-        if (numberMatch[1]==='-') {
-            number = -number;
-        }
-
-        var minValue;
-        var maxValue;
-        switch (extensionRule) {
-            case 'signExtend':
-                // when we sign extend, we keep the same value, but this means that we are dealing with signed numbers
-                // e.g. -3 is 1101, when we sign extend, we get 111111101, which is still -3.
-                minValue = MIPS.minSignedValue(bits);
-                maxValue = MIPS.maxSignedValue(bits);
-                break;
-            case 'zeroExtend':
-                // when we zero fill, this means we are dealing with unsigned values.
-                // for example, -3 would be 1101, when we zero fill it, we get something like 0000001101, which is no longer the value -3
-                minValue = MIPS.minUnsignedValue(bits);
-                maxValue = MIPS.maxUnsignedValue(bits);
-                break;
-            case '16bit':
-                // since only 16 bits are taken, it doesn't matter what we use, thus give the most amount of freedom here
-                minValue = MIPS.minSignedValue(bits);
-                maxValue = MIPS.maxUnsignedValue(bits);
-                break;
-            default:
-                assert(false, 'Unhandled case.');
-        }
-
-        if (number < minValue || maxValue < number) {
-            return null; // TODO: return that it was out of range?
-        }
-
-        return number;
     }
     function parseImmediateAndSignExtend(arg, bits) {
-        return _parseImmediate(arg, bits, 'signExtend');
+        bits = bits || BITS_PER_IMMEDIATE;
+
+        let number;
+        try {
+            let parser = Parser.operandParserFromString(arg);
+            number = parser.parseSignedConstant(bits);
+            parser.tokenStream.enforceCompletion();
+            return number;
+        } catch (e) {
+            if (e instanceof Parser.ParseError) {
+                return null;
+            } else if (e instanceof Parser.LexerError) {
+                return null;
+            } else {
+                throw e;
+            }
+        }
     }
     function parseImmediateAndZeroExtend(arg, bits) {
-        return _parseImmediate(arg, bits, 'zeroExtend');
+        bits = bits || BITS_PER_IMMEDIATE;
+
+        let number;
+        try {
+            let parser = Parser.operandParserFromString(arg);
+            number = parser.parseUnsignedConstant(bits);
+            parser.tokenStream.enforceCompletion();
+            return number;
+        } catch (e) {
+            if (e instanceof Parser.ParseError) {
+                return null;
+            } else if (e instanceof Parser.LexerError) {
+                return null;
+            } else {
+                throw e;
+            }
+        }
     }
     function parseImmediate16Bit(arg, bits) {
-        return _parseImmediate(arg, bits, '16bit');
+        bits = bits || BITS_PER_IMMEDIATE;
+
+        let number;
+        try {
+            let parser = Parser.operandParserFromString(arg);
+            number = parser.parseConstant(bits);
+            parser.tokenStream.enforceCompletion();
+            return number;
+        } catch (e) {
+            if (e instanceof Parser.ParseError) {
+                return null;
+            } else if (e instanceof Parser.LexerError) {
+                return null;
+            } else {
+                throw e;
+            }
+        }
     }
 
     function signedAddition(value1, value2) {
