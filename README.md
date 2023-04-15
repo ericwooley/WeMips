@@ -131,3 +131,17 @@ You can change a value in the stack by clicking it to edit it.
 You can also view it in several modes, as an integer, in binary, and it’s ascii representation (‘None’ if no ascii character is available).
 Viewing the stack in a different mode doesn’t mean you can’t edit it.
 You can edit it in binary mode to save a binary representation, as you could with integers and ascii.
+
+## Developer Notes
+
+### Installing Node packages
+
+WeMIPS uses [npm](https://www.npmjs.com/) as its package manager, which comes with [node.js](https://nodejs.org/en).
+
+To install the required packages, run `npm install` or - for a clean installation - `npm ci`.
+
+### Building the documentation
+
+The documentation is built using [jsdoc](https://jsdoc.app/), which will be installed by npm using the commands shown above.
+
+In order to rebuild the documentation, run `npm run build-doc` from the root of the source directory.

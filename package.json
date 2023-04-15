@@ -2,5 +2,8 @@
   "devDependencies": {
     "gulp": "^4.0.2",
     "gulp-jsdoc3": "^3.0.0"
+  },
+  "scripts": {
+    "build-doc": "jsdoc -c jsdoc-config.json"
   }
 }

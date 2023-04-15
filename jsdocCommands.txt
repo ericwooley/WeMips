@@ -1,3 +1,0 @@
-Use this command to recreate the docs
-jsdoc -c jsdoc-config.json
-
