@@ -64,7 +64,7 @@ function mipsSyscalls(ME) {
 			description: 'Print Integer',
 			execute: function() {
 				var integer = ME.getRegisterVal('$a0');
-				ME.output(integer);
+				ME.output(integer.toString());
 			}
 		},
 		'4': {
@@ -249,9 +249,10 @@ function mipsSyscalls(ME) {
 			execute: function() {
 				var signedNumber = ME.getRegisterVal('$a0');
 				var charCount = ME.getRegisterVal('$a1');
+				var blockSize = ME.getRegisterVal('$a2');
 
 				var unsignedNumber = MIPS.signedNumberToUnsignedNumber(signedNumber, charCount);
-				var binaryString = MIPS.numberToBinaryString(signedNumber, charCount);
+				var binaryString = MIPS.numberToBinaryString(signedNumber, charCount, blockSize);
 
 				var result;
 				if (signedNumber !== unsignedNumber) {

@@ -82,7 +82,7 @@ MIPS.numberToBinaryString = function (number, bits/*=32*/, blockSize) {
 
     bits = bits || 32;
     assert(typeof bits === "number");
-    blockSizeDefined = typeof blockSize !== undefined;
+    let blockSizeDefined = typeof blockSize !== "undefined";
 
     if (number < 0) {
         // convert to the corresponding unsigned number (e.g. when we are using single bytes, then -2 would correspond to 254, since the two are represented the same in binary)

@@ -1,4 +1,32 @@
-function RegisterError(message) {
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: mips_emulator.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: mips_emulator.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>function RegisterError(message) {
     this.name = 'Register Error';
     this.message = message;
 }
@@ -112,7 +140,7 @@ function MipsEmulator(mipsArgs){
      */
     var currentLine = 1;
     // populate registers with all the read and write registers and set their inital values to random
-    for (var i = 0; i < allRegs.length; i++) {
+    for (var i = 0; i &lt; allRegs.length; i++) {
         registers[allRegs[i]] = createRegister(allRegs[i], i);
     };
     registers.$zero.val = 0;
@@ -206,7 +234,7 @@ function MipsEmulator(mipsArgs){
      * @return {Boolean}
      */
     this.isValidWritableRegister = function(reg) {
-        return this.isValidRegister(reg) && this.getRegister(reg).writable === true;
+        return this.isValidRegister(reg) &amp;&amp; this.getRegister(reg).writable === true;
     },
     /**
      * Set a register value, and call onChange function for that register
@@ -219,7 +247,7 @@ function MipsEmulator(mipsArgs){
         if(reg.charAt(0) != '$') reg = '$'+reg; // TODO: I think we should enforce that the reg always has the $ symbol
         var minRegisterValue = MIPS.minSignedValue(this.BITS_PER_REGISTER);
         var maxRegisterValue = MIPS.maxUnsignedValue(this.BITS_PER_REGISTER);
-        if (value < minRegisterValue || maxRegisterValue < value) {
+        if (value &lt; minRegisterValue || maxRegisterValue &lt; value) {
             throw new RegisterError('Value out of range: {0}. Must be between {1} and {2}.'.format(value, minRegisterValue, maxRegisterValue));
         }
 
@@ -234,11 +262,11 @@ function MipsEmulator(mipsArgs){
             throw new RegisterError('Register "{0}" is readonly.'.format(reg));
         }
 
-        if(register.onChange && enableCallback) {
+        if(register.onChange &amp;&amp; enableCallback) {
             register.onChange();
         }
         register.val = value;
-        if(mipsArgs.onRegisterChange && enableCallback) {
+        if(mipsArgs.onRegisterChange &amp;&amp; enableCallback) {
             mipsArgs.onRegisterChange(reg, value);
         }
         if(debug) console.log("----> New value: "+ ME.getRegister(reg));
@@ -310,7 +338,7 @@ function MipsEmulator(mipsArgs){
             // if(debug) console.log(JSON.stringify(line));
             mipsCode.code.push(line);
         });
-        if(mipsCode.code[currentLine] && mipsCode.code[currentLine].ignore){
+        if(mipsCode.code[currentLine] &amp;&amp; mipsCode.code[currentLine].ignore){
             incrementLine();
             if(debug) console.log("First line is to be ignored, first line set to: " + currentLine);
         }
@@ -412,7 +440,7 @@ function MipsEmulator(mipsArgs){
     this.onSetOverflowFlag = function() {}, // e.g. for 8 bit registers signed, 127 + 1 causes an overflow, since we can't store 128, so it wraps around to -128.
     this.onSetCarryFlag = function() {}, // e.g. for 8 bit registers unsigned, 255 + 1 causes a carry flag, since we can't store 256, so it wraps around to 0.
     this.setUnpreservedRegsToGarbage = function() {
-        for (var i = 0; i < allRegs.length; i++) {
+        for (var i = 0; i &lt; allRegs.length; i++) {
             var register = this.getRegister(allRegs[i]);
             if (register.preserved) {
                 continue;
@@ -455,8 +483,8 @@ function MipsEmulator(mipsArgs){
     function incrementLine(){
         currentLine++;
         while(mipsCode.code[currentLine]
-                && currentLine <= mipsCode.code.length
-                && mipsCode.code[currentLine].ignore != false
+                &amp;&amp; currentLine &lt;= mipsCode.code.length
+                &amp;&amp; mipsCode.code[currentLine].ignore != false
         ){
             if(debug) console.log("ignoring line: " + currentLine);
             currentLine++;
@@ -609,7 +637,7 @@ function MipsEmulator(mipsArgs){
 
         if(ar){
             // if we have a label, save it to the hashtable and save it to line
-            if(ar[1] && ar[1].length > 0){
+            if(ar[1] &amp;&amp; ar[1].length > 0){
                 LINE.label = ar[1];
                 mipsCode.labels[LINE.label] = LINE;
                 // TODO: mipsCode.labels[ar[1]] = line;
@@ -621,7 +649,7 @@ function MipsEmulator(mipsArgs){
                 LINE.args = ar[3].split(',');
 
                 // Trim the varaibles
-                for(var i = 0; i < LINE.args.length; i++){
+                for(var i = 0; i &lt; LINE.args.length; i++){
                    LINE.args[i] = $.trim(LINE.args[i]);
                 }
             }
@@ -630,7 +658,7 @@ function MipsEmulator(mipsArgs){
             LINE.instruction = $.trim(ar[2]).toUpperCase();
 
             // If the line has an instruction, we should not ignore it. otherwise it may be a comment or blank
-            if(LINE.instruction && LINE.instruction.length > 0) LINE.ignore = false;
+            if(LINE.instruction &amp;&amp; LINE.instruction.length > 0) LINE.ignore = false;
 
             // The comment, obviously
             LINE.comment = $.trim(ar[4]);
@@ -658,4 +686,26 @@ function MipsEmulator(mipsArgs){
     // Set the starting code if there was any.
     if(mipsArgs.startingCode) ME.setCode(mipsArgs.startingCode);
     return this;
-}
+}</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="global.html#Stack">Stack</a></li></ul><h3>Global</h3><ul><li><a href="global.html#deepEqual">deepEqual</a></li><li><a href="global.html#equal">equal</a></li><li><a href="global.html#getDataAtAddress">getDataAtAddress</a></li><li><a href="global.html#mipsCode">mipsCode</a></li><li><a href="global.html#mipsEmulator">mipsEmulator</a></li><li><a href="global.html#notDeepEqual">notDeepEqual</a></li><li><a href="global.html#notEqual">notEqual</a></li><li><a href="global.html#notPropEqual">notPropEqual</a></li><li><a href="global.html#notStrictEqual">notStrictEqual</a></li><li><a href="global.html#ok">ok</a></li><li><a href="global.html#onChange">onChange</a></li><li><a href="global.html#pointerToBottomOfStack">pointerToBottomOfStack</a></li><li><a href="global.html#propEqual">propEqual</a></li><li><a href="global.html#regName">regName</a></li><li><a href="global.html#reset">reset</a></li><li><a href="global.html#setDataAtAddress">setDataAtAddress</a></li><li><a href="global.html#strictEqual">strictEqual</a></li><li><a href="global.html#val">val</a></li><li><a href="global.html#writable">writable</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.11</a> on Sat Apr 15 2023 19:32:24 GMT+0200 (Mitteleuropäische Sommerzeit)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
