@@ -27,4 +27,4 @@ jobs:
           password: ${{ secrets.password }}
           server-dir: ${{ secrets.target_dir }}
           security: strict
-          exclude: "[**/.git*, **/.git*/**, node_modules]"
+          exclude: "[**/.git*, **/.git*/**, node_modules/** ]"
