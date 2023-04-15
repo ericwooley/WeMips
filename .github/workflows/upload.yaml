@@ -10,16 +10,15 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
-      - name: Setup Ruby
-        uses: ruby/setup-ruby@v1
+        uses: actions/checkout@v3
+      - name: Setup node.js
+        uses: ruby/setup-node@v3
         with:
-          ruby-version: 2.7
-      - name: Install jsduck
-        run: gem install jsduck
+          node-version: latest
+      - run: npm ci
       - name: Build documentation
-        run: jsduck --builtin-classes -o docs --welcome=using_WeMips.html --head-html='<link rel="stylesheet" href="../css/weMipsStyle.css" type="text/css">'
-      - name: Deploy the documentation to the server
+        run: npm run build-doc
+      - name: Deploy package to the server
         uses: SamKirkland/FTP-Deploy-Action@4.1.0
         with:
           protocol: ftps
@@ -28,4 +27,4 @@ jobs:
           password: ${{ secrets.password }}
           server-dir: ${{ secrets.target_dir }}
           security: strict
-          exclude: "[**/.git*, **/.git*/**, release, master]"
+          exclude: "[**/.git*, **/.git*/**, node_modules]"
