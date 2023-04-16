@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: parser/tokenstream.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: parser/tokenstream.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/** A TokenStream represents a stream of tokens
+ * @constructor
+ * @param {Parser.Lexer}  lexer   The lexer to source the tokens from
+ */
+Parser.TokenStream = function(lexer) {
+    this.lexer = lexer;
+    this.token = undefined;
+
+    /** Take a look at the current token without consuming it
+     * @returns {Parser.Token}   The current token
+     */
+    this.peekToken = function() {
+        if (this.token == undefined) {
+            this.token = this.lexer.next();
+        }
+        return this.token;
+    }
+
+    /** Check if the next token has a specific type
+     * @param {string}  type   The token type to check for
+     * @returns {boolean} &lt;code>true&lt;/code> if and only if the next token has the specified type.
+     */
+    this.checkNext = function(type) {
+        let token = this.peekToken();
+        return (token.type == type);
+    }
+
+    /** Get the next token, consuming the current token in the process, if any
+     * @returns {Parser.Token}   The (new) current token
+     */
+    this.nextToken = function() {
+        this.token = this.lexer.next();
+        return this.token;
+    }
+
+    /** Check the current token for the given token type, raising an error on mismatch, otherwise fetching the next token
+     * @param {string}  type   The type to check for in the current token
+     * @returns {Parser.Token}   The (new) current token
+     * @throws {Parser.ParseError}  The current token must match the given token type
+     */
+    this.consume = function(type) {
+        let token = this.peekToken();
+        if (type &amp;&amp; token.type != type) {
+            throw new Parser.ParseError('Expected \''+type+'\', got \''+token.type+'\'', token);
+        }
+        this.nextToken();
+        return token;
+    }
+
+    /** Throw an {@link Parser.ParseError} if there is text remaining.
+     * This is to be used to ensure complete parsing of an input.
+     * @throws {Parser.ParseError} The end of the input must have been reached
+     */
+    this.enforceCompletion = function() {
+        if (!this.checkNext(Parser.TokenType.EndOfString)) {
+            throw new Parser.ParseError('Trailing text remaining');
+        }
+    }
+}
+
+/** Create a token stream from an input string
+ * @param {string} input   The string to scan
+ * @returns {Parser.TokenStream}  The token stream providing the tokens from the input string
+ */
+Parser.tokenStreamFromString = function(input) {
+    let lexer = new Parser.Lexer(input);
+    return new Parser.TokenStream(lexer);
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Parser.Error.html">Error</a></li><li><a href="Parser.ExprParser.html">ExprParser</a></li><li><a href="Parser.Lexer.html">Lexer</a></li><li><a href="Parser.LexerError.html">LexerError</a></li><li><a href="Parser.OperandParser.html">OperandParser</a></li><li><a href="Parser.ParseError.html">ParseError</a></li><li><a href="Parser.Token.html">Token</a></li><li><a href="Parser.TokenStream.html">TokenStream</a></li><li><a href="global.html#Stack">Stack</a></li></ul><h3>Global</h3><ul><li><a href="global.html#deepEqual">deepEqual</a></li><li><a href="global.html#equal">equal</a></li><li><a href="global.html#getDataAtAddress">getDataAtAddress</a></li><li><a href="global.html#mipsCode">mipsCode</a></li><li><a href="global.html#mipsEmulator">mipsEmulator</a></li><li><a href="global.html#notDeepEqual">notDeepEqual</a></li><li><a href="global.html#notEqual">notEqual</a></li><li><a href="global.html#notPropEqual">notPropEqual</a></li><li><a href="global.html#notStrictEqual">notStrictEqual</a></li><li><a href="global.html#ok">ok</a></li><li><a href="global.html#onChange">onChange</a></li><li><a href="global.html#pointerToBottomOfStack">pointerToBottomOfStack</a></li><li><a href="global.html#propEqual">propEqual</a></li><li><a href="global.html#regName">regName</a></li><li><a href="global.html#reset">reset</a></li><li><a href="global.html#setDataAtAddress">setDataAtAddress</a></li><li><a href="global.html#strictEqual">strictEqual</a></li><li><a href="global.html#val">val</a></li><li><a href="global.html#writable">writable</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Sun Apr 16 2023 10:04:43 GMT+0200 (Mitteleuropäische Sommerzeit)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
