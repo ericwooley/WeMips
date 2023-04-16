@@ -217,11 +217,12 @@ Parser.InstructionParsers = {
 
 /** A parser for MIPS instructions and labels
  * @constructor
+ * @param {array} symbols An array of pre-defined symbols
  * @param {Parser.TokenStream}  tokenStream The stream of tokens to parse
  */
-Parser.InstructionParser = function (tokenStream) {
+Parser.InstructionParser = function (tokenStream, symbols) {
     this.tokenStream = tokenStream;
-    this.operandParser = new Parser.OperandParser(tokenStream);
+    this.operandParser = new Parser.OperandParser(tokenStream, symbols);
 
     /**
      * Parse an instruction with its arguments.
@@ -319,9 +320,10 @@ Parser.InstructionParser = function (tokenStream) {
 
 /** Create an {@link Parser.InstructionParser} from a string
  * @param {string}  input The string to parse
+ * @param {array} symbols An array of pre-defined symbols
  * @returns {Parser.InstructionParser} The operand parser for parsing the string
  */
-Parser.instructionParserFromString = function(text) {
+Parser.instructionParserFromString = function(text, symbols) {
     let tokenStream = Parser.tokenStreamFromString(text);
-    return new Parser.InstructionParser(tokenStream);
+    return new Parser.InstructionParser(tokenStream, symbols);
 }

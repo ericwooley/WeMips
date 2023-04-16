@@ -600,7 +600,7 @@ function MipsEmulator(mipsArgs){
             text: line
         };
 
-        let instructionParser = Parser.instructionParserFromString(line);
+        let instructionParser = Parser.instructionParserFromString(line, mipsCode.symbols);
         try {
             let instruction = instructionParser.parseLine();
             if (instruction.symbols) {

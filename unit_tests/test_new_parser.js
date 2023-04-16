@@ -43,8 +43,8 @@ test("Lexer", function() {
 });
 
 test('Expression Parser', function() {
-    let parseExpression = function(text) {
-        let parser = Parser.exprParserFromString(text);
+    let parseExpression = function(text, symbols) {
+        let parser = Parser.exprParserFromString(text, symbols);
         return parser.parseExpression();
     };
     
@@ -91,6 +91,8 @@ test('Expression Parser', function() {
     equal(parseExpression('(1+2)*3'), 9);
     equal(parseExpression('lo16(0x12345678)'), 0x5678);
     equal(parseExpression('hi16(0x12345678)'), 0x1234);
+
+    equal(parseExpression('offset+5', {offset: -7}), -2);
 });
 
 test('Operand Parser', function() {
@@ -116,15 +118,15 @@ test('Operand Parser', function() {
 });
 
 test('Instruction Parsing', function() {
-    function parseLine(line) {
-        let instructionParser = Parser.instructionParserFromString(line);
+    function parseLine(line, symbols) {
+        let instructionParser = Parser.instructionParserFromString(line, symbols);
         let lineInfo = instructionParser.parseLine();
         instructionParser.tokenStream.enforceCompletion()
         return lineInfo;
     }
-    function isValidLine(line) {
+    function isValidLine(line, symbols) {
         try {
-            parseLine(line);
+            parseLine(line, symbols);
             return true;
         } catch (e) {
             if (e instanceof Parser.Error) {
@@ -209,4 +211,11 @@ test('Instruction Parsing', function() {
             ]
         }
     );
+
+    ok(isValidLine("ADDI $t0, $zero, lo16(c+5)",
+                    {
+                        'c': 15
+                    }),
+                    "We can use symbols");
+    ok(!isValidLine("ADDI $t0, $zero, lo16(c+5)"), "We cannot use undefined symbols");
 });

@@ -42,7 +42,6 @@ Parser.ParseError.prototype = Object.create( Parser.Error.prototype );
 /** Exception for unknown instructions
  * Thrown when the parser encounters an unknown instruction.
  * @constructor
- * @param {string} message       A human-readable message explaining the kind of exception
  * @param {Parser.Token} token   The relevant token that led to the exception
  */
 Parser.UnknownInstructionError = function(token) {
@@ -53,6 +52,20 @@ Parser.UnknownInstructionError = function(token) {
         token);
 }
 Parser.UnknownInstructionError.prototype = Object.create( Parser.ParseError.prototype );
+
+/** Exception for undefined symbols
+ * Thrown when the parser encounters an undefined symbol.
+ * @constructor
+ * @param {Parser.Token} token   The relevant token that led to the exception
+ */
+Parser.UnknownSymbolError = function(token) {
+    Parser.ParseError.call(
+        this,
+        'UnknownSymbolError',
+        'Unknown symbol:'+token.value,
+        token);
+}
+Parser.UnknownSymbolError.prototype = Object.create( Parser.ParseError.prototype );
 
 function assert(condition, message) {
     if (!condition) {

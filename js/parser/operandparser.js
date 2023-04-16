@@ -1,10 +1,11 @@
 /** A parser for MIPS operands
  * @constructor
  * @param {Parser.TokenStream}  tokenStream The stream of tokens to parse
+ * @param {array} symbols An array of pre-defined symbols
  */
-Parser.OperandParser = function(tokenStream) {
+Parser.OperandParser = function(tokenStream, symbols) {
     this.tokenStream = tokenStream;
-    this.exprParser = new Parser.ExprParser(tokenStream);
+    this.exprParser = new Parser.ExprParser(tokenStream, symbols);
     this.mipsEmulator = new MipsEmulator();
 
     /** Parse a register operand
