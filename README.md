@@ -47,13 +47,18 @@ addi $t0, $zero, (15+3*32)
 Operators are evaluated according to their precedence, i.e., addition and subtraction have lower precedence than multiplication and the former are thus evaluated after the latter.
 In the following, operands are listed in decreasing order of precedence (i.e., operators further down in the list are evaluated after operators further up):
 
-- Unary Plus ("+"), Unary Minus ("-"), Bitwise NOT ("~")
+- Unary Plus ("+"), Unary Minus ("-"), Bitwise NOT ("~"), Logical NOT ("!")
 - Multiplication ("\*"), Division ("/"), Remainder ("%")
 - Addition ("+"), Subtraction ("-")
 - Shift Left ("<<"), Arithmetic Shift Right (">>"), Logical Shift Right (">>>")
+- Less Than ("<"), Less Than or Equal ("<="), Greater Than or Equal (">="), Greater Than (">")
+- Equals ("=="), Not Equals ("!=")
 - Bitwise AND ("&")
 - Bitwise XOR ("^")
 - Bitwise OR ("|")
+- Logical AND ("&&")
+- Logical OR ("||")
+- Ternary Conditional Operator ("cond?trueValue:falseValue")
 
 It is also possible to extract the lower and higher 16 bits of a constants, respectively, by using the `lo16` and `hi16` functions:
 
