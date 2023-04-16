@@ -88,7 +88,7 @@ test('Operand Parser', function() {
     equal(parseOperand('-32768', 'parseConstant', 16), -32768);
     throws(function() { parseOperand('65536', 'parseConstant', 16); }, Parser.ParseError, '65536 is not a 16-bit value');
     deepEqual(parseOperand('(4+2*5)($t0)', 'parseLoadStoreAddress', 16),
-        {imm: '14', '$rs': '$t0'});
+        {imm: 14, '$rs': '$t0'});
 });
 
 test('Instruction Parsing', function() {

@@ -111,6 +111,7 @@ function MipsEmulator(mipsArgs){
      * @type {Number}
      */
     var currentLine = 1;
+    var pseudoInstructionsEnabled = true;
     // populate registers with all the read and write registers and set their inital values to random
     for (var i = 0; i < allRegs.length; i++) {
         registers[allRegs[i]] = createRegister(allRegs[i], i);
@@ -434,7 +435,7 @@ function MipsEmulator(mipsArgs){
         mipsArgs.onAlert(message);
     }
     this.setPseudoInstructionsEnabled = function(value) {
-        instructionExecutor.setPseudoInstructionsEnabled(value)
+        pseudoInstructionsEnabled = true;
     }
 
     ////////////////////////////////////////////////
@@ -480,8 +481,14 @@ function MipsEmulator(mipsArgs){
             incrementLine();
             return false;
         }
-        // we can assume that we parsed successfully at this point.
-        instructionExecutor.runInstruction(line.instruction, line.args);
+        instruction = instructions[line.instruction];
+        assert(instruction);
+        if (!pseudoInstructionsEnabled && instruction.pseudoInstruction) {
+            throw new MipsError('Pseudo instruction {1} is disabled on line: {0}'.format(line.error, line.instruction));
+        }
+        var runMethod = instruction.runMethod;
+        assert(runMethod);
+        runMethod(line.args);
     };
 
     function getGarbageRegisterData() {
@@ -528,7 +535,7 @@ function MipsEmulator(mipsArgs){
     // the goal is to make these methods look as close to the MIPS cheat sheet as possible.
 
 
-    var instructionExecutor = mipsInstructionExecutor(ME);
+    var instructions = mipsInstructionExecutor(ME);
 
     /**
      * If the user defined an anError message, use that, if not, alert the message
@@ -585,57 +592,21 @@ function MipsEmulator(mipsArgs){
             text: line
         };
 
-
-        //console.log("--> "+val);
-        var regex = /^\s*(?:(\w+)\s*:\s*)?(?:(\w+)(?:\s+([^#]+))?)?(?:#\s*(.*))?$/;
-        var ar = line.match(regex);
-        // when matched the array contains the following
-        // ----> [0] The entire line
-        // ----> [1] The label without the ':'
-        // ----> [2] The instruction (e.g. 'ADD', 'LW', etc.)
-        // ----> [3] The arguments (e.g. '$rd, $rs, $rt'), this should be trimmed
-        // ----> [4] The comment without the '#', this should be trimmed
-        // if ar is null, that means the regex didn't match
-
-        if(ar){
-            // if we have a label, save it to the hashtable and save it to line
-            if(ar[1] && ar[1].length > 0){
-                let label = ar[1];
+        let instructionParser = Parser.instructionParserFromString(line);
+        try {
+            let instruction = instructionParser.parseLine();
+            for (label of instruction.labels) {
                 mipsCode.labels[label] = LINE;
-                // TODO: mipsCode.labels[ar[1]] = line;
             }
-
-            // If we got variables back
-            if(ar[3]){
-                // Split the args by `,`
-                LINE.args = ar[3].split(',');
-
-                // Trim the varaibles
-                for(var i = 0; i < LINE.args.length; i++){
-                   LINE.args[i] = $.trim(LINE.args[i]);
-                }
+            if (instruction.instr) {
+                LINE.instruction = instruction.instr.mnemonic;
+                LINE.args = instruction.instr.args;
+                LINE.ignore = false;
             }
-
-            // The instruction for this code;
-            LINE.instruction = $.trim(ar[2]).toUpperCase();
-
-            // If the line has an instruction, we should not ignore it. otherwise it may be a comment or blank
-            if(LINE.instruction && LINE.instruction.length > 0) LINE.ignore = false;
-
-            // parse the instruction now, so it can be executed whenever we want
-            if (LINE.instruction) {
-                // an instruction was found, so try to parse it
-                var error = {};
-                if (!instructionExecutor.parseInstruction(LINE.instruction, LINE.args, null, error)) {
-                    LINE.error = error.message;
-                }
-            };
-
-        // In the else case, the regex didn't match, possible error?
-        } else {
-            // TODO: check for special cases
-            if(debug) console.log("----> No matches");
-            LINE.error = "Error parsing line: "+ (lineNo+1);
+        } catch (e) {
+            if (e instanceof Parser.Error) {
+                LINE.error = e.toString();
+            }
         }
         if(debug) console.log("Finished parsing line: " + JSON.stringify(LINE));
 

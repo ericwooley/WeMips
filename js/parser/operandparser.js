@@ -126,7 +126,7 @@ Parser.OperandParser = function(tokenStream) {
         let reg = this.parseRegister();
         this.tokenStream.consume(Parser.TokenType.RParen);
         return {
-            'imm': imm.toString(),
+            'imm': imm,
             '$rs': reg
         };
     }

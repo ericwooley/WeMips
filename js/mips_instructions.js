@@ -1,7 +1,6 @@
 function mipsInstructionExecutor(ME) {
     var BITS_PER_SHAMT = 5;
     var BITS_PER_IMMEDIATE = 16;
-    var pseudoInstructionsEnabled = true;
 	var instructions = {
         /////////////////////////////////////////////
         // Mips Arithmetic Instructions
@@ -51,7 +50,7 @@ function mipsInstructionExecutor(ME) {
         'LUI': {
             parseMethod: parse_$RT_imm,
             runMethod: function(namedArgs){
-                ME.setRegisterVal(namedArgs.$rt, (namedArgs.imm << 16));
+                ME.setRegisterVal(namedArgs.$rd, (namedArgs.imm << 16));
                 ME.incerementPC();
             }
         },
@@ -322,7 +321,7 @@ function mipsInstructionExecutor(ME) {
         'JALR': {
             parseMethod: parse_$rs,
             runMethod: function(namedArgs) {
-                ME.setRegisterVal('$ra', ME.getLineNumber() + 1);
+                ME.setRegisterVal(namedArgs.$rd, ME.getLineNumber() + 1);
                 // TODO: the line numbers should be random and not start at 0
                 // Also, blank lines should probably have a line number associated with them
                 var lineNumber = ME.getRegisterUnsignedVal(namedArgs.$rs);
@@ -344,7 +343,7 @@ function mipsInstructionExecutor(ME) {
         'LW': {
             parseMethod: parse_$RT_imm_$rs,
             runMethod: function(namedArgs) {
-                ME.setRegisterVal(namedArgs.$rt, ME.stack.getWord(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm));
+                ME.setRegisterVal(namedArgs.$rd, ME.stack.getWord(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm));
                 ME.incerementPC();
             }
         },
@@ -357,7 +356,7 @@ function mipsInstructionExecutor(ME) {
                 var bitOffset = offset*8;
                 var lowerMask = Math.pow(2,bitOffset)-1;
                 var upperMask = ~lowerMask;
-                ME.setRegisterVal(namedArgs.$rt, ((value << bitOffset) & upperMask) | (ME.getRegisterVal(namedArgs.$rt) & lowerMask));
+                ME.setRegisterVal(namedArgs.$rd, ((value << bitOffset) & upperMask) | (ME.getRegisterVal(namedArgs.$rd) & lowerMask));
                 ME.incerementPC();
             }
         },
@@ -370,7 +369,7 @@ function mipsInstructionExecutor(ME) {
                 var bitOffset = (offset+1)*8;
                 var lowerMask = Math.pow(2,bitOffset)-1;
                 var upperMask = ~lowerMask;
-                ME.setRegisterVal(namedArgs.$rt, (ME.getRegisterVal(namedArgs.$rt) & upperMask) | (value & lowerMask));
+                ME.setRegisterVal(namedArgs.$rd, (ME.getRegisterVal(namedArgs.$rd) & upperMask) | (value & lowerMask));
                 ME.incerementPC();
             }
         },
@@ -407,14 +406,14 @@ function mipsInstructionExecutor(ME) {
         'LH': {
             parseMethod: parse_$RT_imm_$rs,
             runMethod: function(namedArgs) {
-                ME.setRegisterVal(namedArgs.$rt, ME.stack.getHalfword(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm));
+                ME.setRegisterVal(namedArgs.$rd, ME.stack.getHalfword(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm));
                 ME.incerementPC();
             }
         },
         'LHU': {
             parseMethod: parse_$RT_imm_$rs,
             runMethod: function(namedArgs) {
-                ME.setRegisterVal(namedArgs.$rt, ME.stack.getUnsignedHalfword(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm));
+                ME.setRegisterVal(namedArgs.$rd, ME.stack.getUnsignedHalfword(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm));
                 ME.incerementPC();
             }
         },
@@ -428,14 +427,14 @@ function mipsInstructionExecutor(ME) {
         'LB': {
             parseMethod: parse_$RT_imm_$rs,
             runMethod: function(namedArgs) {
-            	ME.setRegisterVal(namedArgs.$rt, ME.stack.getByte(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm));
+            	ME.setRegisterVal(namedArgs.$rd, ME.stack.getByte(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm));
             	ME.incerementPC();
             }
         },
         'LBU': {
             parseMethod: parse_$RT_imm_$rs,
             runMethod: function(namedArgs) {
-            	ME.setRegisterVal(namedArgs.$rt, ME.stack.getUnsignedByte(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm));
+            	ME.setRegisterVal(namedArgs.$rd, ME.stack.getUnsignedByte(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm));
             	ME.incerementPC();
             }
         },
@@ -709,73 +708,5 @@ function mipsInstructionExecutor(ME) {
         return result.result;
     }
 
-    var result = {
-        instructions: instructions,
-        setPseudoInstructionsEnabled: function(value) {
-            pseudoInstructionsEnabled = value;
-        },
-    	parseInstruction: function(instructionName, args, outArgs, outError) {
-    		var instruction = instructions[instructionName];
-	        if (!instruction) {
-	            if (outError) outError.message = "Unknown instruction: " + instructionName;
-	            return false;
-	        }
-            if (!pseudoInstructionsEnabled && ('pseudoInstruction' in instruction) && instruction['pseudoInstruction']) {
-                if (outError) outError.message = "Pseudo-instruction "+instructionName+" is disabled";
-                return false;
-            }
-
-
-	        var parseMethod = instruction.parseMethod;
-	        assert(parseMethod, "If this is a valid instruction, then it must have a parseMethod.");
-
-	        // ensure that each of the keys (e.g. $rd, $rs, $rt) contain a non-null value in order to determine if we were successful or not
-        	var validArgs = true;
-        	var namedArgs = parseMethod(args); // e.g. namedArgs has $rd, $rs, imm, etc.
-        	if (namedArgs['expectedArgCount'] !== args.length) {
-                var invalid = true;
-                if (namedArgs['expectedArgCount'] === 0 && args.length === 1) {
-                    if (args[0] === '') {
-                        // 0 expected args should consider [''] to be valid as well.
-                        invalid = false;
-                    }
-                }
-
-                if (invalid) {
-    	            if (outError) outError.message = "Incorrect number of arguments {0}, should be {1}.".format(args.length, namedArgs['expectedArgCount']);
-    	            return false;
-                }
-        	}
-			for (var key in namedArgs) {
-				// important check that this is objects own property not from prototype prop inherited
-				if (!namedArgs.hasOwnProperty(key)) continue;
-
-				if (namedArgs[key] === null) {
-					validArgs = false;
-					break;
-				}
-
-				if (outArgs) outArgs[key] = namedArgs[key];
-			}
-
-			if (!validArgs) {
-				if (outError) outError.message = "Invalid arguments: " + args;
-				return false;
-			}
-
-	        return true;
-	    },
-	    runInstruction: function(instructionName, args) {
-	    	var namedArgs = {};
-            var error = {};
-	    	var parsed = this.parseInstruction(instructionName, args, namedArgs, error);
-	    	assert(parsed, "Instruction did not parse correctly:" + error.message);
-
-	    	var runMethod = instructions[instructionName].runMethod;
-	    	assert(runMethod);
-	    	runMethod(namedArgs);
-    	}
-    };
-
-    return result;
+    return instructions;
 }
