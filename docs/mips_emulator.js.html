@@ -139,6 +139,7 @@ function MipsEmulator(mipsArgs){
      * @type {Number}
      */
     var currentLine = 1;
+    var pseudoInstructionsEnabled = true;
     // populate registers with all the read and write registers and set their inital values to random
     for (var i = 0; i &lt; allRegs.length; i++) {
         registers[allRegs[i]] = createRegister(allRegs[i], i);
@@ -462,7 +463,7 @@ function MipsEmulator(mipsArgs){
         mipsArgs.onAlert(message);
     }
     this.setPseudoInstructionsEnabled = function(value) {
-        instructionExecutor.setPseudoInstructionsEnabled(value)
+        pseudoInstructionsEnabled = true;
     }
 
     ////////////////////////////////////////////////
@@ -508,8 +509,14 @@ function MipsEmulator(mipsArgs){
             incrementLine();
             return false;
         }
-        // we can assume that we parsed successfully at this point.
-        instructionExecutor.runInstruction(line.instruction, line.args);
+        instruction = instructions[line.instruction];
+        assert(instruction);
+        if (!pseudoInstructionsEnabled &amp;&amp; instruction.pseudoInstruction) {
+            throw new MipsError('Pseudo instruction {1} is disabled on line: {0}'.format(line.error, line.instruction));
+        }
+        var runMethod = instruction.runMethod;
+        assert(runMethod);
+        runMethod(line.args);
     };
 
     function getGarbageRegisterData() {
@@ -556,7 +563,7 @@ function MipsEmulator(mipsArgs){
     // the goal is to make these methods look as close to the MIPS cheat sheet as possible.
 
 
-    var instructionExecutor = mipsInstructionExecutor(ME);
+    var instructions = mipsInstructionExecutor(ME);
 
     /**
      * If the user defined an anError message, use that, if not, alert the message
@@ -605,16 +612,6 @@ function MipsEmulator(mipsArgs){
              */
             ignore: true,
             /**
-             * The comment (if any) that this line of code contained
-             * @type {String}
-             */
-            comment: '',
-            /**
-             * The label for this line of code
-             * @type {String}
-             */
-            label: '',
-            /**
              * Error when running this line of code (if any)
              * @type {String}
              */
@@ -623,60 +620,21 @@ function MipsEmulator(mipsArgs){
             text: line
         };
 
-
-        //console.log("--> "+val);
-        var regex = /^\s*(?:(\w+)\s*:\s*)?(?:(\w+)(?:\s+([^#]+))?)?(?:#\s*(.*))?$/;
-        var ar = line.match(regex);
-        // when matched the array contains the following
-        // ----> [0] The entire line
-        // ----> [1] The label without the ':'
-        // ----> [2] The instruction (e.g. 'ADD', 'LW', etc.)
-        // ----> [3] The arguments (e.g. '$rd, $rs, $rt'), this should be trimmed
-        // ----> [4] The comment without the '#', this should be trimmed
-        // if ar is null, that means the regex didn't match
-
-        if(ar){
-            // if we have a label, save it to the hashtable and save it to line
-            if(ar[1] &amp;&amp; ar[1].length > 0){
-                LINE.label = ar[1];
-                mipsCode.labels[LINE.label] = LINE;
-                // TODO: mipsCode.labels[ar[1]] = line;
+        let instructionParser = Parser.instructionParserFromString(line);
+        try {
+            let instruction = instructionParser.parseLine();
+            for (label of instruction.labels) {
+                mipsCode.labels[label] = LINE;
             }
-
-            // If we got variables back
-            if(ar[3]){
-                // Split the args by `,`
-                LINE.args = ar[3].split(',');
-
-                // Trim the varaibles
-                for(var i = 0; i &lt; LINE.args.length; i++){
-                   LINE.args[i] = $.trim(LINE.args[i]);
-                }
+            if (instruction.instr) {
+                LINE.instruction = instruction.instr.mnemonic;
+                LINE.args = instruction.instr.args;
+                LINE.ignore = false;
             }
-
-            // The instruction for this code;
-            LINE.instruction = $.trim(ar[2]).toUpperCase();
-
-            // If the line has an instruction, we should not ignore it. otherwise it may be a comment or blank
-            if(LINE.instruction &amp;&amp; LINE.instruction.length > 0) LINE.ignore = false;
-
-            // The comment, obviously
-            LINE.comment = $.trim(ar[4]);
-
-            // parse the instruction now, so it can be executed whenever we want
-            if (LINE.instruction) {
-                // an instruction was found, so try to parse it
-                var error = {};
-                if (!instructionExecutor.parseInstruction(LINE.instruction, LINE.args, null, error)) {
-                    LINE.error = error.message;
-                }
-            };
-
-        // In the else case, the regex didn't match, possible error?
-        } else {
-            // TODO: check for special cases
-            if(debug) console.log("----> No matches");
-            LINE.error = "Error parsing line: "+ (lineNo+1);
+        } catch (e) {
+            if (e instanceof Parser.Error) {
+                LINE.error = e.toString();
+            }
         }
         if(debug) console.log("Finished parsing line: " + JSON.stringify(LINE));
 
@@ -696,13 +654,13 @@ function MipsEmulator(mipsArgs){
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Parser.Error.html">Error</a></li><li><a href="Parser.ExprParser.html">ExprParser</a></li><li><a href="Parser.Lexer.html">Lexer</a></li><li><a href="Parser.LexerError.html">LexerError</a></li><li><a href="Parser.OperandParser.html">OperandParser</a></li><li><a href="Parser.ParseError.html">ParseError</a></li><li><a href="Parser.Token.html">Token</a></li><li><a href="Parser.TokenStream.html">TokenStream</a></li><li><a href="global.html#Stack">Stack</a></li></ul><h3>Global</h3><ul><li><a href="global.html#deepEqual">deepEqual</a></li><li><a href="global.html#equal">equal</a></li><li><a href="global.html#getDataAtAddress">getDataAtAddress</a></li><li><a href="global.html#mipsCode">mipsCode</a></li><li><a href="global.html#mipsEmulator">mipsEmulator</a></li><li><a href="global.html#notDeepEqual">notDeepEqual</a></li><li><a href="global.html#notEqual">notEqual</a></li><li><a href="global.html#notPropEqual">notPropEqual</a></li><li><a href="global.html#notStrictEqual">notStrictEqual</a></li><li><a href="global.html#ok">ok</a></li><li><a href="global.html#onChange">onChange</a></li><li><a href="global.html#pointerToBottomOfStack">pointerToBottomOfStack</a></li><li><a href="global.html#propEqual">propEqual</a></li><li><a href="global.html#regName">regName</a></li><li><a href="global.html#reset">reset</a></li><li><a href="global.html#setDataAtAddress">setDataAtAddress</a></li><li><a href="global.html#strictEqual">strictEqual</a></li><li><a href="global.html#val">val</a></li><li><a href="global.html#writable">writable</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Parser.Error.html">Error</a></li><li><a href="Parser.ExprParser.html">ExprParser</a></li><li><a href="Parser.InstructionParser.html">InstructionParser</a></li><li><a href="Parser.Lexer.html">Lexer</a></li><li><a href="Parser.LexerError.html">LexerError</a></li><li><a href="Parser.OperandParser.html">OperandParser</a></li><li><a href="Parser.ParseError.html">ParseError</a></li><li><a href="Parser.Token.html">Token</a></li><li><a href="Parser.TokenStream.html">TokenStream</a></li><li><a href="Parser.UnknownInstructionError.html">UnknownInstructionError</a></li><li><a href="global.html#Stack">Stack</a></li></ul><h3>Global</h3><ul><li><a href="global.html#deepEqual">deepEqual</a></li><li><a href="global.html#equal">equal</a></li><li><a href="global.html#getDataAtAddress">getDataAtAddress</a></li><li><a href="global.html#mipsCode">mipsCode</a></li><li><a href="global.html#mipsEmulator">mipsEmulator</a></li><li><a href="global.html#notDeepEqual">notDeepEqual</a></li><li><a href="global.html#notEqual">notEqual</a></li><li><a href="global.html#notPropEqual">notPropEqual</a></li><li><a href="global.html#notStrictEqual">notStrictEqual</a></li><li><a href="global.html#ok">ok</a></li><li><a href="global.html#onChange">onChange</a></li><li><a href="global.html#pointerToBottomOfStack">pointerToBottomOfStack</a></li><li><a href="global.html#propEqual">propEqual</a></li><li><a href="global.html#regName">regName</a></li><li><a href="global.html#reset">reset</a></li><li><a href="global.html#setDataAtAddress">setDataAtAddress</a></li><li><a href="global.html#strictEqual">strictEqual</a></li><li><a href="global.html#val">val</a></li><li><a href="global.html#writable">writable</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Sun Apr 16 2023 12:58:39 GMT+0200 (Mitteleuropäische Sommerzeit)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Sun Apr 16 2023 17:50:55 GMT+0200 (Mitteleuropäische Sommerzeit)
 </footer>
 
 <script> prettyPrint(); </script>

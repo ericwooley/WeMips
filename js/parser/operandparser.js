@@ -106,14 +106,15 @@ Parser.OperandParser = function(tokenStream) {
     }
 
     /** Parse an address for loading or storing.
-     * A load/store-address consists of an (optional) offset and a register in parentheses (`imm($rs)`).
+     * A load/store-address consists of an (optional) signed offset and a register in parentheses (`imm($rs)`).
      * 
+     * @param {number} bits  The number of bits allowed for the offset
      * @return {Object} A dictionary containing the offset in key `imm` and the register name in key  `$rs`.
      */
-    this.parseLoadStoreAddress = function() {
+    this.parseLoadStoreAddress = function(bits) {
         let imm;
         try {
-            imm = this.exprParser.parseExpression();
+            imm = this.parseSignedConstant(bits);
         } catch (e) {
             if (e instanceof Parser.ParseError) {
                 imm = 0;
@@ -125,7 +126,7 @@ Parser.OperandParser = function(tokenStream) {
         let reg = this.parseRegister();
         this.tokenStream.consume(Parser.TokenType.RParen);
         return {
-            'imm': imm.toString(),
+            'imm': imm,
             '$rs': reg
         };
     }

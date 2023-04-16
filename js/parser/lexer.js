@@ -32,6 +32,7 @@ Parser.TokenType = {
     LParen: 'LParen',
     RParen: 'RParen',
     Comma: 'Comma',
+    Colon: 'Colon',
     EndOfString: 'EndOfString',
 };
 
@@ -49,6 +50,7 @@ Parser.AtomTypes = {
     '(': Parser.TokenType.LParen,
     ')': Parser.TokenType.RParen,
     ',': Parser.TokenType.Comma,
+    ':': Parser.TokenType.Colon,
 };
 
 /** Determine whether the given character is whitespace
@@ -56,7 +58,7 @@ Parser.AtomTypes = {
  * @return {boolean} <code>true</code> if and only if the character is whitespace
  */
 Parser.isWhitespace = function(ch) {
-    return (ch=='\t' || ch==' ');
+    return (ch=='\t' || ch==' ' || ch=='\n' || ch=='\r');
 }
 
 Parser.DigitsUpperCase = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -146,11 +148,6 @@ Parser.Lexer = function(input) {
         this.marker = this.index;
     }
 
-    /** Return to the start of the current token */
-    this.restartToken = function() {
-        this.index = this.marker;
-    }
-
     /** Determine the next character without advancing the input position
      * @returns {(string|undefined)} The next character of undefined if there are no more characters left.
      */
@@ -180,12 +177,24 @@ Parser.Lexer = function(input) {
         throw new Parser.LexerError(message, this.input.substring(this.marker, this.index), this.marker, this.index);
     }
 
+    /** Skip a comment until the end of the line */
+    this.skipComment = function() {
+        this.skipChar();
+        let ch = this.peekNextChar();
+        while (!this.endOfString() && ch != '\n') {
+            this.skipChar();
+            ch = this.peekNextChar();
+        }
+    }
+
     /** Skip spaces until the first non-whitespace character */
     this.skipSpaces = function() {
         let ch;
         while (!this.endOfString()) {
             ch = this.peekNextChar();
-            if (!Parser.isWhitespace(ch)) {
+            if (ch == '#') {
+                this.skipComment();
+            } else if (!Parser.isWhitespace(ch)) {
                 break;
             }
             this.skipChar();
