@@ -1,5 +1,9 @@
 # WeMIPS Documentation (MIPS Emulator)
 
+WeMIPS is an instruction-level emulator for the assembly language of the MIPS32 architecture. It is implemented in client-side JavaScript and HTML, and can thus be run in your own (JavaScript-capable and -enabled) webbrowser.
+
+While WeMIPS can be provided on-line (for example [here](https://wemips.ralfgerlich.biz)), it is also possible to simply install it locally on your own computer and use it there.
+
 The WeMIPS Emulator was originally created by Eric Wooley and Ortal Yahdav, with additions and updates by Ralf Gerlich.
 
 ## Installation Guide
@@ -7,42 +11,6 @@ The WeMIPS Emulator was originally created by Eric Wooley and Ortal Yahdav, with
 1. [View Online](https://wemips.ralfgerlich.biz) or clone [WeMIPS](https://github.com/ericwooley/WeMips) somewhere on your computer.
 2. Open the top-most *WeMips.html* in your browser.
 3. You can now use WeMIPS!
-
-## Available MIPS instructions
-
-| Category                         | Instructions                           |
-| -------------------------------- | -------------------------------------- |
-| Arithmetic Operations            | ADD, ADDI, ADDU, ADDIU, SUB, SUBU, LUI |
-| Comparison Instructions          | SLT, SLTI, SLTU, SLTIU                 |
-| Logical Operations               | AND, ANDI, OR, ORI, XOR, XORI, NOR     |
-| Shift Operations                 | SLL, SLLV, SRL, SRLV, SRA, SRAV        |
-| Jump Instructions                | B, J, JAL, JR, JALR                    |
-| Branch Instructions              | BEQ, BNE, BGE, BGT, BLE, BLT           |
-| Branch Instructions (zero comp.) | BEQZ, BNEZ, BGEZ, BGTZ, BLEZ, BLTZ     |
-| Memory Load Instructions         | LB, LBU, LH, LHW, LW, LWL, LWR         |
-| Memory Store Instructions        | SB, SH, SW, SWL, SWR                   |
-
-Note that the floating point unit (FPU) is not implemented!
-
-## Available MIPS Syscalls
-
-The syscalls supported are similar to the [syscalls used by the MARS emulator](https://courses.missouristate.edu/kenvollmar/mars/help/syscallhelp.html):
-
-| Description               | $v0 code | Arguments                                                                                                                                                                     | Return Value                                                                                                                                                                                                                                                                                                                                                       |
-|---------------------------|----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Print Integer             | 1        | $a0 = integer to print                                                                                                                                                        |                                                                                                                                                                                                                                                                                                                                                                    |
-| Print String              | 4        | $a0 = stack address of null-terminated string to print to console                                                                                                             |                                                                                                                                                                                                                                                                                                                                                                    |
-| Read Integer              | 5        |                                                                                                                                                                               | $v0 = contains integer read                                                                                                                                                                                                                                                                                                                                        |
-| Read String               | 8        | $a0 = address of input buffer<br/>$a1 = maximum number of characters to read (this will be one less than the<br/>allowed string since it needs space for the null terminator) | $v0 = contains the length of the input string                                                                                                                                                                                                                                                                                                                      |
-| Confirm Dialog            | 50       | $a0 = address of null-terminated string that is the message to user                                                                                                           | $a0 contains value of user-chosen option<br/>0: OK<br/>1: Cancel                                                                                                                                                                                                                                                                                                   |
-| Input Dialog Int          | 51       | $a0 = address of null-terminated string that is the message to user                                                                                                           | $a0 contains int read<br/>$a1 contains status value<br/>0: OK status<br/>-1: input data cannot be correctly parsed<br/>-2: Cancel was chosen<br/>-3: OK was chosen but no data had been input into field                                                                                                                                                           |
-| Input Dialog String       | 54       | $a0 = address of null-terminated string that is the message to user<br/>$a1 = address of input buffer<br/>$a2 = maximum number of characters to read                          | $a1 contains status value<br/>0: OK status. Buffer contains the input string.<br/>-2: Cancel was chosen. No change to buffer.<br/>-3: OK was chosen but no data had been input into field. No change to buffer.<br/>-4: length of the input string exceeded the specified maximum. Buffer<br/>contains the maximum allowable input string plus a terminating null. |
-| Alert                     | 55       | $a0 = address of null-terminated string that is the message to user                                                                                                           |                                                                                                                                                                                                                                                                                                                                                                    |
-| Alert Int                 | 56       | $a0 = address of null-terminated string that is an information-type message<br/>to user<br/>$a1 = int value to display in string form after the first string                  |                                                                                                                                                                                                                                                                                                                                                                    |
-| Alert String              | 59       | $a0 = address of null-terminated string that is an information-type message<br/>to user<br/>$a1 = address of null-terminated string to display after the first<br/>string     |                                                                                                                                                                                                                                                                                                                                                                    |
-| Generate Save String Code | 60       | $a0 = stack address of null-terminated string to generate code for                                                                                                            |                                                                                                                                                                                                                                                                                                                                                                    |
-| Binary -&gt; Decimal      | 61       | $a0 = stack address of binary string                                                                                                                                          |                                                                                                                                                                                                                                                                                                                                                                    |
-| Decimal -&gt; Binary      | 62       | $a0 = decimal number to convert<br/>$a1 = number of chars to output<br/>$a2 = size of each block to output                                                                    |                                                                                                                                                                                                                                                                                                                                                                    |
 
 ## User's Guide
 
@@ -65,6 +33,41 @@ There are 2 ways to process your code: Stepping, and Running.
   Your program can be interrupted by errors, requests for input, or the completion of your code.
 
 ### Features
+
+#### Constant Expressions
+
+Wherever an immediate value is required, you can use expressions with operands such as addition, subtraction, etc., as long as the result is a constant value.
+
+For example, it is possible to use
+
+```asm
+addi $t0, $zero, (15+3*32)
+```
+
+Operators are evaluated according to their precedence, i.e., addition and subtraction have lower precedence than multiplication and the former are thus evaluated after the latter.
+In the following, operands are listed in decreasing order of precedence (i.e., operators further down in the list are evaluated after operators further up):
+
+- Unary Plus ("+"), Unary Minus ("-"), Bitwise NOT ("~")
+- Multiplication ("\*"), Division ("/"), Remainder ("%")
+- Addition ("+"), Subtraction ("-")
+- Shift Left ("<<"), Arithmetic Shift Right (">>"), Logical Shift Right (">>>")
+- Bitwise AND ("&")
+- Bitwise XOR ("^")
+- Bitwise OR ("|")
+
+It is also possible to extract the lower and higher 16 bits of a constants, respectively, by using the `lo16` and `hi16` functions:
+
+```asm
+lui $t0, hi16(123456)
+addiu $t0, $t0, lo16(123456)
+```
+
+Numerical constants can be provided in decimal, hexadecimal, octal and binary:
+
+- Hexadecimal numbers are specified with a `0x` or `0X` prefix, e.g., `0xabcd`. Case does not matter, i.e. `0XABcd` is the same as `0xabCD`.
+- Octal numbers are prefixed by a `0`, e.g. `0775`.
+- Binary numbers are specified with a `0b` or `0B` prefix, e.g. `0b101001010`.
+- Decimal numbers are specified without any prefix. That also means that they may *not* start with a zero (`0`), otherwise they will be interepreted as octal (which will lead to errors if using non-octal digits).
 
 #### Go to Line Number
 
@@ -109,6 +112,42 @@ A register is composed of 32 bits, and can therefore hold 2<sup>32</sup> differe
 ![Modify Register Value](images/image03.png)
 
 You can click a register's value and overwrite its contents with whatever you want.
+
+## Available MIPS instructions
+
+| Category                         | Instructions                           |
+| -------------------------------- | -------------------------------------- |
+| Arithmetic Operations            | ADD, ADDI, ADDU, ADDIU, SUB, SUBU, LUI |
+| Comparison Instructions          | SLT, SLTI, SLTU, SLTIU                 |
+| Logical Operations               | AND, ANDI, OR, ORI, XOR, XORI, NOR     |
+| Shift Operations                 | SLL, SLLV, SRL, SRLV, SRA, SRAV        |
+| Jump Instructions                | B, J, JAL, JR, JALR                    |
+| Branch Instructions              | BEQ, BNE, BGE, BGT, BLE, BLT           |
+| Branch Instructions (zero comp.) | BEQZ, BNEZ, BGEZ, BGTZ, BLEZ, BLTZ     |
+| Memory Load Instructions         | LB, LBU, LH, LHW, LW, LWL, LWR         |
+| Memory Store Instructions        | SB, SH, SW, SWL, SWR                   |
+
+Note that the floating point unit (FPU) is not implemented!
+
+## Available MIPS Syscalls
+
+The syscalls supported are similar to the [syscalls used by the MARS emulator](https://courses.missouristate.edu/kenvollmar/mars/help/syscallhelp.html):
+
+| Description               | $v0 code | Arguments                                                                                                                                                                     | Return Value                                                                                                                                                                                                                                                                                                                                                       |
+|---------------------------|----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Print Integer             | 1        | $a0 = integer to print                                                                                                                                                        |                                                                                                                                                                                                                                                                                                                                                                    |
+| Print String              | 4        | $a0 = stack address of null-terminated string to print to console                                                                                                             |                                                                                                                                                                                                                                                                                                                                                                    |
+| Read Integer              | 5        |                                                                                                                                                                               | $v0 = contains integer read                                                                                                                                                                                                                                                                                                                                        |
+| Read String               | 8        | $a0 = address of input buffer<br/>$a1 = maximum number of characters to read (this will be one less than the<br/>allowed string since it needs space for the null terminator) | $v0 = contains the length of the input string                                                                                                                                                                                                                                                                                                                      |
+| Confirm Dialog            | 50       | $a0 = address of null-terminated string that is the message to user                                                                                                           | $a0 contains value of user-chosen option<br/>0: OK<br/>1: Cancel                                                                                                                                                                                                                                                                                                   |
+| Input Dialog Int          | 51       | $a0 = address of null-terminated string that is the message to user                                                                                                           | $a0 contains int read<br/>$a1 contains status value<br/>0: OK status<br/>-1: input data cannot be correctly parsed<br/>-2: Cancel was chosen<br/>-3: OK was chosen but no data had been input into field                                                                                                                                                           |
+| Input Dialog String       | 54       | $a0 = address of null-terminated string that is the message to user<br/>$a1 = address of input buffer<br/>$a2 = maximum number of characters to read                          | $a1 contains status value<br/>0: OK status. Buffer contains the input string.<br/>-2: Cancel was chosen. No change to buffer.<br/>-3: OK was chosen but no data had been input into field. No change to buffer.<br/>-4: length of the input string exceeded the specified maximum. Buffer<br/>contains the maximum allowable input string plus a terminating null. |
+| Alert                     | 55       | $a0 = address of null-terminated string that is the message to user                                                                                                           |                                                                                                                                                                                                                                                                                                                                                                    |
+| Alert Int                 | 56       | $a0 = address of null-terminated string that is an information-type message<br/>to user<br/>$a1 = int value to display in string form after the first string                  |                                                                                                                                                                                                                                                                                                                                                                    |
+| Alert String              | 59       | $a0 = address of null-terminated string that is an information-type message<br/>to user<br/>$a1 = address of null-terminated string to display after the first<br/>string     |                                                                                                                                                                                                                                                                                                                                                                    |
+| Generate Save String Code | 60       | $a0 = stack address of null-terminated string to generate code for                                                                                                            |                                                                                                                                                                                                                                                                                                                                                                    |
+| Binary -&gt; Decimal      | 61       | $a0 = stack address of binary string                                                                                                                                          |                                                                                                                                                                                                                                                                                                                                                                    |
+| Decimal -&gt; Binary      | 62       | $a0 = decimal number to convert<br/>$a1 = number of chars to output<br/>$a2 = size of each block to output                                                                    |                                                                                                                                                                                                                                                                                                                                                                    |
 
 ## Other Notes
 
