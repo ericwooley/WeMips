@@ -69,6 +69,20 @@ Numerical constants can be provided in decimal, hexadecimal, octal and binary:
 - Binary numbers are specified with a `0b` or `0B` prefix, e.g. `0b101001010`.
 - Decimal numbers are specified without any prefix. That also means that they may *not* start with a zero (`0`), otherwise they will be interepreted as octal (which will lead to errors if using non-octal digits).
 
+#### Named Constants
+
+It is possible to introduce named constants for use in expressions.
+Simply add a line of the form `symbol = expression`.
+You will be able to use the name `symbol` in other expressions after that assignment.
+
+```asm
+x = 312
+y = x*x
+
+lui $t0, hi16(y)
+addiu $t0, $t0, lo16(y)
+```
+
 #### Go to Line Number
 
 ![Line Number Entry](images/image04.png)

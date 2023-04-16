@@ -120,9 +120,11 @@ Parser.Builtins = {
 /** Parser for (constant) expressions
  * @constructor
  * @param {Parser.TokenStream}  tokenStream The stream of tokens to parse
+ * @param {array} symbols An array of pre-defined symbols
  */
-Parser.ExprParser = function(tokenStream) {
+Parser.ExprParser = function(tokenStream, symbols) {
     this.tokenStream = tokenStream;
+    this.symbols = symbols || {};
 
     /** Parse a primary expression
      * A primary expression is a number literal or a parenthesized expression.
@@ -134,6 +136,13 @@ Parser.ExprParser = function(tokenStream) {
             let expr = this.parseExpression();
             this.tokenStream.consume(Parser.TokenType.RParen);
             return expr;
+        } else if (this.tokenStream.checkNext(Parser.TokenType.Identifier)) {
+            let symbol = this.tokenStream.consume();
+            if (symbol.value in this.symbols) {
+                return this.symbols[symbol.value];
+            } else {
+                throw new Parser.UnknownSymbolError(symbol);
+            }
         } else {
             let number = this.tokenStream.consume(Parser.TokenType.Number);
             return number.value;
@@ -146,7 +155,8 @@ Parser.ExprParser = function(tokenStream) {
      */
     this.parsePostfixExpression = function() {
         let token= this.tokenStream.lookahead();
-        if (token.type == Parser.TokenType.Identifier) {
+        if (token.type == Parser.TokenType.Identifier &amp;&amp;
+            this.tokenStream.checkNext(Parser.TokenType.LParen, 1)) {
             if (token.value in Parser.Builtins) {
                 let builtinFunction = Parser.Builtins[token.value];
                 this.tokenStream.consume();
@@ -281,11 +291,12 @@ Parser.ExprParser = function(tokenStream) {
 
 /** Create an {@link Parser.ExprParser} from a string
  * @param {string}  input The string to parse
+ * @param {array} symbols An array of pre-defined symbols
  * @returns {Parser.ExprParser} The expression parser for parsing the string
  */
-Parser.exprParserFromString = function(input) {
+Parser.exprParserFromString = function(input, symbols) {
     let tokenStream = Parser.tokenStreamFromString(input);
-    return new Parser.ExprParser(tokenStream);
+    return new Parser.ExprParser(tokenStream, symbols);
 }
 </code></pre>
         </article>
@@ -297,13 +308,13 @@ Parser.exprParserFromString = function(input) {
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Parser.Error.html">Error</a></li><li><a href="Parser.ExprParser.html">ExprParser</a></li><li><a href="Parser.InstructionParser.html">InstructionParser</a></li><li><a href="Parser.Lexer.html">Lexer</a></li><li><a href="Parser.LexerError.html">LexerError</a></li><li><a href="Parser.OperandParser.html">OperandParser</a></li><li><a href="Parser.ParseError.html">ParseError</a></li><li><a href="Parser.Token.html">Token</a></li><li><a href="Parser.TokenStream.html">TokenStream</a></li><li><a href="Parser.UnknownInstructionError.html">UnknownInstructionError</a></li><li><a href="global.html#Stack">Stack</a></li></ul><h3>Global</h3><ul><li><a href="global.html#deepEqual">deepEqual</a></li><li><a href="global.html#equal">equal</a></li><li><a href="global.html#getDataAtAddress">getDataAtAddress</a></li><li><a href="global.html#mipsCode">mipsCode</a></li><li><a href="global.html#mipsEmulator">mipsEmulator</a></li><li><a href="global.html#notDeepEqual">notDeepEqual</a></li><li><a href="global.html#notEqual">notEqual</a></li><li><a href="global.html#notPropEqual">notPropEqual</a></li><li><a href="global.html#notStrictEqual">notStrictEqual</a></li><li><a href="global.html#ok">ok</a></li><li><a href="global.html#onChange">onChange</a></li><li><a href="global.html#pointerToBottomOfStack">pointerToBottomOfStack</a></li><li><a href="global.html#propEqual">propEqual</a></li><li><a href="global.html#regName">regName</a></li><li><a href="global.html#reset">reset</a></li><li><a href="global.html#setDataAtAddress">setDataAtAddress</a></li><li><a href="global.html#strictEqual">strictEqual</a></li><li><a href="global.html#val">val</a></li><li><a href="global.html#writable">writable</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Parser.Error.html">Error</a></li><li><a href="Parser.ExprParser.html">ExprParser</a></li><li><a href="Parser.InstructionParser.html">InstructionParser</a></li><li><a href="Parser.Lexer.html">Lexer</a></li><li><a href="Parser.LexerError.html">LexerError</a></li><li><a href="Parser.OperandParser.html">OperandParser</a></li><li><a href="Parser.ParseError.html">ParseError</a></li><li><a href="Parser.Token.html">Token</a></li><li><a href="Parser.TokenStream.html">TokenStream</a></li><li><a href="Parser.UnknownInstructionError.html">UnknownInstructionError</a></li><li><a href="Parser.UnknownSymbolError.html">UnknownSymbolError</a></li><li><a href="global.html#Stack">Stack</a></li></ul><h3>Global</h3><ul><li><a href="global.html#deepEqual">deepEqual</a></li><li><a href="global.html#equal">equal</a></li><li><a href="global.html#getDataAtAddress">getDataAtAddress</a></li><li><a href="global.html#mipsCode">mipsCode</a></li><li><a href="global.html#mipsEmulator">mipsEmulator</a></li><li><a href="global.html#notDeepEqual">notDeepEqual</a></li><li><a href="global.html#notEqual">notEqual</a></li><li><a href="global.html#notPropEqual">notPropEqual</a></li><li><a href="global.html#notStrictEqual">notStrictEqual</a></li><li><a href="global.html#ok">ok</a></li><li><a href="global.html#onChange">onChange</a></li><li><a href="global.html#pointerToBottomOfStack">pointerToBottomOfStack</a></li><li><a href="global.html#propEqual">propEqual</a></li><li><a href="global.html#regName">regName</a></li><li><a href="global.html#reset">reset</a></li><li><a href="global.html#setDataAtAddress">setDataAtAddress</a></li><li><a href="global.html#strictEqual">strictEqual</a></li><li><a href="global.html#val">val</a></li><li><a href="global.html#writable">writable</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Sun Apr 16 2023 21:03:38 GMT+0200 (Mitteleuropäische Sommerzeit)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Sun Apr 16 2023 21:04:47 GMT+0200 (Mitteleuropäische Sommerzeit)
 </footer>
 
 <script> prettyPrint(); </script>
