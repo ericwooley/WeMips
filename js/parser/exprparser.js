@@ -1,5 +1,13 @@
 /** A dictionary of binary operator token types, their associated precedence and evaluation functions */
 Parser.BinaryOperators = {}
+Parser.BinaryOperators[Parser.TokenType.LogicalOR] = {
+    evaluate: function(left, right) { return left || right; },
+    precedence: 15
+}
+Parser.BinaryOperators[Parser.TokenType.LogicalAND] = {
+    evaluate: function(left, right) { return left && right; },
+    precedence: 14
+}
 Parser.BinaryOperators[Parser.TokenType.BitwiseOR] = {
     evaluate: function(left, right) { return left | right; },
     precedence: 13
@@ -11,6 +19,30 @@ Parser.BinaryOperators[Parser.TokenType.BitwiseXOR] = {
 Parser.BinaryOperators[Parser.TokenType.BitwiseAND] = {
     evaluate: function(left, right) { return left & right; },
     precedence: 11
+}
+Parser.BinaryOperators[Parser.TokenType.Equals] = {
+    evaluate: function(left, right) { return left == right; },
+    precedence: 10
+}
+Parser.BinaryOperators[Parser.TokenType.NotEquals] = {
+    evaluate: function(left, right) { return left != right; },
+    precedence: 10
+}
+Parser.BinaryOperators[Parser.TokenType.LessThan] = {
+    evaluate: function(left, right) { return left < right; },
+    precedence: 9
+}
+Parser.BinaryOperators[Parser.TokenType.LessEqual] = {
+    evaluate: function(left, right) { return left <= right; },
+    precedence: 9
+}
+Parser.BinaryOperators[Parser.TokenType.GreaterThan] = {
+    evaluate: function(left, right) { return left > right; },
+    precedence: 9
+}
+Parser.BinaryOperators[Parser.TokenType.GreaterEqual] = {
+    evaluate: function(left, right) { return left >= right; },
+    precedence: 9
 }
 Parser.BinaryOperators[Parser.TokenType.LogicalShiftLeft] = {
     evaluate: function(left, right) { return left << right; },
@@ -60,9 +92,11 @@ Parser.Builtins = {
 /** Parser for (constant) expressions
  * @constructor
  * @param {Parser.TokenStream}  tokenStream The stream of tokens to parse
+ * @param {array} symbols An array of pre-defined symbols
  */
-Parser.ExprParser = function(tokenStream) {
+Parser.ExprParser = function(tokenStream, symbols) {
     this.tokenStream = tokenStream;
+    this.symbols = symbols || {};
 
     /** Parse a primary expression
      * A primary expression is a number literal or a parenthesized expression.
@@ -74,6 +108,13 @@ Parser.ExprParser = function(tokenStream) {
             let expr = this.parseExpression();
             this.tokenStream.consume(Parser.TokenType.RParen);
             return expr;
+        } else if (this.tokenStream.checkNext(Parser.TokenType.Identifier)) {
+            let symbol = this.tokenStream.consume();
+            if (symbol.value in this.symbols) {
+                return this.symbols[symbol.value];
+            } else {
+                throw new Parser.UnknownSymbolError(symbol);
+            }
         } else {
             let number = this.tokenStream.consume(Parser.TokenType.Number);
             return number.value;
@@ -86,7 +127,8 @@ Parser.ExprParser = function(tokenStream) {
      */
     this.parsePostfixExpression = function() {
         let token= this.tokenStream.lookahead();
-        if (token.type == Parser.TokenType.Identifier) {
+        if (token.type == Parser.TokenType.Identifier &&
+            this.tokenStream.checkNext(Parser.TokenType.LParen, 1)) {
             if (token.value in Parser.Builtins) {
                 let builtinFunction = Parser.Builtins[token.value];
                 this.tokenStream.consume();
@@ -192,6 +234,19 @@ Parser.ExprParser = function(tokenStream) {
         }
     }
 
+    this.parseConditionalExpression = function() {
+        let cond = this.parseBinaryExpression();
+        if (this.tokenStream.checkNext(Parser.TokenType.QuestionMark)) {
+            this.tokenStream.consume();
+            let trueValue = this.parseExpression();
+            this.tokenStream.consume(Parser.TokenType.Colon);
+            let falseValue = this.parseConditionalExpression();
+            return (cond?trueValue:falseValue);
+        } else {
+            return cond;
+        }
+    }
+
     /** Parse an expression
      * An expression is a binary expression.
      * 
@@ -202,15 +257,16 @@ Parser.ExprParser = function(tokenStream) {
      * @returns {number} The value of the expression
      */
     this.parseExpression = function() {
-        return this.parseBinaryExpression();
+        return this.parseConditionalExpression();
     }
 }
 
 /** Create an {@link Parser.ExprParser} from a string
  * @param {string}  input The string to parse
+ * @param {array} symbols An array of pre-defined symbols
  * @returns {Parser.ExprParser} The expression parser for parsing the string
  */
-Parser.exprParserFromString = function(input) {
+Parser.exprParserFromString = function(input, symbols) {
     let tokenStream = Parser.tokenStreamFromString(input);
-    return new Parser.ExprParser(tokenStream);
+    return new Parser.ExprParser(tokenStream, symbols);
 }

@@ -80,13 +80,18 @@ Your program can be interrupted by errors, requests for input, or the completion
 <p>Operators are evaluated according to their precedence, i.e., addition and subtraction have lower precedence than multiplication and the former are thus evaluated after the latter.
 In the following, operands are listed in decreasing order of precedence (i.e., operators further down in the list are evaluated after operators further up):</p>
 <ul>
-<li>Unary Plus (&quot;+&quot;), Unary Minus (&quot;-&quot;), Bitwise NOT (&quot;~&quot;)</li>
+<li>Unary Plus (&quot;+&quot;), Unary Minus (&quot;-&quot;), Bitwise NOT (&quot;~&quot;), Logical NOT (&quot;!&quot;)</li>
 <li>Multiplication (&quot;*&quot;), Division (&quot;/&quot;), Remainder (&quot;%&quot;)</li>
 <li>Addition (&quot;+&quot;), Subtraction (&quot;-&quot;)</li>
 <li>Shift Left (&quot;&lt;&lt;&quot;), Arithmetic Shift Right (&quot;&gt;&gt;&quot;), Logical Shift Right (&quot;&gt;&gt;&gt;&quot;)</li>
+<li>Less Than (&quot;&lt;&quot;), Less Than or Equal (&quot;&lt;=&quot;), Greater Than or Equal (&quot;&gt;=&quot;), Greater Than (&quot;&gt;&quot;)</li>
+<li>Equals (&quot;==&quot;), Not Equals (&quot;!=&quot;)</li>
 <li>Bitwise AND (&quot;&amp;&quot;)</li>
 <li>Bitwise XOR (&quot;^&quot;)</li>
 <li>Bitwise OR (&quot;|&quot;)</li>
+<li>Logical AND (&quot;&amp;&amp;&quot;)</li>
+<li>Logical OR (&quot;||&quot;)</li>
+<li>Ternary Conditional Operator (&quot;cond?trueValue:falseValue&quot;)</li>
 </ul>
 <p>It is also possible to extract the lower and higher 16 bits of a constants, respectively, by using the <code>lo16</code> and <code>hi16</code> functions:</p>
 <pre class="prettyprint source lang-asm"><code>lui $t0, hi16(123456)
@@ -99,6 +104,16 @@ addiu $t0, $t0, lo16(123456)
 <li>Binary numbers are specified with a <code>0b</code> or <code>0B</code> prefix, e.g. <code>0b101001010</code>.</li>
 <li>Decimal numbers are specified without any prefix. That also means that they may <em>not</em> start with a zero (<code>0</code>), otherwise they will be interepreted as octal (which will lead to errors if using non-octal digits).</li>
 </ul>
+<h4>Named Constants</h4>
+<p>It is possible to introduce named constants for use in expressions.
+Simply add a line of the form <code>symbol = expression</code>.
+You will be able to use the name <code>symbol</code> in other expressions after that assignment.</p>
+<pre class="prettyprint source lang-asm"><code>x = 312
+y = x*x
+
+lui $t0, hi16(y)
+addiu $t0, $t0, lo16(y)
+</code></pre>
 <h4>Go to Line Number</h4>
 <p><img src="images/image04.png" alt="Line Number Entry"></p>
 <p>You can type a line number and press Go to jump to a specific line of code.
@@ -296,13 +311,13 @@ You can edit it in binary mode to save a binary representation, as you could wit
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Parser.Error.html">Error</a></li><li><a href="Parser.ExprParser.html">ExprParser</a></li><li><a href="Parser.InstructionParser.html">InstructionParser</a></li><li><a href="Parser.Lexer.html">Lexer</a></li><li><a href="Parser.LexerError.html">LexerError</a></li><li><a href="Parser.OperandParser.html">OperandParser</a></li><li><a href="Parser.ParseError.html">ParseError</a></li><li><a href="Parser.Token.html">Token</a></li><li><a href="Parser.TokenStream.html">TokenStream</a></li><li><a href="Parser.UnknownInstructionError.html">UnknownInstructionError</a></li><li><a href="global.html#Stack">Stack</a></li></ul><h3>Global</h3><ul><li><a href="global.html#deepEqual">deepEqual</a></li><li><a href="global.html#equal">equal</a></li><li><a href="global.html#getDataAtAddress">getDataAtAddress</a></li><li><a href="global.html#mipsCode">mipsCode</a></li><li><a href="global.html#mipsEmulator">mipsEmulator</a></li><li><a href="global.html#notDeepEqual">notDeepEqual</a></li><li><a href="global.html#notEqual">notEqual</a></li><li><a href="global.html#notPropEqual">notPropEqual</a></li><li><a href="global.html#notStrictEqual">notStrictEqual</a></li><li><a href="global.html#ok">ok</a></li><li><a href="global.html#onChange">onChange</a></li><li><a href="global.html#pointerToBottomOfStack">pointerToBottomOfStack</a></li><li><a href="global.html#propEqual">propEqual</a></li><li><a href="global.html#regName">regName</a></li><li><a href="global.html#reset">reset</a></li><li><a href="global.html#setDataAtAddress">setDataAtAddress</a></li><li><a href="global.html#strictEqual">strictEqual</a></li><li><a href="global.html#val">val</a></li><li><a href="global.html#writable">writable</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Parser.Error.html">Error</a></li><li><a href="Parser.ExprParser.html">ExprParser</a></li><li><a href="Parser.InstructionParser.html">InstructionParser</a></li><li><a href="Parser.Lexer.html">Lexer</a></li><li><a href="Parser.LexerError.html">LexerError</a></li><li><a href="Parser.OperandParser.html">OperandParser</a></li><li><a href="Parser.ParseError.html">ParseError</a></li><li><a href="Parser.Token.html">Token</a></li><li><a href="Parser.TokenStream.html">TokenStream</a></li><li><a href="Parser.UnknownInstructionError.html">UnknownInstructionError</a></li><li><a href="Parser.UnknownSymbolError.html">UnknownSymbolError</a></li><li><a href="global.html#Stack">Stack</a></li></ul><h3>Global</h3><ul><li><a href="global.html#deepEqual">deepEqual</a></li><li><a href="global.html#equal">equal</a></li><li><a href="global.html#getDataAtAddress">getDataAtAddress</a></li><li><a href="global.html#mipsCode">mipsCode</a></li><li><a href="global.html#mipsEmulator">mipsEmulator</a></li><li><a href="global.html#notDeepEqual">notDeepEqual</a></li><li><a href="global.html#notEqual">notEqual</a></li><li><a href="global.html#notPropEqual">notPropEqual</a></li><li><a href="global.html#notStrictEqual">notStrictEqual</a></li><li><a href="global.html#ok">ok</a></li><li><a href="global.html#onChange">onChange</a></li><li><a href="global.html#pointerToBottomOfStack">pointerToBottomOfStack</a></li><li><a href="global.html#propEqual">propEqual</a></li><li><a href="global.html#regName">regName</a></li><li><a href="global.html#reset">reset</a></li><li><a href="global.html#setDataAtAddress">setDataAtAddress</a></li><li><a href="global.html#strictEqual">strictEqual</a></li><li><a href="global.html#val">val</a></li><li><a href="global.html#writable">writable</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Sun Apr 16 2023 17:50:55 GMT+0200 (Mitteleuropäische Sommerzeit)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Sun Apr 16 2023 20:59:53 GMT+0200 (Mitteleuropäische Sommerzeit)
 </footer>
 
 <script> prettyPrint(); </script>

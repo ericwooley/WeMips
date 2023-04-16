@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Class: Token</title>
+    <title>JSDoc: Class: UnknownSymbolError</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,7 +17,7 @@
 
 <div id="main">
 
-    <h1 class="page-title">Class: Token</h1>
+    <h1 class="page-title">Class: UnknownSymbolError</h1>
 
     
 
@@ -28,7 +28,7 @@
 
 <header>
     
-        <h2><span class="attribs"><span class="type-signature"></span></span>Token<span class="signature">(type, value, begin, end)</span><span class="type-signature"></span></h2>
+        <h2><span class="attribs"><span class="type-signature"></span></span>UnknownSymbolError<span class="signature">(token)</span><span class="type-signature"></span></h2>
         
     
 </header>
@@ -41,7 +41,7 @@
     
 
     
-    <h4 class="name" id="Token"><span class="type-signature"></span>new Token<span class="signature">(type, value, begin, end)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="UnknownSymbolError"><span class="type-signature"></span>new UnknownSymbolError<span class="signature">(token)</span><span class="type-signature"></span></h4>
     
 
     
@@ -49,7 +49,7 @@
 
 
 <div class="description">
-    Token object
+    Exception for undefined symbolsThrown when the parser encounters an undefined symbol.
 </div>
 
 
@@ -85,13 +85,13 @@
 
         <tr>
             
-                <td class="name"><code>type</code></td>
+                <td class="name"><code>token</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">string</span>
+<span class="param-type"><a href="Parser.Token.html">Parser.Token</a></span>
 
 
             
@@ -101,71 +101,7 @@
 
             
 
-            <td class="description last">The type of token</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>value</code></td>
-            
-
-            <td class="type">
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The value of the token</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>begin</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The start index of the input region represented by the token</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>end</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The index of the character one past the end of the input region represented by the token</td>
+            <td class="description last">The relevant token that led to the exception</td>
         </tr>
 
     
@@ -206,7 +142,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="parser_lexer.js.html">parser/lexer.js</a>, <a href="parser_lexer.js.html#line8">line 8</a>
+        <a href="parser_utils.js.html">parser/utils.js</a>, <a href="parser_utils.js.html#line61">line 61</a>
     </li></ul></dd>
     
 

@@ -142,7 +142,14 @@ function MipsEmulator(mipsArgs){
          * @member mipsCode
          * @type {Object}
          */
-        labels: {}
+        labels: {},
+        /**
+         * Hashtable of symbols with constant values
+         * @property symbols
+         * @member mipsCode
+         * @type {number}
+         */
+        symbols: {}
     };
 
     // Public methods
@@ -285,6 +292,7 @@ function MipsEmulator(mipsArgs){
     this.reset = function() {
         mipsCode.labels = {};
         mipsCode.code = [null];
+        mipsCode.symbols = {};
         stack.reset();
         registers.$sp.val = stack.pointerToBottomOfStack();
     },
@@ -592,11 +600,18 @@ function MipsEmulator(mipsArgs){
             text: line
         };
 
-        let instructionParser = Parser.instructionParserFromString(line);
+        let instructionParser = Parser.instructionParserFromString(line, mipsCode.symbols);
         try {
             let instruction = instructionParser.parseLine();
-            for (label of instruction.labels) {
-                mipsCode.labels[label] = LINE;
+            if (instruction.symbols) {
+                for (symbol of instruction.symbols) {
+                    mipsCode.symbols[symbol.name] = symbol.value;
+                }
+            }
+            if (instruction.labels) {
+                for (label of instruction.labels) {
+                    mipsCode.labels[label] = LINE;
+                }
             }
             if (instruction.instr) {
                 LINE.instruction = instruction.instr.mnemonic;

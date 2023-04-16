@@ -43,13 +43,37 @@ test("Lexer", function() {
 });
 
 test('Expression Parser', function() {
-    let parseExpression = function(text) {
-        let parser = Parser.exprParserFromString(text);
+    let parseExpression = function(text, symbols) {
+        let parser = Parser.exprParserFromString(text, symbols);
         return parser.parseExpression();
     };
     
+    equal(parseExpression('1?10:15'), 10);
+    equal(parseExpression('0?10:15'), 15);
+    ok(parseExpression('5||9'));
+    ok(parseExpression('5||0'));
+    ok(parseExpression('0||9'));
+    ok(!parseExpression('0||0'));
+    ok(parseExpression('5&&9'));
+    ok(!parseExpression('5&&0'));
+    ok(!parseExpression('0&&9'));
+    ok(!parseExpression('0&&0'));
     equal(parseExpression('5|9'), 13);
     equal(parseExpression('5&9'), 1);
+    ok(parseExpression('5==5'));
+    ok(!parseExpression('5==4'));
+    ok(!parseExpression('5!=5'));
+    ok(parseExpression('5!=4'));
+    ok(!parseExpression('5<5'));
+    ok(parseExpression('4<5'));
+    ok(!parseExpression('5>5'));
+    ok(parseExpression('5>4'));
+    ok(!parseExpression('4>=5'));
+    ok(parseExpression('5>=5'));
+    ok(parseExpression('5>=4'));
+    ok(!parseExpression('5<=4'));
+    ok(parseExpression('5<=5'));
+    ok(parseExpression('4<=5'));
     equal(parseExpression('5^9'), 12);
     equal(parseExpression('1+2'), 3);
     equal(parseExpression('1-2'), -1);
@@ -67,6 +91,8 @@ test('Expression Parser', function() {
     equal(parseExpression('(1+2)*3'), 9);
     equal(parseExpression('lo16(0x12345678)'), 0x5678);
     equal(parseExpression('hi16(0x12345678)'), 0x1234);
+
+    equal(parseExpression('offset+5', {offset: -7}), -2);
 });
 
 test('Operand Parser', function() {
@@ -92,15 +118,15 @@ test('Operand Parser', function() {
 });
 
 test('Instruction Parsing', function() {
-    function parseLine(line) {
-        let instructionParser = Parser.instructionParserFromString(line);
+    function parseLine(line, symbols) {
+        let instructionParser = Parser.instructionParserFromString(line, symbols);
         let lineInfo = instructionParser.parseLine();
         instructionParser.tokenStream.enforceCompletion()
         return lineInfo;
     }
-    function isValidLine(line) {
+    function isValidLine(line, symbols) {
         try {
-            parseLine(line);
+            parseLine(line, symbols);
             return true;
         } catch (e) {
             if (e instanceof Parser.Error) {
@@ -171,4 +197,25 @@ test('Instruction Parsing', function() {
          }
         }
     );
+
+    ok(isValidLine("c = 5"), "We can assign symbols");
+    ok(isValidLine("c = (5+5)*2"), "We can assign symbols with complex expressions");
+
+    deepEqual(parseLine('c = (5+5)*2'),
+        {
+            symbols: [
+                {
+                    name: 'c',
+                    value: 20
+                }
+            ]
+        }
+    );
+
+    ok(isValidLine("ADDI $t0, $zero, lo16(c+5)",
+                    {
+                        'c': 15
+                    }),
+                    "We can use symbols");
+    ok(!isValidLine("ADDI $t0, $zero, lo16(c+5)"), "We cannot use undefined symbols");
 });
