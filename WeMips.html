@@ -1,210 +1,213 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>WeMips: Online Mips Emulator </title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- Bootstrap -->
-    <link href="css/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
-    <link href="css/main.css" rel="stylesheet" >
-    <style>
+<head>
+  <title>WeMips: Online Mips Emulator </title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Bootstrap -->
+  <link href="css/bootstrap/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="css/main.css" rel="stylesheet">
+  <style>
 
-    </style>
-    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
-    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
-    <!--[if lt IE 9]>
+  </style>
+  <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+  <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+  <!--[if lt IE 9]>
       <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
       <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
     <![endif]-->
-    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+  <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
 
-    <link rel="stylesheet" href="css/codemirror.css">
-    <script src="js/lib/codemirror.js"></script>
-    <script src="js/lib/jquery.min.js"></script>
-    <script src="js/lib/underscore-min.js"></script>
-    <script src="js/lib/mipsMode.js"></script>
-    <script src="js/lib.js"></script>
-    <script src="js/examples.js"></script>
-    <script src="js/parser/utils.js"></script>
-    <script src="js/parser/lexer.js"></script>
-    <script src="js/parser/tokenstream.js"></script>
-    <script src="js/parser/exprparser.js"></script>
-    <script src="js/parser/operandparser.js"></script>
-    <script src="js/parser/instructionparser.js"></script>
-    <script src="js/mips_syscalls.js"></script>
-    <script src="js/mips_instructions.js"></script>
-    <script src="js/mips_emulator.js"></script>
-    <script src="js/stack.js"></script>
-    <script src="js/main.js"></script>
-  </head>
-  <body>
-    <div id="exampleHolder" style='display: none'>
-    </div>
-    <div id="main" class="container">
-      <div class='row'>
-        <div class='col-lg-2'>
-          <div class="input-group input-group-sm">
-            <span class="input-group-addon">Line: </span>
-            <input type="text" id="currentLineInput" class="form-control" value='1'>
-            <span class="input-group-btn">
-              <button class="btn btn-default" id="goToLineButton" type="button">Go!</button>
-            </span>
-          </div><!-- /input-group -->
-        </div>
-        <div class='col-lg-6'>
+  <link rel="stylesheet" href="css/codemirror.css">
+  <script src="js/lib/codemirror.js"></script>
+  <script src="js/lib/jquery.min.js"></script>
+  <script src="js/lib/underscore-min.js"></script>
+  <script src="js/lib/mipsMode.js"></script>
+  <script src="js/lib.js"></script>
+  <script src="js/examples.js"></script>
+  <script src="js/parser/utils.js"></script>
+  <script src="js/parser/lexer.js"></script>
+  <script src="js/parser/tokenstream.js"></script>
+  <script src="js/parser/exprparser.js"></script>
+  <script src="js/parser/operandparser.js"></script>
+  <script src="js/parser/instructionparser.js"></script>
+  <script src="js/mips_syscalls.js"></script>
+  <script src="js/mips_instructions.js"></script>
+  <script src="js/mips_emulator.js"></script>
+  <script src="js/stack.js"></script>
+  <script src="js/main.js"></script>
+</head>
+<body>
+  <div id="exampleHolder" style='display: none'>
+  </div>
+  <div id="main" class="container">
+    <div class='row'>
+      <div class='col-lg-2'>
+        <div class="input-group input-group-sm">
+          <span class="input-group-addon">Line: </span>
+          <input type="text" id="currentLineInput" class="form-control" value='1'>
+          <span class="input-group-btn">
+            <button class="btn btn-default" id="goToLineButton" type="button">Go!</button>
+          </span>
+        </div><!-- /input-group -->
+      </div>
+      <div class='col-lg-6'>
         <button id="showHideDemos" class='' onclick="$('#codeLoaders').toggle()">Show/Hide Demos</button>
-          <div class="btn-group" id="codeLoaders" style='display: none; margin-top: 10px'>
-          </div>
-        </div>
-        <div class='col-lg-4' align="right">
-          <a href="docs/index.html" target='about_blank'>Documentation</a> |
-          <a href="unit_tests/index.html" target="about_blank">Unit Tests</a>
+        <div class="btn-group" id="codeLoaders" style='display: none; margin-top: 10px'>
         </div>
       </div>
-      <div class="row">
-        <div class="col-lg-8">
+      <div class='col-lg-4' align="right">
+        <a href="docs/index.html" target='about_blank'>Documentation</a> |
+        <a href="unit_tests/index.html" target="about_blank">Unit Tests</a>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-lg-8">
 
-          <div id="editorContainer" class="CodeMirror">
-            <textarea id="editor" >
-# Not sure what to do now? Enter your mips code here 
-# and hit step (to run one line at a time) or 
-# hit run (to run them all at once)
+        <div id="editorContainer" class="CodeMirror">
+          <textarea id="editor">
+            # Not sure what to do now? Enter your mips code here
+            # and hit step (to run one line at a time) or
+            # hit run (to run them all at once)
 
-# Keep an eye on the register and stack tracker
-# to see what changes are being made to them.
+            # Keep an eye on the register and stack tracker
+            # to see what changes are being made to them.
 
-# If you want to preload the stack or some registers
-# with data, you can click on them to change edit them.
+            # If you want to preload the stack or some registers
+            # with data, you can click on them to change edit them.
 
-# If you would like more infomation, check out the user
-# guide linked in the menu.
+            # If you would like more infomation, check out the user
+            # guide linked in the menu.
 
 
-ADDI $s0, $zero, 10
-ADDI $s1, $zero, 9
-SB $s0, -10($sp)
-SB $s1, -9($sp)
-LB $s2, -9($sp)
-ADDI $sp, $sp, -1
-ADDI $sp, $sp, -2
-ADDI $sp, $sp, -3
-ADDI $sp, $sp, -5
-ADDI $sp, $sp, -9
-ADDI $sp, $sp, -14
-ADDI $sp, $sp, -23
-ADDI $sp, $sp, -37
-LB $s3, 0($sp)</textarea>
+            ADDI $s0, $zero, 10
+            ADDI $s1, $zero, 9
+            SB $s0, -10($sp)
+            SB $s1, -9($sp)
+            LB $s2, -9($sp)
+            ADDI $sp, $sp, -1
+            ADDI $sp, $sp, -2
+            ADDI $sp, $sp, -3
+            ADDI $sp, $sp, -5
+            ADDI $sp, $sp, -9
+            ADDI $sp, $sp, -14
+            ADDI $sp, $sp, -23
+            ADDI $sp, $sp, -37
+            LB $s3, 0($sp)</textarea>
           <div class="input-group input-group-sm">
             <span class="input-group-addon">Link To Code</span>
             <input type="text" id="linkToCode" class="form-control" value=''>
           </div><!-- /input-group -->
-           <div class="input-group input-group-sm">
+          <div class="input-group input-group-sm">
             <span class="input-group-addon">Embed</span>
             <input type="text" id="embedCode" class="form-control" value=''>
           </div><!-- /input-group -->
-          </div>
-          <br />
-          <span class='pull-right'>
-            Created by: <a href="" target="about_blank">Ortal Yahdav</a> &amp; <a target="about_blank" href="http://www.ericwooley.com">Eric Wooley</a>
-          </span>
-          <br />
-          <span class='pull-right'>
-            Updated by: <a href="https://ralfgerlich.biz" target="about_blank">Ralf Gerlich</a> (see <a href="https://github.com/ralfgerlich/WeMips">GitHub</a>)
-          </span>
-          <hr />
         </div>
+        <br />
+        <span class='pull-right'>
+          Created by: <a href="" target="about_blank">Ortal Yahdav</a> &amp; <a target="about_blank"
+            href="http://github.com/ericwooley">Eric Wooley</a>
+        </span>
+        <br />
+        <span class='pull-right'>
+          Updated by: <a href="https://ralfgerlich.biz" target="about_blank">Ralf Gerlich</a> (see <a
+            href="https://github.com/ralfgerlich/WeMips">GitHub</a>)
+        </span>
+        <hr />
+      </div>
 
-        <div id="registers" class="col-lg-4">
-          <button id="step"> Step </button>
-          <button id="run"> Run </button>
-          <ul>
-            <li><input type="checkbox" id="autoSwitch" checked><label for="autoSwitch">Enable auto switching</label></li>
-            <li><input type="checkbox" id="pseudoSwitch" checked><label for="pseudoSwitch">Enable pseudo-instructions</label></li>
-          </ul>
-          <!-- Nav tabs -->
-          <ul class="nav nav-tabs">
-            <li class='active'><a href="#s-registers" data-toggle="tab">S</a></li>
-            <li><a href="#t-registers" data-toggle="tab">T</a></li>
-            <li><a href="#a-registers" data-toggle="tab">A</a></li>
-            <li><a href="#v-registers" data-toggle="tab">V</a></li>
-            <li><a href="#stack-container-div" data-toggle="tab">Stack</a></li>
-            <li><a href="#logWrapper" data-toggle="tab">Log</a></li>
-          </ul>
+      <div id="registers" class="col-lg-4">
+        <button id="step"> Step </button>
+        <button id="run"> Run </button>
+        <ul>
+          <li><input type="checkbox" id="autoSwitch" checked><label for="autoSwitch">Enable auto switching</label></li>
+          <li><input type="checkbox" id="pseudoSwitch" checked><label for="pseudoSwitch">Enable
+              pseudo-instructions</label></li>
+        </ul>
+        <!-- Nav tabs -->
+        <ul class="nav nav-tabs">
+          <li class='active'><a href="#s-registers" data-toggle="tab">S</a></li>
+          <li><a href="#t-registers" data-toggle="tab">T</a></li>
+          <li><a href="#a-registers" data-toggle="tab">A</a></li>
+          <li><a href="#v-registers" data-toggle="tab">V</a></li>
+          <li><a href="#stack-container-div" data-toggle="tab">Stack</a></li>
+          <li><a href="#logWrapper" data-toggle="tab">Log</a></li>
+        </ul>
 
-          <!-- Tab panes -->
-          <div id="dataTabs" class="tab-content">
-            <div class="tab-pane active" id="s-registers">
-              <ul class='registers-container' id="registers-s">
-                <li id="s0"></li>
-                <li id="s1"></li>
-                <li id="s2"></li>
-                <li id="s3"></li>
-                <li id="s4"></li>
-                <li id="s5"></li>
-                <li id="s6"></li>
-                <li id="s7"></li>
-              </ul>
-            </div>
-            <div class="tab-pane" id="t-registers">
-              <ul class='registers-container' id="registers-t">
-                <li id="t0"></li>
-                <li id="t1"></li>
-                <li id="t2"></li>
-                <li id="t3"></li>
-                <li id="t4"></li>
-                <li id="t5"></li>
-                <li id="t6"></li>
-                <li id="t7"></li>
-                <li id="t8"></li>
-                <li id="t9"></li>
-              </ul>
-            </div>
-            <div class="tab-pane" id="a-registers">
-              <ul class='registers-container' id="registers-a">
-                <li id="a0"></li>
-                <li id="a1"></li>
-                <li id="a2"></li>
-                <li id="a3"></li>
-              </ul>
-            </div>
-            <div class="tab-pane" id="v-registers">
-              <ul class='registers-container' id="registers-v">
-                <li id="v0"></li>
-                <li id="v1"></li>
-              </ul>
-            </div>
-            <div class="tab-pane" id="stack-container-div">
-              <div class='stack-container' id="stack">
-                <div id='stackOptions'>
-                  <input type="checkbox" id='optionShowRelative'> <span id="addrTypeText">show relative address<span>
-                  <select class="form-control" id="stackDisplayType">
-                    <option>Integer</option>
-                    <option>Ascii</option>
-                    <option>Binary</option>
-                  </select>
-                </div>
-                <div id='stackRep'>
-                  <span class="glyphicon glyphicon-arrow-right"></span>
-                  <span class='' id="stackBottom">
-                    ------------ Frame Pointer ------------
+        <!-- Tab panes -->
+        <div id="dataTabs" class="tab-content">
+          <div class="tab-pane active" id="s-registers">
+            <ul class='registers-container' id="registers-s">
+              <li id="s0"></li>
+              <li id="s1"></li>
+              <li id="s2"></li>
+              <li id="s3"></li>
+              <li id="s4"></li>
+              <li id="s5"></li>
+              <li id="s6"></li>
+              <li id="s7"></li>
+            </ul>
+          </div>
+          <div class="tab-pane" id="t-registers">
+            <ul class='registers-container' id="registers-t">
+              <li id="t0"></li>
+              <li id="t1"></li>
+              <li id="t2"></li>
+              <li id="t3"></li>
+              <li id="t4"></li>
+              <li id="t5"></li>
+              <li id="t6"></li>
+              <li id="t7"></li>
+              <li id="t8"></li>
+              <li id="t9"></li>
+            </ul>
+          </div>
+          <div class="tab-pane" id="a-registers">
+            <ul class='registers-container' id="registers-a">
+              <li id="a0"></li>
+              <li id="a1"></li>
+              <li id="a2"></li>
+              <li id="a3"></li>
+            </ul>
+          </div>
+          <div class="tab-pane" id="v-registers">
+            <ul class='registers-container' id="registers-v">
+              <li id="v0"></li>
+              <li id="v1"></li>
+            </ul>
+          </div>
+          <div class="tab-pane" id="stack-container-div">
+            <div class='stack-container' id="stack">
+              <div id='stackOptions'>
+                <input type="checkbox" id='optionShowRelative'> <span id="addrTypeText">show relative address<span>
+                    <select class="form-control" id="stackDisplayType">
+                      <option>Integer</option>
+                      <option>Ascii</option>
+                      <option>Binary</option>
+                    </select>
+              </div>
+              <div id='stackRep'>
+                <span class="glyphicon glyphicon-arrow-right"></span>
+                <span class='' id="stackBottom">
+                  ------------ Frame Pointer ------------
 
-                  </span>
-                </div>
+                </span>
               </div>
             </div>
-            <div class="tab-pane" id="logWrapper">
-              <button id="clearLog">Clear Log</button>
-              <hr />
-              <div id='log'>
-              </div>
+          </div>
+          <div class="tab-pane" id="logWrapper">
+            <button id="clearLog">Clear Log</button>
+            <hr />
+            <div id='log'>
             </div>
           </div>
         </div>
       </div>
     </div>
+  </div>
 
-    <!--<script src="js/main.js"></script>-->
-    <!-- Include all compiled plugins (below), or include individual files as needed -->
-   <!-- <script src="css/bootstrap/js/bootstrap.min.js"></script>-->
-  </body>
+  <!--<script src="js/main.js"></script>-->
+  <!-- Include all compiled plugins (below), or include individual files as needed -->
+  <!-- <script src="css/bootstrap/js/bootstrap.min.js"></script>-->
+</body>
 </html>
 <script src="js/lib/bootstrap.min.js"></script>
