@@ -29,6 +29,7 @@ Parser.TokenType = {
     LessEqual: 'LessEqual',
     GreaterThan: 'GreaterThan',
     GreaterEqual: 'GreaterEqual',
+    Assignment: 'Assignment',
     Equals: 'Equals',
     NotEquals: 'NotEquals',
     BitwiseAND: 'BitwiseAND',
@@ -54,8 +55,6 @@ Parser.AtomTypes = {
     '*': Parser.TokenType.Multiplication,
     '/': Parser.TokenType.Division,
     '%': Parser.TokenType.Remainder,
-    '|': Parser.TokenType.BitwiseOR,
-    '&': Parser.TokenType.BitwiseAND,
     '^': Parser.TokenType.BitwiseXOR,
     '~': Parser.TokenType.BitwiseNOT,
     '(': Parser.TokenType.LParen,
@@ -358,7 +357,7 @@ Parser.Lexer = function(input) {
                 this.skipChar();
                 return this.createToken(Parser.TokenType.Equals);
             } else {
-                this.error('Unknown token');
+                return this.createToken(Parser.TokenType.Assignment);
             }
         } else if (ch == '!') {
             this.skipChar();
