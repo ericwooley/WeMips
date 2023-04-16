@@ -17,22 +17,33 @@ Parser.TokenType = {
     Identifier: 'Identifier',
     Register: 'Register',
     Number: 'Number',
-    Addition: 'Addition',
-    Subtraction: 'Subtraction',
     Multiplication: 'Multiplication',
     Division: 'Division',
     Remainder: 'Remainder',
-    BitwiseOR: 'BitwiseOR',
-    BitwiseAND: 'BitwiseAND',
-    BitwiseXOR: 'BitwiseXOR',
-    BitwiseNOT: 'BitwiseNOT',
+    Addition: 'Addition',
+    Subtraction: 'Subtraction',
     LogicalShiftLeft: 'LogicalShiftLeft',
     LogicalShiftRight: 'LogicalShiftRight',
     ArithmeticShiftRight: 'ArithmeticShiftRight',
+    LessThan: 'LessThan',
+    LessEqual: 'LessEqual',
+    GreaterThan: 'GreaterThan',
+    GreaterEqual: 'GreaterEqual',
+    Equals: 'Equals',
+    NotEquals: 'NotEquals',
+    BitwiseAND: 'BitwiseAND',
+    BitwiseXOR: 'BitwiseXOR',
+    BitwiseOR: 'BitwiseOR',
+    LogicalAND: 'LogicalAND',
+    LogicalOR: 'LogicalOR',
+
+    LogicalNOT: 'LogicalNOT',
+    BitwiseNOT: 'BitwiseNOT',
     LParen: 'LParen',
     RParen: 'RParen',
     Comma: 'Comma',
     Colon: 'Colon',
+    QuestionMark: 'QuestionMark',
     EndOfString: 'EndOfString',
 };
 
@@ -51,6 +62,7 @@ Parser.AtomTypes = {
     ')': Parser.TokenType.RParen,
     ',': Parser.TokenType.Comma,
     ':': Parser.TokenType.Colon,
+    '?': Parser.TokenType.QuestionMark,
 };
 
 /** Determine whether the given character is whitespace
@@ -297,8 +309,11 @@ Parser.Lexer = function(input) {
             if (ch == '<') {
                 this.skipChar();
                 return this.createToken(Parser.TokenType.LogicalShiftLeft);
+            } else if (ch == '=') {
+                this.skipChar();
+                return this.createToken(Parser.TokenType.LessEqual);
             } else {
-                this.error('Unknown token');
+                return this.createToken(Parser.TokenType.LessThan);
             }
         } else if (ch == '>') {
             this.skipChar();
@@ -312,8 +327,47 @@ Parser.Lexer = function(input) {
                 } else {
                     return this.createToken(Parser.TokenType.ArithmeticShiftRight);
                 }
+            } else if (ch == '=') {
+                this.skipChar();
+                return this.createToken(Parser.TokenType.GreaterEqual);
+            } else {
+                return this.createToken(Parser.TokenType.GreaterThan);
+            }
+        } else if (ch == '|') {
+            this.skipChar();
+            ch = this.peekNextChar();
+            if (ch == '|') {
+                this.skipChar();
+                return this.createToken(Parser.TokenType.LogicalOR);
+            } else {
+                return this.createToken(Parser.TokenType.BitwiseOR);
+            }
+        } else if (ch == '&') {
+            this.skipChar();
+            ch = this.peekNextChar();
+            if (ch == '&') {
+                this.skipChar();
+                return this.createToken(Parser.TokenType.LogicalAND);
+            } else {
+                return this.createToken(Parser.TokenType.BitwiseAND);
+            }
+        } else if (ch == '=') {
+            this.skipChar();
+            ch = this.peekNextChar();
+            if (ch == '=') {
+                this.skipChar();
+                return this.createToken(Parser.TokenType.Equals);
             } else {
                 this.error('Unknown token');
+            }
+        } else if (ch == '!') {
+            this.skipChar();
+            ch = this.peekNextChar();
+            if (ch == '=') {
+                this.skipChar();
+                return this.createToken(Parser.TokenType.NotEquals);
+            } else {
+                return this.createToken(Parser.TokenType.LogicalNOT);
             }
         } else if (ch in Parser.AtomTypes) {
             this.skipChar();

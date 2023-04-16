@@ -1,5 +1,13 @@
 /** A dictionary of binary operator token types, their associated precedence and evaluation functions */
 Parser.BinaryOperators = {}
+Parser.BinaryOperators[Parser.TokenType.LogicalOR] = {
+    evaluate: function(left, right) { return left || right; },
+    precedence: 15
+}
+Parser.BinaryOperators[Parser.TokenType.LogicalAND] = {
+    evaluate: function(left, right) { return left && right; },
+    precedence: 14
+}
 Parser.BinaryOperators[Parser.TokenType.BitwiseOR] = {
     evaluate: function(left, right) { return left | right; },
     precedence: 13
@@ -11,6 +19,30 @@ Parser.BinaryOperators[Parser.TokenType.BitwiseXOR] = {
 Parser.BinaryOperators[Parser.TokenType.BitwiseAND] = {
     evaluate: function(left, right) { return left & right; },
     precedence: 11
+}
+Parser.BinaryOperators[Parser.TokenType.Equals] = {
+    evaluate: function(left, right) { return left == right; },
+    precedence: 10
+}
+Parser.BinaryOperators[Parser.TokenType.NotEquals] = {
+    evaluate: function(left, right) { return left != right; },
+    precedence: 10
+}
+Parser.BinaryOperators[Parser.TokenType.LessThan] = {
+    evaluate: function(left, right) { return left < right; },
+    precedence: 9
+}
+Parser.BinaryOperators[Parser.TokenType.LessEqual] = {
+    evaluate: function(left, right) { return left <= right; },
+    precedence: 9
+}
+Parser.BinaryOperators[Parser.TokenType.GreaterThan] = {
+    evaluate: function(left, right) { return left > right; },
+    precedence: 9
+}
+Parser.BinaryOperators[Parser.TokenType.GreaterEqual] = {
+    evaluate: function(left, right) { return left >= right; },
+    precedence: 9
 }
 Parser.BinaryOperators[Parser.TokenType.LogicalShiftLeft] = {
     evaluate: function(left, right) { return left << right; },
@@ -192,6 +224,19 @@ Parser.ExprParser = function(tokenStream) {
         }
     }
 
+    this.parseConditionalExpression = function() {
+        let cond = this.parseBinaryExpression();
+        if (this.tokenStream.checkNext(Parser.TokenType.QuestionMark)) {
+            this.tokenStream.consume();
+            let trueValue = this.parseExpression();
+            this.tokenStream.consume(Parser.TokenType.Colon);
+            let falseValue = this.parseConditionalExpression();
+            return (cond?trueValue:falseValue);
+        } else {
+            return cond;
+        }
+    }
+
     /** Parse an expression
      * An expression is a binary expression.
      * 
@@ -202,7 +247,7 @@ Parser.ExprParser = function(tokenStream) {
      * @returns {number} The value of the expression
      */
     this.parseExpression = function() {
-        return this.parseBinaryExpression();
+        return this.parseConditionalExpression();
     }
 }
 
