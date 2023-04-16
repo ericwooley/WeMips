@@ -1,19 +1,24 @@
 let Parser;
 Parser = Parser || {};
 
-Parser.LexerError = function(message, text, start, end) {
-    this.name = 'LexerError';
+Parser.Error = function(name, message) {
+    this.name = name;
     this.message = message;
+}
+
+Parser.LexerError = function(message, text, start, end) {
+    Parser.Error.call(this, 'LexerError', message);
     this.text = text;
     this.start = start;
     this.end = end;
 }
+Parser.LexerError.prototype = Object.create( Parser.Error.prototype );
 
 Parser.ParseError = function(message, token) {
-    this.name = 'ParseError';
-    this.message = message;
+    Parser.Error.call(this, 'ParseError', message);
     this.token = token;
 }
+Parser.ParseError.prototype = Object.create( Parser.Error.prototype );
 
 function assert(condition, message) {
     if (!condition) {
