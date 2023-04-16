@@ -48,3 +48,7 @@ test("Labels", function() {
 	ok(!ME.isValidLine("loop start:"), "A label cannot have more than one word");
 	ok(ME.isValidLine("mylabel:ADD $t0, $t1, $t2"), "we can have attached labels.");
 });
+
+test("Symbols", function() {
+    ok(ME.isValidLine("c = 5"), "We can assign symbols");
+});

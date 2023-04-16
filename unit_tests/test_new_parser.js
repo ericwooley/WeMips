@@ -195,4 +195,18 @@ test('Instruction Parsing', function() {
          }
         }
     );
+
+    ok(isValidLine("c = 5"), "We can assign symbols");
+    ok(isValidLine("c = (5+5)*2"), "We can assign symbols with complex expressions");
+
+    deepEqual(parseLine('c = (5+5)*2'),
+        {
+            symbols: [
+                {
+                    name: 'c',
+                    value: 20
+                }
+            ]
+        }
+    );
 });
