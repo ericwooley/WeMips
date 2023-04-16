@@ -577,16 +577,6 @@ function MipsEmulator(mipsArgs){
              */
             ignore: true,
             /**
-             * The comment (if any) that this line of code contained
-             * @type {String}
-             */
-            comment: '',
-            /**
-             * The label for this line of code
-             * @type {String}
-             */
-            label: '',
-            /**
              * Error when running this line of code (if any)
              * @type {String}
              */
@@ -610,8 +600,8 @@ function MipsEmulator(mipsArgs){
         if(ar){
             // if we have a label, save it to the hashtable and save it to line
             if(ar[1] && ar[1].length > 0){
-                LINE.label = ar[1];
-                mipsCode.labels[LINE.label] = LINE;
+                let label = ar[1];
+                mipsCode.labels[label] = LINE;
                 // TODO: mipsCode.labels[ar[1]] = line;
             }
 
@@ -631,9 +621,6 @@ function MipsEmulator(mipsArgs){
 
             // If the line has an instruction, we should not ignore it. otherwise it may be a comment or blank
             if(LINE.instruction && LINE.instruction.length > 0) LINE.ignore = false;
-
-            // The comment, obviously
-            LINE.comment = $.trim(ar[4]);
 
             // parse the instruction now, so it can be executed whenever we want
             if (LINE.instruction) {

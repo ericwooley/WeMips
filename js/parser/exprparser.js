@@ -85,7 +85,7 @@ Parser.ExprParser = function(tokenStream) {
      * @returns {number} The value of the expression
      */
     this.parsePostfixExpression = function() {
-        let token= this.tokenStream.peekToken();
+        let token= this.tokenStream.lookahead();
         if (token.type == Parser.TokenType.Identifier) {
             if (token.value in Parser.Builtins) {
                 let builtinFunction = Parser.Builtins[token.value];
@@ -111,7 +111,7 @@ Parser.ExprParser = function(tokenStream) {
      *          or undefined if no operator is present.
      */
     this.parseUnaryOperator = function() {
-        let operator = this.tokenStream.peekToken();
+        let operator = this.tokenStream.lookahead();
         if (operator.type in Parser.UnaryOperators) {
             this.tokenStream.consume();
             return Parser.UnaryOperators[operator.type];
@@ -139,7 +139,7 @@ Parser.ExprParser = function(tokenStream) {
      *          or undefined if no operator is present.
      */
     this.parseBinaryOperator = function() {
-        let operator = this.tokenStream.peekToken();
+        let operator = this.tokenStream.lookahead();
         if (operator.type in Parser.BinaryOperators) {
             this.tokenStream.consume();
             return Parser.BinaryOperators[operator.type];

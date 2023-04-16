@@ -92,11 +92,16 @@ test('Operand Parser', function() {
 });
 
 test('Instruction Parsing', function() {
-    function isValidLine(line) {
+    function parseLine(line) {
         let instructionParser = Parser.instructionParserFromString(line);
+        let lineInfo = instructionParser.parseLine();
+        instructionParser.tokenStream.enforceCompletion()
+        return lineInfo;
+    }
+    function isValidLine(line) {
         try {
-            instructionParser.parseInstruction();
-            instructionParser.tokenStream.enforceCompletion()
+            parseLine(line);
+            return true;
         } catch (e) {
             if (e instanceof Parser.Error) {
                 return false;
@@ -104,7 +109,6 @@ test('Instruction Parsing', function() {
                 throw e;
             }
         }
-        return true;
     }
 	ok(isValidLine("ADD $t0, $t1, $t2"), "ADD should have 3 registers as arguments.");
 	ok(!isValidLine("ADD $t0, $t1, 515"), "ADD should not be able to have an immediate as last argument.");
@@ -133,4 +137,38 @@ test('Instruction Parsing', function() {
 	ok(isValidLine("syscall"));
 	ok(!isValidLine("syscall foo"), "Syscall takes no params");
 	ok(!isValidLine("ADD t0, $t1, $t2"), "Must not omit the $ symbols.");
+
+	ok(isValidLine("ADD $t0, $t1, $t2#comment here"), "we can have attached comments.");
+	ok(isValidLine("# Hello there"), "we can have single line comments.");
+	ok(isValidLine("mylabel: ADD $t0, $t1, $t2 # comment here"), "we can have labels and comments.");
+
+	ok(isValidLine("loop:"), "we can have single line labels.");
+	ok(isValidLine(" loop  :"), "A label can have whitespace between the text and the colon");
+	ok(!isValidLine("loop start:"), "A label cannot have more than one word");
+	ok(isValidLine("mylabel:ADD $t0, $t1, $t2"), "we can have attached labels.");
+
+    deepEqual(parseLine('ADDIU $t0, $t0, lo16(0x1234)'),
+        {labels: [],
+         instr: {
+            mnemonic: 'ADDIU',
+            args: {
+                '$rs': '$t0',
+                '$rt': '$t0',
+                'imm': 0x1234
+            }
+         }
+        }
+    );
+
+    deepEqual(parseLine('L1: L2: LUI $t0, hi16(0x12345678)'),
+        {labels: ['L1', 'L2'],
+         instr: {
+            mnemonic: 'LUI',
+            args: {
+                '$rd': '$t0',
+                'imm': 0x1234
+            }
+         }
+        }
+    );
 });

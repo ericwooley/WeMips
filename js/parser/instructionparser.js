@@ -219,6 +219,12 @@ Parser.InstructionParser = function (tokenStream) {
     this.tokenStream = tokenStream;
     this.operandParser = new Parser.OperandParser(tokenStream);
 
+    /**
+     * Parse an instruction with its arguments.
+     * 
+     * @throws Parser.ParseException The instruction must be a valid assembler instruction.
+     * @returns {Object}  A dictionary with 'mnemonic' and 'args' set
+     */
     this.parseInstruction = function() {
         let token = this.tokenStream.consume(Parser.TokenType.Identifier);
         let mnemonic = token.value.toUpperCase();
@@ -233,6 +239,51 @@ Parser.InstructionParser = function (tokenStream) {
         } else {
             throw new Parser.UnknownInstructionError(token);
         }
+    }
+
+    /** Parse an optional label.
+     * 
+     * If the following token sequence is not a label, this will consume no tokens.
+     * 
+     * @returns {(String|undefined)} The label name or <code>undefined</code> if no label is present.
+     */
+    this.parseOptionalLabel = function() {
+        if (this.tokenStream.checkNext(Parser.TokenType.Identifier, 0) &&
+            this.tokenStream.checkNext(Parser.TokenType.Colon, 1)) {
+            let labelToken = this.tokenStream.lookahead();
+            this.tokenStream.consume();
+            this.tokenStream.consume();
+            return labelToken.value;
+        } else {
+            return undefined;
+        }
+    }
+
+    /** Parse a possibly non-empty sequence of labels
+     * 
+     * @returns {array(Parser.Token)} The sequence of labels.
+     */
+    this.parseLabels = function() {
+        let labels = [];
+        let label = this.parseOptionalLabel();
+        while (label !== undefined) {
+            labels.push(label);
+            label = this.parseOptionalLabel();
+        }
+        return labels;
+    }
+
+    /** Parse a sequence of optional labels and an optional instruction. */
+    this.parseLine = function() {
+        let labels = this.parseLabels();
+        let instr = undefined;
+        if (!this.tokenStream.checkNext(Parser.TokenType.EndOfString)) {
+            instr = this.parseInstruction();
+        }
+        return {
+            labels: labels,
+            instr: instr
+        };
     }
 }
 
