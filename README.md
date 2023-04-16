@@ -8,7 +8,7 @@ The WeMIPS Emulator was originally created by Eric Wooley and Ortal Yahdav, with
 
 ## Installation Guide
 
-1. [View Online](https://wemips.ralfgerlich.biz) for the version hosted by Ralf Gerlich, or [webmips.dev.plumbing for the version hosted on github pages](https://wemips.dev.plumbing/WeMips.html) or clone [WeMIPS](https://github.com/ericwooley/WeMips) somewhere on your computer.
+1. [View Online](https://wemips.ralfgerlich.biz) for the version hosted by Ralf Gerlich, or [wemips.dev.plumbing for the version hosted on github pages](https://wemips.dev.plumbing/WeMips.html) or clone [WeMIPS](https://github.com/ericwooley/WeMips) somewhere on your computer.
 2. Open the top-most *WeMips.html* in your browser.
 3. You can now use WeMIPS!
 
