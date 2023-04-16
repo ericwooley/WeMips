@@ -56,7 +56,7 @@ Parser.AtomTypes = {
  * @return {boolean} <code>true</code> if and only if the character is whitespace
  */
 Parser.isWhitespace = function(ch) {
-    return (ch=='\t' || ch==' ');
+    return (ch=='\t' || ch==' ' || ch=='\n' || ch=='\r');
 }
 
 Parser.DigitsUpperCase = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -144,11 +144,6 @@ Parser.Lexer = function(input) {
     /** Start the next token */
     this.startToken = function() {
         this.marker = this.index;
-    }
-
-    /** Return to the start of the current token */
-    this.restartToken = function() {
-        this.index = this.marker;
     }
 
     /** Determine the next character without advancing the input position

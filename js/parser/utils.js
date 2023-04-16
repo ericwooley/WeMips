@@ -39,6 +39,21 @@ Parser.ParseError = function(message, token) {
 }
 Parser.ParseError.prototype = Object.create( Parser.Error.prototype );
 
+/** Exception for unknown instructions
+ * Thrown when the parser encounters an unknown instruction.
+ * @constructor
+ * @param {string} message       A human-readable message explaining the kind of exception
+ * @param {Parser.Token} token   The relevant token that led to the exception
+ */
+Parser.UnknownInstructionError = function(token) {
+    Parser.ParseError.call(
+        this,
+        'UnknownInstructionError',
+        'Unknown instruction:'+token.value,
+        token);
+}
+Parser.UnknownInstructionError.prototype = Object.create( Parser.ParseError.prototype );
+
 function assert(condition, message) {
     if (!condition) {
         throw new Error(message) || new Error("Assertion failed");

@@ -597,7 +597,7 @@ function mipsInstructionExecutor(ME) {
     function parseImmAnd$rs(string) {
         try {
             let parser = Parser.operandParserFromString(string);
-            let loadStoreAddr = parser.parseLoadStoreAddress();
+            let loadStoreAddr = parser.parseLoadStoreAddress(BITS_PER_IMMEDIATE);
             parser.tokenStream.enforceCompletion();
             return loadStoreAddr;
         } catch (e) {
@@ -710,6 +710,7 @@ function mipsInstructionExecutor(ME) {
     }
 
     var result = {
+        instructions: instructions,
         setPseudoInstructionsEnabled: function(value) {
             pseudoInstructionsEnabled = value;
         },
