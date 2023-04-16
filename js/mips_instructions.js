@@ -601,9 +601,7 @@ function mipsInstructionExecutor(ME) {
             parser.tokenStream.enforceCompletion();
             return loadStoreAddr;
         } catch (e) {
-            if (e instanceof Parser.ParseError) {
-                return null; // TODO: return that it was not a valid expression?
-            } else if (e instanceof Parser.LexerError) {
+            if (e instanceof Parser.Error) {
                 return null; // TODO: return that it was not a valid expression?
             } else {
                 throw e;
@@ -615,9 +613,7 @@ function mipsInstructionExecutor(ME) {
             let parser = Parser.operandParserFromString(reg);
             return parser.parseRegister();
         } catch (e) {
-            if (e instanceof Parser.ParseError) {
-                return null;
-            } else if (e instanceof Parser.LexerError) {
+            if (e instanceof Parser.Error) {
                 return null;
             } else {
                 throw e;
@@ -629,9 +625,7 @@ function mipsInstructionExecutor(ME) {
             let parser = Parser.operandParserFromString(label);
             return parser.parseLabel();
         } catch (e) {
-            if (e instanceof Parser.ParseError) {
-                return null;
-            } else if (e instanceof Parser.LexerError) {
+            if (e instanceof Parser.Error) {
                 return null;
             } else {
                 throw e;
@@ -643,9 +637,7 @@ function mipsInstructionExecutor(ME) {
             let parser = Parser.operandParserFromString(reg);
             return parser.parseWritableRegister();
         } catch (e) {
-            if (e instanceof Parser.ParseError) {
-                return null;
-            } else if (e instanceof Parser.LexerError) {
+            if (e instanceof Parser.Error) {
                 return null;
             } else {
                 throw e;
@@ -662,9 +654,7 @@ function mipsInstructionExecutor(ME) {
             parser.tokenStream.enforceCompletion();
             return number;
         } catch (e) {
-            if (e instanceof Parser.ParseError) {
-                return null;
-            } else if (e instanceof Parser.LexerError) {
+            if (e instanceof Parser.Error) {
                 return null;
             } else {
                 throw e;
@@ -681,9 +671,7 @@ function mipsInstructionExecutor(ME) {
             parser.tokenStream.enforceCompletion();
             return number;
         } catch (e) {
-            if (e instanceof Parser.ParseError) {
-                return null;
-            } else if (e instanceof Parser.LexerError) {
+            if (e instanceof Parser.Error) {
                 return null;
             } else {
                 throw e;
@@ -700,9 +688,7 @@ function mipsInstructionExecutor(ME) {
             parser.tokenStream.enforceCompletion();
             return number;
         } catch (e) {
-            if (e instanceof Parser.ParseError) {
-                return null;
-            } else if (e instanceof Parser.LexerError) {
+            if (e instanceof Parser.Error) {
                 return null;
             } else {
                 throw e;

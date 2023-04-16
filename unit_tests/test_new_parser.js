@@ -9,37 +9,37 @@ test("Lexer", function() {
     let token;
 
     token = parseSingleToken('$t0');
-    equal(token.type, Parser.Tokens.Register);
+    equal(token.type, Parser.TokenType.Register);
     equal(token.value, '$t0');
 
     token = parseSingleToken(' 102');
-    equal(token.type, Parser.Tokens.Number);
+    equal(token.type, Parser.TokenType.Number);
     equal(token.value, 102);
 
     token = parseSingleToken('0b1011');
-    equal(token.type, Parser.Tokens.Number);
+    equal(token.type, Parser.TokenType.Number);
     equal(token.value, 11);
 
     token = parseSingleToken('0770');
-    equal(token.type, Parser.Tokens.Number);
+    equal(token.type, Parser.TokenType.Number);
     equal(token.value, 0770);
 
     token = parseSingleToken('0xab12');
-    equal(token.type, Parser.Tokens.Number);
+    equal(token.type, Parser.TokenType.Number);
     equal(token.value, 0xab12);
 
     token = parseSingleToken('abc');
-    equal(token.type, Parser.Tokens.Identifier);
+    equal(token.type, Parser.TokenType.Identifier);
     equal(token.value, 'abc');
 
     token = parseSingleToken('+');
-    equal(token.type, Parser.Tokens.Addition);
+    equal(token.type, Parser.TokenType.Addition);
 
     token = parseSingleToken('<<');
-    equal(token.type, Parser.Tokens.LogicalShiftLeft);
+    equal(token.type, Parser.TokenType.LogicalShiftLeft);
 
     token = parseSingleToken('>>>');
-    equal(token.type, Parser.Tokens.LogicalShiftRight);
+    equal(token.type, Parser.TokenType.LogicalShiftRight);
 });
 
 test('Expression Parser', function() {

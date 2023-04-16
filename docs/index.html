@@ -44,6 +44,8 @@
 
     <section>
         <article><h1>WeMIPS Documentation (MIPS Emulator)</h1>
+<p>WeMIPS is an instruction-level emulator for the assembly language of the MIPS32 architecture. It is implemented in client-side JavaScript and HTML, and can thus be run in your own (JavaScript-capable and -enabled) webbrowser.</p>
+<p>While WeMIPS can be provided on-line (for example <a href="https://wemips.ralfgerlich.biz">here</a>), it is also possible to simply install it locally on your own computer and use it there.</p>
 <p>The WeMIPS Emulator was originally created by Eric Wooley and Ortal Yahdav, with additions and updates by Ralf Gerlich.</p>
 <h2>Installation Guide</h2>
 <ol>
@@ -51,6 +53,79 @@
 <li>Open the top-most <em>WeMips.html</em> in your browser.</li>
 <li>You can now use WeMIPS!</li>
 </ol>
+<h2>User's Guide</h2>
+<h3>Running a Program</h3>
+<p>There are 2 ways to process your code: Stepping, and Running.</p>
+<ul>
+<li>The first way is to &quot;step&quot; through 1 line at a time.
+This can be accomplished by clicking the step button.
+When you step through your code, you will see that the editor will highlight specific lines.
+These lines indicate which lines the emulator is processing.
+The last line the emulator successfully ran will be highlighted in green.
+The next line to be run will be highlighted in grey.
+If the emulator runs into a MIPS error, it will be highlighted in red.
+You will notice as you step through your program that the last register, or stack address changed, is also highlighted in green.
+See the Auto Switch feature for more details.</li>
+<li>The second way to process your code is to &quot;run&quot; it.
+This can be accomplished by clicking the run button.
+When you run your code, each line is successively run until your program is interrupted.
+Your program can be interrupted by errors, requests for input, or the completion of your code.</li>
+</ul>
+<h3>Features</h3>
+<h4>Constant Expressions</h4>
+<p>Wherever an immediate value is required, you can use expressions with operands such as addition, subtraction, etc., as long as the result is a constant value.</p>
+<p>For example, it is possible to use</p>
+<pre class="prettyprint source lang-asm"><code>addi $t0, $zero, (15+3*32)
+</code></pre>
+<p>Operators are evaluated according to their precedence, i.e., addition and subtraction have lower precedence than multiplication and the former are thus evaluated after the latter.
+In the following, operands are listed in decreasing order of precedence (i.e., operators further down in the list are evaluated after operators further up):</p>
+<ul>
+<li>Unary Plus (&quot;+&quot;), Unary Minus (&quot;-&quot;), Bitwise NOT (&quot;~&quot;)</li>
+<li>Multiplication (&quot;*&quot;), Division (&quot;/&quot;), Remainder (&quot;%&quot;)</li>
+<li>Addition (&quot;+&quot;), Subtraction (&quot;-&quot;)</li>
+<li>Shift Left (&quot;&lt;&lt;&quot;), Arithmetic Shift Right (&quot;&gt;&gt;&quot;), Logical Shift Right (&quot;&gt;&gt;&gt;&quot;)</li>
+<li>Bitwise AND (&quot;&amp;&quot;)</li>
+<li>Bitwise XOR (&quot;^&quot;)</li>
+<li>Bitwise OR (&quot;|&quot;)</li>
+</ul>
+<p>It is also possible to extract the lower and higher 16 bits of a constants, respectively, by using the <code>lo16</code> and <code>hi16</code> functions:</p>
+<pre class="prettyprint source lang-asm"><code>lui $t0, hi16(123456)
+addiu $t0, $t0, lo16(123456)
+</code></pre>
+<p>Numerical constants can be provided in decimal, hexadecimal, octal and binary:</p>
+<ul>
+<li>Hexadecimal numbers are specified with a <code>0x</code> or <code>0X</code> prefix, e.g., <code>0xabcd</code>. Case does not matter, i.e. <code>0XABcd</code> is the same as <code>0xabCD</code>.</li>
+<li>Octal numbers are prefixed by a <code>0</code>, e.g. <code>0775</code>.</li>
+<li>Binary numbers are specified with a <code>0b</code> or <code>0B</code> prefix, e.g. <code>0b101001010</code>.</li>
+<li>Decimal numbers are specified without any prefix. That also means that they may <em>not</em> start with a zero (<code>0</code>), otherwise they will be interepreted as octal (which will lead to errors if using non-octal digits).</li>
+</ul>
+<h4>Go to Line Number</h4>
+<p><img src="images/image04.png" alt="Line Number Entry"></p>
+<p>You can type a line number and press Go to jump to a specific line of code.
+This will become the next line the mips engine will run.</p>
+<h4>Demos</h4>
+<p><img src="images/image05.png" alt="Demo Buttons"></p>
+<p>Tap the Show/Hide Demos button to reveal the list of built-in demos.
+Tap a demo (e.g. Hello World) to replace the existing MIPS code with the predefined MIPS code for that demo.
+Then press run (or step) to watch it execute.
+Most of them are self explanatory, or have comments that explain how they work.</p>
+<h4>Auto switch register/stack/log tabs</h4>
+<p><img src="images/image07.png" alt="Register/Stack/Log Tabs"></p>
+<p>With this feature enabled, whenever a register (or stack) is modified, the tab will automatically switch the corresponding tab so that you can see the relevant change.
+In the case where multiple things are modified at once, the last change will take precedence.</p>
+<h4>Show stack byte as number/ascii/binary</h4>
+<p>Sometimes it is useful to see the actual bits that compose a byte, or to see the corresponding ASCII character that is stored in the stack.
+You can toggle between seeing any of these three values for a corresponding address in the stack.</p>
+<h4>View registers</h4>
+<p><img src="images/image06.png" alt="Registers View"></p>
+<p>Up top we can toggle which registers are currently visible (S, T, A, or V registers).
+Underneath that, we can see a register's current value.
+Registers are initially populated with junk data until an instruction modifies them.
+In this screenshot, we can see that the $s0 register currently has the value 170.
+A register is composed of 32 bits, and can therefore hold 2<sup>32</sup> different values.</p>
+<h4>Modify Register Value</h4>
+<p><img src="images/image03.png" alt="Modify Register Value"></p>
+<p>You can click a register's value and overwrite its contents with whatever you want.</p>
 <h2>Available MIPS instructions</h2>
 <table>
 <thead>
@@ -191,52 +266,6 @@
 </tr>
 </tbody>
 </table>
-<h2>User's Guide</h2>
-<h3>Running a Program</h3>
-<p>There are 2 ways to process your code: Stepping, and Running.</p>
-<ul>
-<li>The first way is to &quot;step&quot; through 1 line at a time.
-This can be accomplished by clicking the step button.
-When you step through your code, you will see that the editor will highlight specific lines.
-These lines indicate which lines the emulator is processing.
-The last line the emulator successfully ran will be highlighted in green.
-The next line to be run will be highlighted in grey.
-If the emulator runs into a MIPS error, it will be highlighted in red.
-You will notice as you step through your program that the last register, or stack address changed, is also highlighted in green.
-See the Auto Switch feature for more details.</li>
-<li>The second way to process your code is to &quot;run&quot; it.
-This can be accomplished by clicking the run button.
-When you run your code, each line is successively run until your program is interrupted.
-Your program can be interrupted by errors, requests for input, or the completion of your code.</li>
-</ul>
-<h3>Features</h3>
-<h4>Go to Line Number</h4>
-<p><img src="images/image04.png" alt="Line Number Entry"></p>
-<p>You can type a line number and press Go to jump to a specific line of code.
-This will become the next line the mips engine will run.</p>
-<h4>Demos</h4>
-<p><img src="images/image05.png" alt="Demo Buttons"></p>
-<p>Tap the Show/Hide Demos button to reveal the list of built-in demos.
-Tap a demo (e.g. Hello World) to replace the existing MIPS code with the predefined MIPS code for that demo.
-Then press run (or step) to watch it execute.
-Most of them are self explanatory, or have comments that explain how they work.</p>
-<h4>Auto switch register/stack/log tabs</h4>
-<p><img src="images/image07.png" alt="Register/Stack/Log Tabs"></p>
-<p>With this feature enabled, whenever a register (or stack) is modified, the tab will automatically switch the corresponding tab so that you can see the relevant change.
-In the case where multiple things are modified at once, the last change will take precedence.</p>
-<h4>Show stack byte as number/ascii/binary</h4>
-<p>Sometimes it is useful to see the actual bits that compose a byte, or to see the corresponding ASCII character that is stored in the stack.
-You can toggle between seeing any of these three values for a corresponding address in the stack.</p>
-<h4>View registers</h4>
-<p><img src="images/image06.png" alt="Registers View"></p>
-<p>Up top we can toggle which registers are currently visible (S, T, A, or V registers).
-Underneath that, we can see a register's current value.
-Registers are initially populated with junk data until an instruction modifies them.
-In this screenshot, we can see that the $s0 register currently has the value 170.
-A register is composed of 32 bits, and can therefore hold 2<sup>32</sup> different values.</p>
-<h4>Modify Register Value</h4>
-<p><img src="images/image03.png" alt="Modify Register Value"></p>
-<p>You can click a register's value and overwrite its contents with whatever you want.</p>
 <h2>Other Notes</h2>
 <h3>Stack</h3>
 <p>The stack is byte-addressable, and is currently the only place to store anything of great length.
@@ -267,13 +296,13 @@ You can edit it in binary mode to save a binary representation, as you could wit
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="global.html#Stack">Stack</a></li></ul><h3>Global</h3><ul><li><a href="global.html#deepEqual">deepEqual</a></li><li><a href="global.html#equal">equal</a></li><li><a href="global.html#getDataAtAddress">getDataAtAddress</a></li><li><a href="global.html#mipsCode">mipsCode</a></li><li><a href="global.html#mipsEmulator">mipsEmulator</a></li><li><a href="global.html#notDeepEqual">notDeepEqual</a></li><li><a href="global.html#notEqual">notEqual</a></li><li><a href="global.html#notPropEqual">notPropEqual</a></li><li><a href="global.html#notStrictEqual">notStrictEqual</a></li><li><a href="global.html#ok">ok</a></li><li><a href="global.html#onChange">onChange</a></li><li><a href="global.html#pointerToBottomOfStack">pointerToBottomOfStack</a></li><li><a href="global.html#propEqual">propEqual</a></li><li><a href="global.html#regName">regName</a></li><li><a href="global.html#reset">reset</a></li><li><a href="global.html#setDataAtAddress">setDataAtAddress</a></li><li><a href="global.html#strictEqual">strictEqual</a></li><li><a href="global.html#val">val</a></li><li><a href="global.html#writable">writable</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Parser.Error.html">Error</a></li><li><a href="Parser.ExprParser.html">ExprParser</a></li><li><a href="Parser.Lexer.html">Lexer</a></li><li><a href="Parser.LexerError.html">LexerError</a></li><li><a href="Parser.OperandParser.html">OperandParser</a></li><li><a href="Parser.ParseError.html">ParseError</a></li><li><a href="Parser.Token.html">Token</a></li><li><a href="Parser.TokenStream.html">TokenStream</a></li><li><a href="global.html#Stack">Stack</a></li></ul><h3>Global</h3><ul><li><a href="global.html#deepEqual">deepEqual</a></li><li><a href="global.html#equal">equal</a></li><li><a href="global.html#getDataAtAddress">getDataAtAddress</a></li><li><a href="global.html#mipsCode">mipsCode</a></li><li><a href="global.html#mipsEmulator">mipsEmulator</a></li><li><a href="global.html#notDeepEqual">notDeepEqual</a></li><li><a href="global.html#notEqual">notEqual</a></li><li><a href="global.html#notPropEqual">notPropEqual</a></li><li><a href="global.html#notStrictEqual">notStrictEqual</a></li><li><a href="global.html#ok">ok</a></li><li><a href="global.html#onChange">onChange</a></li><li><a href="global.html#pointerToBottomOfStack">pointerToBottomOfStack</a></li><li><a href="global.html#propEqual">propEqual</a></li><li><a href="global.html#regName">regName</a></li><li><a href="global.html#reset">reset</a></li><li><a href="global.html#setDataAtAddress">setDataAtAddress</a></li><li><a href="global.html#strictEqual">strictEqual</a></li><li><a href="global.html#val">val</a></li><li><a href="global.html#writable">writable</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.11</a> on Sat Apr 15 2023 19:32:24 GMT+0200 (Mitteleuropäische Sommerzeit)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Sun Apr 16 2023 10:04:43 GMT+0200 (Mitteleuropäische Sommerzeit)
 </footer>
 
 <script> prettyPrint(); </script>

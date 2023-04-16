@@ -1,4 +1,32 @@
-/** Token object
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: parser/lexer.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: parser/lexer.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/** Token object
  * @constructor
  * @param {string}  type   The type of token
  * @param           value  The value of the token
@@ -43,7 +71,7 @@ Parser.AtomTypes = {
     '/': Parser.TokenType.Division,
     '%': Parser.TokenType.Remainder,
     '|': Parser.TokenType.BitwiseOR,
-    '&': Parser.TokenType.BitwiseAND,
+    '&amp;': Parser.TokenType.BitwiseAND,
     '^': Parser.TokenType.BitwiseXOR,
     '~': Parser.TokenType.BitwiseNOT,
     '(': Parser.TokenType.LParen,
@@ -53,7 +81,7 @@ Parser.AtomTypes = {
 
 /** Determine whether the given character is whitespace
  * @param {string} ch   The character to check
- * @return {boolean} <code>true</code> if and only if the character is whitespace
+ * @return {boolean} &lt;code>true&lt;/code> if and only if the character is whitespace
  */
 Parser.isWhitespace = function(ch) {
     return (ch=='\t' || ch==' ');
@@ -68,16 +96,16 @@ Parser.DigitsLowerCase = "0123456789abcdefghijklmnopqrstuvwxyz";
  * 
  * @param {string}  ch   The character to check
  * @param {number}  base The base to check against (e.g., 10 for decimal numbers, 16 for hexadecimal, etc.)
- * @return {boolean} <code>true</code> if and only if the character is a digit for the given base
+ * @return {boolean} &lt;code>true&lt;/code> if and only if the character is a digit for the given base
  */
 Parser.isBaseDigit = function(ch, base) {
-    assert(base <= 36);
-    if (ch >= '0' && ch <= '9') {
+    assert(base &lt;= 36);
+    if (ch >= '0' &amp;&amp; ch &lt;= '9') {
         return (base >= 10 || Parser.DigitsUpperCase.charAt(base));
-    } else if (ch >= 'A' && ch <= 'Z') {
-        return (ch <= Parser.DigitsUpperCase.charAt(base));
-    } else if (ch >= 'a' && ch <= 'z') {
-        return (ch <= Parser.DigitsLowerCase.charAt(base));
+    } else if (ch >= 'A' &amp;&amp; ch &lt;= 'Z') {
+        return (ch &lt;= Parser.DigitsUpperCase.charAt(base));
+    } else if (ch >= 'a' &amp;&amp; ch &lt;= 'z') {
+        return (ch &lt;= Parser.DigitsLowerCase.charAt(base));
     } else {
         return false;
     }
@@ -85,31 +113,31 @@ Parser.isBaseDigit = function(ch, base) {
 
 /** Determine whether the given character is a decimal digit
  * @param {string}  ch   The character to check
- * @return {boolean} <code>true</code> if and only if the character is a decimal digit
+ * @return {boolean} &lt;code>true&lt;/code> if and only if the character is a decimal digit
  */
 Parser.isDigit = function(ch) {
-    return (ch >= '0' && ch <= '9');
+    return (ch >= '0' &amp;&amp; ch &lt;= '9');
 }
 
 /** Determine whether the given character is an octal digit
  * @param {string}  ch   The character to check
- * @return {boolean} <code>true</code> if and only if the character is an octal digit
+ * @return {boolean} &lt;code>true&lt;/code> if and only if the character is an octal digit
  */
 Parser.isOctalDigit = function(ch) {
-    return (ch >= '0' && ch <= '7');
+    return (ch >= '0' &amp;&amp; ch &lt;= '7');
 }
 
 /** Determine whether the given character is a letter
  * @param {string}  ch   The character to check
- * @return {boolean} <code>true</code> if and only if the character is a letter
+ * @return {boolean} &lt;code>true&lt;/code> if and only if the character is a letter
  */
 Parser.isLetter = function(ch) {
-    return ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z'));
+    return ((ch >= 'A' &amp;&amp; ch &lt;= 'Z') || (ch >= 'a' &amp;&amp; ch &lt;= 'z'));
 }
 
 /** Determine whether the given character can be the start of an identifier
  * @param {string}  ch   The character to check
- * @return {boolean} <code>true</code> if and only if the character can be the start of an identifier
+ * @return {boolean} &lt;code>true&lt;/code> if and only if the character can be the start of an identifier
  */
 Parser.isIdentifierStart = function(ch) {
     return Parser.isLetter(ch) || ch=='_';
@@ -117,7 +145,7 @@ Parser.isIdentifierStart = function(ch) {
 
 /** Determine whether the given character can be part of an identifier
  * @param {string}  ch   The character to check
- * @return {boolean} <code>true</code> if and only if the character can be part of an identifier
+ * @return {boolean} &lt;code>true&lt;/code> if and only if the character can be part of an identifier
  */
 Parser.isIdentifierPart = function(ch) {
     return Parser.isIdentifierStart(ch) || Parser.isDigit(ch);
@@ -135,7 +163,7 @@ Parser.Lexer = function(input) {
     this.length = input.length;
 
     /** Determine whether we have reached the end of the input string
-     * @returns {boolean} <code>true</code> if and only if there are no more characters left
+     * @returns {boolean} &lt;code>true&lt;/code> if and only if there are no more characters left
      */
     this.endOfString = function() {
         return this.index >= this.length;
@@ -282,10 +310,10 @@ Parser.Lexer = function(input) {
      */
     this.parseAtom = function() {
         let ch = this.peekNextChar();
-        if (ch == '<') {
+        if (ch == '&lt;') {
             this.skipChar();
             ch = this.peekNextChar();
-            if (ch == '<') {
+            if (ch == '&lt;') {
                 this.skipChar();
                 return this.createToken(Parser.TokenType.LogicalShiftLeft);
             } else {
@@ -337,3 +365,26 @@ Parser.Lexer = function(input) {
         }
     }
 }
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Parser.Error.html">Error</a></li><li><a href="Parser.ExprParser.html">ExprParser</a></li><li><a href="Parser.Lexer.html">Lexer</a></li><li><a href="Parser.LexerError.html">LexerError</a></li><li><a href="Parser.OperandParser.html">OperandParser</a></li><li><a href="Parser.ParseError.html">ParseError</a></li><li><a href="Parser.Token.html">Token</a></li><li><a href="Parser.TokenStream.html">TokenStream</a></li><li><a href="global.html#Stack">Stack</a></li></ul><h3>Global</h3><ul><li><a href="global.html#deepEqual">deepEqual</a></li><li><a href="global.html#equal">equal</a></li><li><a href="global.html#getDataAtAddress">getDataAtAddress</a></li><li><a href="global.html#mipsCode">mipsCode</a></li><li><a href="global.html#mipsEmulator">mipsEmulator</a></li><li><a href="global.html#notDeepEqual">notDeepEqual</a></li><li><a href="global.html#notEqual">notEqual</a></li><li><a href="global.html#notPropEqual">notPropEqual</a></li><li><a href="global.html#notStrictEqual">notStrictEqual</a></li><li><a href="global.html#ok">ok</a></li><li><a href="global.html#onChange">onChange</a></li><li><a href="global.html#pointerToBottomOfStack">pointerToBottomOfStack</a></li><li><a href="global.html#propEqual">propEqual</a></li><li><a href="global.html#regName">regName</a></li><li><a href="global.html#reset">reset</a></li><li><a href="global.html#setDataAtAddress">setDataAtAddress</a></li><li><a href="global.html#strictEqual">strictEqual</a></li><li><a href="global.html#val">val</a></li><li><a href="global.html#writable">writable</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Sun Apr 16 2023 10:04:43 GMT+0200 (Mitteleuropäische Sommerzeit)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
