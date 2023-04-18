@@ -198,7 +198,8 @@ function mipsInstructionExecutor(ME) {
                     ME.goToLabel(namedArgs.label);
                 else
                     ME.incerementPC();
-            }
+            },
+            pseudoInstruction: true
         },
         'BEQZ': {
             runMethod: function(namedArgs) {
