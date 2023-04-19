@@ -4,12 +4,17 @@
  * @param           value  The value of the token
  * @param {number}  begin  The start index of the input region represented by the token
  * @param {number}  end    The index of the character one past the end of the input region represented by the token
+ * @param {string}  text   The text of the token
  */
-Parser.Token = function(type, value, begin, end) {
+Parser.Token = function(type, value, begin, end, text) {
     this.type = type;
     this.value = value;
     this.begin = begin;
     this.end = end;
+    this.text
+}
+Parser.Token.prototype.toString = function() {
+    return this.type + ' \''+this.text+'\'';
 }
 
 /** Dictionary of token types */
@@ -218,7 +223,7 @@ Parser.Lexer = function(input) {
      * @returns {Parser.Token}  The newly created token
      */
     this.createToken = function(type, value) {
-        return new Parser.Token(type, value, this.marker, this.index);
+        return new Parser.Token(type, value, this.marker, this.index, this.input.substring(this.marker, this.index));
     }
 
     /** Parse a number of the given base

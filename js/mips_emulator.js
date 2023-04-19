@@ -373,7 +373,7 @@ function MipsEmulator(mipsArgs){
         // check if we are finished with the emulation
         if(currentLine > mipsCode.code.length - 1) return finishEmulation();
         if(!mipsCode.code[currentLine]) throw new MipsError("Line " + currentLine + " does not exist");
-        if(mipsCode.code[currentLine].error) throw new MipsError(mipsCode.code[currentLine].error);
+        if(mipsCode.code[currentLine].error) throw new MipsError(mipsCode.code[currentLine].error.toString());
         if(mipsCode.code[currentLine].ignore) incrementLine();
         // we need to check again, because the remainder of the lines could have been comments or blank.
 
@@ -614,13 +614,15 @@ function MipsEmulator(mipsArgs){
                 }
             }
             if (instruction.instr) {
+                LINE.ignore = false;
                 LINE.instruction = instruction.instr.mnemonic;
                 LINE.args = instruction.instr.args;
-                LINE.ignore = false;
             }
         } catch (e) {
             if (e instanceof Parser.Error) {
-                LINE.error = e.toString();
+                /* Do not ignore erroneous lines! */
+                LINE.ignore = false;
+                LINE.error = e;
             }
         }
         if(debug) console.log("Finished parsing line: " + JSON.stringify(LINE));

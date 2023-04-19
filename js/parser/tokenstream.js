@@ -53,7 +53,7 @@ Parser.TokenStream = function(lexer) {
     this.consume = function(type) {
         let token = this.lookahead();
         if (type && token.type != type) {
-            throw new Parser.ParseError('Expected \''+type+'\', got \''+token.type+'\'', token);
+            throw new Parser.UnexpectedTokenError(token, type);
         }
         this.nextToken();
         return token;

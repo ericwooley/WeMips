@@ -3,12 +3,13 @@ Parser = Parser || {};
 
 /** Base class for all parser exceptions
  * @constructor
- * @param {string} name The kind of exception
  * @param {string} message A human-readable message explaining the kind of exception
  */
-Parser.Error = function(name, message) {
-    this.name = name;
+Parser.Error = function(message) {
     this.message = message;
+}
+Parser.Error.prototype.toString = function() {
+    return this.message;
 }
 
 /** Exception for lexer errors
@@ -20,12 +21,15 @@ Parser.Error = function(name, message) {
  * @param {number} end     The index of the next character within the input string plus one
  */
 Parser.LexerError = function(message, text, start, end) {
-    Parser.Error.call(this, 'LexerError', message);
+    Parser.Error.call(this, message);
     this.text = text;
     this.start = start;
     this.end = end;
 }
 Parser.LexerError.prototype = Object.create( Parser.Error.prototype );
+Parser.LexerError.prototype.toString = function() {
+    return this.message+" ('"+text+"')";
+}
 
 /** Exception for parsing errors
  * Thrown when the parser cannot associate a token with a grammar rule.
@@ -34,10 +38,36 @@ Parser.LexerError.prototype = Object.create( Parser.Error.prototype );
  * @param {Parser.Token} token   The relevant token that led to the exception
  */
 Parser.ParseError = function(message, token) {
-    Parser.Error.call(this, 'ParseError', message);
+    Parser.Error.call(this, message);
     this.token = token;
+
 }
 Parser.ParseError.prototype = Object.create( Parser.Error.prototype );
+Parser.ParseError.prototype.toString = function() {
+    return this.message+" ('"+this.token.value+"')";
+}
+
+/** Exception for unexpected tokens
+ * Thrown when the parser encounters a token that is not expected.
+ * @constructor
+ * @param {Parser.Token} token   The relevant token that led to the exception
+ * @param {string} expectedType  The type of token expected
+ */
+Parser.UnexpectedTokenError = function(token, expectedType) {
+    Parser.ParseError.call(
+        this,
+        'Unexpected token',
+        token);
+    this.expectedType = expectedType;
+}
+Parser.UnexpectedTokenError.prototype = Object.create( Parser.ParseError.prototype );
+Parser.UnexpectedTokenError.prototype.toString = function() {
+    if (this.token.value === undefined) {
+        return 'Expected '+this.expectedType+', but got '+this.token.type;
+    } else {
+        return 'Expected '+this.expectedType+', but got \''+this.token.value+'\' (a '+this.token.type+')';
+    }
+}
 
 /** Exception for unknown instructions
  * Thrown when the parser encounters an unknown instruction.
@@ -47,8 +77,7 @@ Parser.ParseError.prototype = Object.create( Parser.Error.prototype );
 Parser.UnknownInstructionError = function(token) {
     Parser.ParseError.call(
         this,
-        'UnknownInstructionError',
-        'Unknown instruction:'+token.value,
+        'Unknown instruction',
         token);
 }
 Parser.UnknownInstructionError.prototype = Object.create( Parser.ParseError.prototype );
@@ -61,8 +90,7 @@ Parser.UnknownInstructionError.prototype = Object.create( Parser.ParseError.prot
 Parser.UnknownSymbolError = function(token) {
     Parser.ParseError.call(
         this,
-        'UnknownSymbolError',
-        'Unknown symbol:'+token.value,
+        'Unknown symbol',
         token);
 }
 Parser.UnknownSymbolError.prototype = Object.create( Parser.ParseError.prototype );
