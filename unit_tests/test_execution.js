@@ -630,37 +630,25 @@ test("BGE", function() {
 	// number: 1, 1, 2, 3, 5, 8, 13, 21
 	equal(ME.getRegisterVal('$t2'), 21, "Fibonnaci's 6th number is 21.");
 });
-
-test("BGEZAL", function() {
+	
+test("BGEU", function() {
 	throws(function() {
 		ME.runLines([
-			"ADDI $t0, $zero, 1",
-			"BGEZAL $t0, foo"
+			"BGEU $zero, $zero, foo"
 		]);
 	}, JumpError, "There is no foo label.");
 
 	ME.runLines([
-		"ADDI $t0, $zero, 1",
-		"BGEZAL $t0, tgt",
-		"tgt:"
+		"ADDIU $t0, $zero, 0xF000",
+		"ADDI $t1, $zero, 1",
+		"BGEU $t1, $t0, skip1    # jump not taken",
+		"ADDI $t1, $t1, 1",
+		"skip1:",
+		"BGEU $t0, $t0, skip2    # jump taken",
+		"ADDI $t1, $t1, 1",
+		"skip2:"
 	]);
-	equal(ME.getRegisterVal('$ra'), 3);
-});
-
-test("BLTZAL", function() {
-       throws(function() {
-               ME.runLines([
-                       "ADDI $t0, $zero, -1",
-                       "BLTZAL $t0, foo"     
-               ]);
-       }, JumpError, "There is no foo label.");
-
-       ME.runLines([
-               "ADDI $t0, $zero, -1",
-               "BLTZAL $t0, tgt",
-               "tgt:"
-       ]);
-       equal(ME.getRegisterVal('$ra'), 3);
+	equal(ME.getRegisterUnsignedVal('$t1'), 2);
 });
 	
 test("BGT", function() {
@@ -692,6 +680,24 @@ test("BGT", function() {
 	// number: 1, 1, 2, 3, 5, 8, 13, 21
 	equal(ME.getRegisterVal('$t2'), 21, "Fibonnaci's 6th number is 21.");
 });
+	
+test("BGTU", function() {
+	throws(function() {
+		ME.runLines([
+			"ADDI $t0, $zero, 1",
+			"BGTU $t0, $zero, foo"
+		]);
+	}, JumpError, "There is no foo label.");
+
+	ME.runLines([
+		"ADDIU $t0, $zero, 0xF000",
+		"ADDI $t1, $zero, 1",
+		"BGTU $t1, $t0, skip    # jump not taken",
+		"ADDI $t1, $t1, 1",
+		"skip:"
+	]);
+	equal(ME.getRegisterUnsignedVal('$t1'), 2);
+});
 
 test("BLE", function() {
 	throws(function() {
@@ -718,6 +724,26 @@ test("BLE", function() {
 	// index:     0, 1, 2, 3, 4,  5,  6
 	// number: 1, 1, 2, 3, 5, 8, 13, 21
 	equal(ME.getRegisterVal('$t2'), 21, "Fibonnaci's 6th number is 21.");
+});
+	
+test("BLEU", function() {
+	throws(function() {
+		ME.runLines([
+			"BLEU $zero, $zero, foo"
+		]);
+	}, JumpError, "There is no foo label.");
+
+	ME.runLines([
+		"ADDIU $t0, $zero, 0xF000",
+		"ADDI $t1, $zero, 1",
+		"BLEU $t0, $t1, skip1    # jump not taken",
+		"ADDI $t1, $t1, 1",
+		"skip1:",
+		"BLEU $t0, $t0, skip2    # jump taken",
+		"ADDI $t1, $t1, 1",
+		"skip2:"
+	]);
+	equal(ME.getRegisterUnsignedVal('$t1'), 2);
 });
 
 test("BLT", function() {
@@ -748,6 +774,24 @@ test("BLT", function() {
 	// index:     0, 1, 2, 3, 4,  5,  6
 	// number: 1, 1, 2, 3, 5, 8, 13, 21
 	equal(ME.getRegisterVal('$t2'), 21, "Fibonnaci's 6th number is 21.");
+});
+	
+test("BLTU", function() {
+	throws(function() {
+		ME.runLines([
+			"ADDI $t0, $zero, 1",
+			"BLTU $zero, $t0, foo"
+		]);
+	}, JumpError, "There is no foo label.");
+
+	ME.runLines([
+		"ADDIU $t0, $zero, 0xF000",
+		"ADDI $t1, $zero, 1",
+		"BLTU $t0, $t1, skip    # jump not taken",
+		"ADDI $t1, $t1, 1",
+		"skip:"
+	]);
+	equal(ME.getRegisterUnsignedVal('$t1'), 2);
 });
 
 test("BEQZ", function() {
@@ -835,6 +879,22 @@ test("BGEZ", function() {
 	// index:     0, 1, 2, 3, 4,  5,  6
 	// number: 1, 1, 2, 3, 5, 8, 13, 21
 	equal(ME.getRegisterVal('$t2'), 21, "Fibonnaci's 6th number is 21.");
+});
+
+test("BGEZAL", function() {
+	throws(function() {
+		ME.runLines([
+			"ADDI $t0, $zero, 1",
+			"BGEZAL $t0, foo"
+		]);
+	}, JumpError, "There is no foo label.");
+
+	ME.runLines([
+		"ADDI $t0, $zero, 1",
+		"BGEZAL $t0, tgt",
+		"tgt:"
+	]);
+	equal(ME.getRegisterVal('$ra'), 3);
 });
 
 test("BGTZ", function() {
@@ -926,6 +986,22 @@ test("BLTZ", function() {
 	// index:     0, 1, 2, 3, 4,  5,  6
 	// number: 1, 1, 2, 3, 5, 8, 13, 21
 	equal(ME.getRegisterVal('$t2'), 21, "Fibonnaci's 6th number is 21.");
+});
+
+test("BLTZAL", function() {
+	throws(function() {
+			ME.runLines([
+					"ADDI $t0, $zero, -1",
+					"BLTZAL $t0, foo"     
+			]);
+	}, JumpError, "There is no foo label.");
+
+	ME.runLines([
+			"ADDI $t0, $zero, -1",
+			"BLTZAL $t0, tgt",
+			"tgt:"
+	]);
+	equal(ME.getRegisterVal('$ra'), 3);
 });
 
 test("LUI", function(){

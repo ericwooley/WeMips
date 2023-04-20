@@ -183,9 +183,13 @@ Parser.InstructionParsers = {
     'BEQ': Parser.parseRsRtLabel,
     'BNE': Parser.parseRsRtLabel,
     'BGT': Parser.parseRsRtLabel,
+    'BGTU': Parser.parseRsRtLabel,
     'BGE': Parser.parseRsRtLabel,
+    'BGEU': Parser.parseRsRtLabel,
     'BLT': Parser.parseRsRtLabel,
+    'BLTU': Parser.parseRsRtLabel,
     'BLE': Parser.parseRsRtLabel,
+    'BLEU': Parser.parseRsRtLabel,
     /* Branch Instructions after comparison with zero */
     'BEQZ': Parser.parseRsLabel,
     'BNEZ': Parser.parseRsLabel,

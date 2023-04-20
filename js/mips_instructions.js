@@ -174,9 +174,27 @@ function mipsInstructionExecutor(ME) {
             },
             pseudoInstruction: true
         },
+        'BGTU': {
+            runMethod: function(namedArgs) {
+                if (ME.getRegisterUnsignedVal(namedArgs.$rs) > ME.getRegisterUnsignedVal(namedArgs.$rt))
+                    ME.goToLabel(namedArgs.label);
+                else
+                    ME.incerementPC();
+            },
+            pseudoInstruction: true
+        },
         'BGE': {
             runMethod: function(namedArgs) {
                 if (ME.getRegisterVal(namedArgs.$rs) >= ME.getRegisterVal(namedArgs.$rt))
+                    ME.goToLabel(namedArgs.label);
+                else
+                    ME.incerementPC();
+            },
+            pseudoInstruction: true
+        },
+        'BGEU': {
+            runMethod: function(namedArgs) {
+                if (ME.getRegisterUnsignedVal(namedArgs.$rs) >= ME.getRegisterUnsignedVal(namedArgs.$rt))
                     ME.goToLabel(namedArgs.label);
                 else
                     ME.incerementPC();
@@ -192,9 +210,27 @@ function mipsInstructionExecutor(ME) {
             },
             pseudoInstruction: true
         },
+        'BLTU': {
+            runMethod: function(namedArgs) {
+                if (ME.getRegisterUnsignedVal(namedArgs.$rs) < ME.getRegisterUnsignedVal(namedArgs.$rt))
+                    ME.goToLabel(namedArgs.label);
+                else
+                    ME.incerementPC();
+            },
+            pseudoInstruction: true
+        },
         'BLE': {
             runMethod: function(namedArgs) {
                 if (ME.getRegisterVal(namedArgs.$rs) <= ME.getRegisterVal(namedArgs.$rt))
+                    ME.goToLabel(namedArgs.label);
+                else
+                    ME.incerementPC();
+            },
+            pseudoInstruction: true
+        },
+        'BLEU': {
+            runMethod: function(namedArgs) {
+                if (ME.getRegisterUnsignedVal(namedArgs.$rs) <= ME.getRegisterUnsignedVal(namedArgs.$rt))
                     ME.goToLabel(namedArgs.label);
                 else
                     ME.incerementPC();
