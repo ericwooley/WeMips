@@ -111,6 +111,12 @@ function MipsEmulator(mipsArgs){
      * @type {Number}
      */
     var currentLine = 1;
+    /** Flag for enabling pseudo instructions
+     * @property pseudoInstructionsEnabled
+     * @private
+     * @member mipsEmulator
+     * @type {boolean}
+     */
     var pseudoInstructionsEnabled = true;
     // populate registers with all the read and write registers and set their inital values to random
     for (var i = 0; i < allRegs.length; i++) {
@@ -443,7 +449,7 @@ function MipsEmulator(mipsArgs){
         mipsArgs.onAlert(message);
     }
     this.setPseudoInstructionsEnabled = function(value) {
-        pseudoInstructionsEnabled = true;
+        pseudoInstructionsEnabled = value;
     }
 
     ////////////////////////////////////////////////
@@ -492,7 +498,7 @@ function MipsEmulator(mipsArgs){
         instruction = instructions[line.instruction];
         assert(instruction);
         if (!pseudoInstructionsEnabled && instruction.pseudoInstruction) {
-            throw new MipsError('Pseudo instruction {1} is disabled on line: {0}'.format(line.error, line.instruction));
+            throw new MipsError('Pseudo instruction {0} is disabled'.format(line.instruction));
         }
         var runMethod = instruction.runMethod;
         assert(runMethod);
