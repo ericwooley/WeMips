@@ -226,7 +226,7 @@ function mipsInstructionExecutor(ME) {
         'BGEZAL': {
             runMethod: function(namedArgs) {
                 if (ME.getRegisterVal(namedArgs.$rs) >= 0) {
-                    ME.setRegisterVal('$ra', ME.getNextLineToExecute());
+                    ME.linkReturnAddress('$ra');
                     ME.goToLabel(namedArgs.label);
                 }
             }
@@ -240,7 +240,7 @@ function mipsInstructionExecutor(ME) {
         'BLTZAL': {
             runMethod: function(namedArgs) {
                 if (ME.getRegisterVal(namedArgs.$rs) < 0) {
-                    ME.setRegisterVal('$ra', ME.getNextLineToExecute());
+                    ME.linkReturnAddress('$ra');
                     ME.goToLabel(namedArgs.label);
                 }
             }
@@ -258,13 +258,13 @@ function mipsInstructionExecutor(ME) {
         },
         'JAL': {
             runMethod: function(namedArgs) {
-                ME.setRegisterVal('$ra', ME.getNextLineToExecute());
+                ME.linkReturnAddress('$ra');
                 ME.goToLabel(namedArgs.label);
             }
         },
         'JALR': {
             runMethod: function(namedArgs) {
-                ME.setRegisterVal(namedArgs.$rd, ME.getNextLineToExecute());
+                ME.linkReturnAddress(namedArgs.$rd);
                 var lineNumber = ME.getRegisterUnsignedVal(namedArgs.$rs);
                 ME.goToLine(lineNumber);
             }

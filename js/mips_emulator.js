@@ -103,13 +103,21 @@ function MipsEmulator(mipsArgs){
         '$zero', '$at', '$k0', '$k1', '$gp'
     ];
     /**
-     * The current line the mips emulator is looking at.
-     * @property currentLine
+     * The next line to be fetched
+     * @property nextLineToFetch
      * @private
      * @member mipsEmulator
      * @type {Number}
      */
-    var nextLineToExecute = 1;
+    var nextLineToFetch = 1;
+    /**
+     * The next line to execute
+     * @property nextLineToExecute
+     * @private
+     * @member mipsEmulator
+     * @type {Number}
+     */
+    var nextLineToExecute = undefined;
     /** The current line being executed
      * This is used for error messages
      * @property currentLine
@@ -125,6 +133,18 @@ function MipsEmulator(mipsArgs){
      * @type {boolean}
      */
     var pseudoInstructionsEnabled = true;
+    /** Flag for enabling pipeline emulation
+     * 
+     * When this is activated, we emulate a pipeline consisting of a
+     * fetch and execute stage. The result is that branches are delayed
+     * by one instruction.
+     * 
+     * @property pipelineEmulationEnabled
+     * @private
+     * @member mipsEmulator
+     * @type {boolean}
+     */
+    var pipelineEmulationEnabled = false;
     // populate registers with all the read and write registers and set their inital values to random
     for (var i = 0; i < allRegs.length; i++) {
         registers[allRegs[i]] = createRegister(allRegs[i], i);
@@ -275,17 +295,21 @@ function MipsEmulator(mipsArgs){
         registers[reg].onChange = func;
     },
     /**
-     * Set which line to run next.
+     * Set which line to fetch next.
+     * 
+     * This resets the pipeline.
+     * 
      * @member mipsEmulator
      * @param {Number} lineNo
      * @return {Number} Returns the number the line was set too.
      */
-    this.setLine = function(lineNo){
+    this.setNextLineToFetch = function(lineNo){
         var line = mipsCode.code[lineNo];
         if(debug) console.log("setting line: "+ lineNo + " - " + JSON.stringify(line));
         if(!line) return false;
-        nextLineToExecute = getFirstActiveLine(lineNo);
-        return nextLineToExecute;
+        nextLineToFetch = getFirstActiveLine(lineNo);
+        nextLineToExecute = undefined;
+        return nextLineToFetch;
     },
     /**
      * Checks if a string is a valid mips line
@@ -332,7 +356,7 @@ function MipsEmulator(mipsArgs){
             mipsCode.code.push(line);
         });
         // Reset to first active line, as the code changed
-        this.setLine(1);
+        this.setNextLineToFetch(1);
     },
     /**
      * Run an individual line
@@ -379,8 +403,9 @@ function MipsEmulator(mipsArgs){
      */
     this.step = function(){
         /* Advance the pipeline */
-        currentLine = nextLineToExecute;
-        nextLineToExecute = getFirstActiveLine(nextLineToExecute+1);
+        currentLine = this.getNextLineToExecute();
+        nextLineToExecute = nextLineToFetch;
+        nextLineToFetch = getFirstActiveLine(nextLineToExecute + 1);
         
         if(debug) console.log("Running line: " + currentLine + " - " + JSON.stringify(mipsCode.code[currentLine]));
         // check if we are finished with the emulation
@@ -400,6 +425,10 @@ function MipsEmulator(mipsArgs){
          */
         var lineToExecute = mipsCode.code[currentLine];
         runLine(lineToExecute);
+        if (!pipelineEmulationEnabled) {
+            /* We skip the fetch step if the pipeline is disabled */
+            nextLineToExecute = nextLineToFetch;
+        }
         ret.nextLine = nextLineToExecute;
         if(nextLineToExecute > mipsCode.code.length - 1) finishEmulation();
         return ret;
@@ -410,7 +439,15 @@ function MipsEmulator(mipsArgs){
      * @return {Number}
      */
     this.getNextLineToExecute = function(){
-        return nextLineToExecute;
+        return nextLineToExecute || nextLineToFetch;
+    },
+    /**
+     * Returns the next line number to be fetched
+     * @member mipsEmulator
+     * @return {Number}
+     */
+    this.getCurrentLine = function(){
+        return currentLine;
     },
     /**
      * Jump to a specified label
@@ -435,7 +472,13 @@ function MipsEmulator(mipsArgs){
      */
     this.goToLine = function(lineNo) {
         if(debug) console.log("Going to line: "+ line);
-        return ME.setLine(lineNo);
+        nextLineToFetch = getFirstActiveLine(lineNo);
+        return nextLineToFetch;
+    }
+    this.linkReturnAddress = function(reg) {
+        var returnInstruction = (pipelineEmulationEnabled?nextLineToFetch:this.getNextLineToExecute()+1);
+        this.setRegisterVal(reg, returnInstruction);
+
     }
     this.onSetOverflowFlag = function() {}, // e.g. for 8 bit registers signed, 127 + 1 causes an overflow, since we can't store 128, so it wraps around to -128.
     this.onSetCarryFlag = function() {}, // e.g. for 8 bit registers unsigned, 255 + 1 causes a carry flag, since we can't store 256, so it wraps around to 0.
@@ -464,6 +507,9 @@ function MipsEmulator(mipsArgs){
     this.setPseudoInstructionsEnabled = function(value) {
         pseudoInstructionsEnabled = value;
     }
+    this.setPipelineEmulationEnabled = function(value) {
+        pipelineEmulationEnabled = value;
+    }
 
     ////////////////////////////////////////////////
     // Private Methods
@@ -471,8 +517,8 @@ function MipsEmulator(mipsArgs){
     function finishEmulation(){
         ME.running = false;
         mipsArgs.onFinish();
-        if(debug) console.log("Emulation finished. Returning to line: " + ME.setLine(1));
-        ME.setLine(1);
+        if(debug) console.log("Emulation finished. Returning to line: " + ME.setNextLineToFetch(1));
+        ME.setNextLineToFetch(1);
         return ME.FINISHED_EMULATION;
     };
 

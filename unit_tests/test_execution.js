@@ -885,7 +885,7 @@ test("BGEZAL", function() {
 	throws(function() {
 		ME.runLines([
 			"ADDI $t0, $zero, 1",
-			"BGEZAL $t0, foo"
+			"BGEZAL $t0, foo",
 		]);
 	}, JumpError, "There is no foo label.");
 
@@ -894,7 +894,7 @@ test("BGEZAL", function() {
 		"BGEZAL $t0, tgt",
 		"tgt:"
 	]);
-	equal(ME.getRegisterVal('$ra'), 4);
+	equal(ME.getRegisterVal('$ra'), 3);
 });
 
 test("BGTZ", function() {
@@ -1001,7 +1001,7 @@ test("BLTZAL", function() {
 			"BLTZAL $t0, tgt",
 			"tgt:"
 	]);
-	equal(ME.getRegisterVal('$ra'), 4);
+	equal(ME.getRegisterVal('$ra'), 3);
 });
 
 test("LUI", function(){
@@ -1117,4 +1117,22 @@ test("XORI", function(){
 	equal(ME.getRegisterVal("$t1"), 1, "0 ^ 1 is 1");
 	equal(ME.getRegisterVal("$t2"), 1, "1 ^ 0 is 1");
 	equal(ME.getRegisterVal("$t3"), 0, "1 ^ 1 is 0");
+});
+
+test("Pipeline Emulation", function() {
+	ME.setPipelineEmulationEnabled(true);
+	ME.runLines([
+		"ADDI $t0, $zero, 10",
+		"JAL test",
+		"ADDI $t0, $zero, 1",
+		"j end",
+		"ADDI $t0, $t0, 1",
+		"test:",
+		"addi $t0, $t0, 1",
+		"jr $ra",
+		"addi $t0, $t0, 2",
+		"end:"
+	]);
+	equal(ME.getRegisterVal("$t0"), 5);
+	ME.setPipelineEmulationEnabled(false);
 });

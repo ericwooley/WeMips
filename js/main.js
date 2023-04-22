@@ -41,7 +41,7 @@ $(document).ready(function(){
          */
         onFinish: function(){
             addToLog('success', "Emulation complete, returning to line 1");
-            me.setLine(1);
+            me.setNextLineToFetch(1);
             setHighlights({lineRan: lastLineNoRun, nextLine: me.getNextLineToExecute()});
             running = false;
         },
@@ -127,6 +127,7 @@ $(document).ready(function(){
     $("#optionShowRelative").change(switchAddressMode);
     $("#autoSwitch").change(function(e){autoSwitch = $(e.target).is(':checked');});
     $("#pseudoSwitch").change(function(e){me.setPseudoInstructionsEnabled($(e.target).is(':checked'));});
+    $("#pipelineSwitch").change(function(e){me.setPipelineEmulationEnabled($(e.target).is(':checked'));});
     $("#clearLog").on('click', function(){$("#log").html('')});
     $("#stackDisplayType").change(changeStackType);
     //$(".stackVal").on('blur', manualStackEdit); This has to be setup after the stack has been created
@@ -135,7 +136,7 @@ $(document).ready(function(){
     function setLine(){
         var newLine = $("#currentLineInput").val();
         // if(debug) console.log("Setting new line: "+ newLine);
-        if(!_.isNumber(me.setLine(Number(newLine)))) console.error("Error setting line: " + newLine);
+        if(!_.isNumber(me.setNextLineToFetch(Number(newLine)))) console.error("Error setting line: " + newLine);
         // if(debug) console.log("nextLine"+ me.getNextLineToExecute());
         setHighlights({lineRan: null, nextLine: me.getNextLineToExecute()})
         return false;
@@ -174,7 +175,7 @@ $(document).ready(function(){
         } catch(e){
             addToLog('error', e.message, lastLineAttempted);
             running = false;
-            //me.setLine(lastLineAttempted + 1);
+            //me.setNextLineToFetch(lastLineAttempted + 1);
             //setHighlights();
         }
 
