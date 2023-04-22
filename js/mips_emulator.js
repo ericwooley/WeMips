@@ -408,19 +408,28 @@ function MipsEmulator(mipsArgs){
     /**
      * Jump to a specified label
      * @member mipsEmulator
-     * @param  {String} label The label to jump too
-     * @return {Number} The line number you jumped too.
+     * @param  {String} label The label to jump to
+     * @return {Number} The line number you jumped to
      */
     this.goToLabel = function(label){
         var line = mipsCode.labels[label];
         if(debug) console.log("Getting label: "+ label + " - " +JSON.stringify(line) );
         if(line){
-            ME.setLine(line.lineNo);
-            return currentLine; // TODO: probably don't need a return value here, instead, listen for an onChangeLineNumber handler
+            return this.goToLine(line.lineNo);
         } else {
             throw new JumpError('Unknown label: {0}'.format(label));
         }
-    },
+    }
+    /**
+     * Jump to a specified line number
+     * @member mipsEmulator
+     * @param  {String} lineNo The line number to jump to
+     * @return {Number} The line number you jumped to
+     */
+    this.goToLine = function(lineNo) {
+        if(debug) console.log("Going to line: "+ line);
+        return ME.setLine(lineNo);
+    }
     this.onSetOverflowFlag = function() {}, // e.g. for 8 bit registers signed, 127 + 1 causes an overflow, since we can't store 128, so it wraps around to -128.
     this.onSetCarryFlag = function() {}, // e.g. for 8 bit registers unsigned, 255 + 1 causes a carry flag, since we can't store 256, so it wraps around to 0.
     this.setUnpreservedRegsToGarbage = function() {

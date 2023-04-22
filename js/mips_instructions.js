@@ -319,18 +319,14 @@ function mipsInstructionExecutor(ME) {
         'JALR': {
             runMethod: function(namedArgs) {
                 ME.setRegisterVal(namedArgs.$rd, ME.getLineNumber() + 1);
-                // TODO: the line numbers should be random and not start at 0
-                // Also, blank lines should probably have a line number associated with them
                 var lineNumber = ME.getRegisterUnsignedVal(namedArgs.$rs);
-                ME.setLine(lineNumber);
+                ME.goToLine(lineNumber);
             }
         },
         'JR': {
             runMethod: function(namedArgs) {
-                // TODO: the line numbers should be random and not start at 0
-                // Also, blank lines should probably have a line number associated with them
                 var lineNumber = ME.getRegisterUnsignedVal(namedArgs.$rs);
-                ME.setLine(lineNumber);
+                ME.goToLine(lineNumber);
             }
         },
         /////////////////////////////////////////////
