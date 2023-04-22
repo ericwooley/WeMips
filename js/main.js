@@ -157,11 +157,7 @@ $(document).ready(function(){
         // if this code is no longer valid, reanalyze.
         if(!me.valid){
             try{
-                mipsAnalyze();
-                  mipsAnalyze(true);
-                  me.setLine(1);
-                  lastLineNoRun = null;
-                  setHighlights();
+                  mipsAnalyze();
             } catch(e){
                 addToLog('error', e.message, 1);
             }
@@ -192,10 +188,7 @@ $(document).ready(function(){
         //newContent = newContent.replace(/\n\s+/g, '\n');
         editor.setValue(newContent);
 
-        mipsAnalyze(true);
-        me.setLine(1);
-        lastLineNoRun = null;
-        setHighlights();
+        mipsAnalyze();
     };
 
     function manualRegistryEdit(e){
@@ -265,12 +258,7 @@ $(document).ready(function(){
     function run(){
         // if this code is no longer valid, reanalyze.
         if(!me.valid){
-            editor.save();
-            me.setCode($("#editor").val());
-            mipsAnalyze(true);
-            me.setLine(1);
-            lastLineNoRun = null;
-            setHighlights();
+            mipsAnalyze();
         }
         running = true;
         var lineRanThisRun = 0;
@@ -293,19 +281,13 @@ $(document).ready(function(){
         }
 
     };
-    function mipsAnalyze(goBackToLineOne){
+    function mipsAnalyze(){
         editor.save();
         linesOfCode = editor.lineCount();
         me.setCode($("#editor").val());
-        if(goBackToLineOne) me.setLine(1);
         me.valid = true;
-    };
-    function getCodeAsString(){
-        editor.save();
-        return $("#editor").val();
-    };
-    function unsignInt(num){
-        return (num << 31) >>> 0;
+        lastLineNoRun = null;
+        setHighlights();
     };
     function setSP(address){
         addStackAddress(address, '', false);

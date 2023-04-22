@@ -325,10 +325,8 @@ function MipsEmulator(mipsArgs){
             // if(debug) console.log(JSON.stringify(line));
             mipsCode.code.push(line);
         });
-        if(mipsCode.code[currentLine] && mipsCode.code[currentLine].ignore){
-            incrementLine();
-            if(debug) console.log("First line is to be ignored, first line set to: " + currentLine);
-        }
+        // Reset to first active line, as the code changed
+        this.setLine(1);
     },
     /**
      * Run an individual line
@@ -351,7 +349,6 @@ function MipsEmulator(mipsArgs){
         // lines is an array of strings
         lines = lines.join('\n');
         this.setCode(lines);
-        this.setLine(1);
         this.run();
     },
     /**
