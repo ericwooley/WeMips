@@ -894,7 +894,7 @@ test("BGEZAL", function() {
 		"BGEZAL $t0, tgt",
 		"tgt:"
 	]);
-	equal(ME.getRegisterVal('$ra'), 3);
+	equal(ME.getRegisterVal('$ra'), 4);
 });
 
 test("BGTZ", function() {
@@ -1001,7 +1001,7 @@ test("BLTZAL", function() {
 			"BLTZAL $t0, tgt",
 			"tgt:"
 	]);
-	equal(ME.getRegisterVal('$ra'), 3);
+	equal(ME.getRegisterVal('$ra'), 4);
 });
 
 test("LUI", function(){

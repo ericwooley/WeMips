@@ -6,43 +6,36 @@ function mipsInstructionExecutor(ME) {
         'ADD': {
             runMethod: function(namedArgs) {
             	ME.setRegisterVal(namedArgs.$rd, signedAddition(ME.getRegisterVal(namedArgs.$rs), ME.getRegisterVal(namedArgs.$rt)));
-            	ME.incerementPC();
             }
         },
         'ADDI': {
             runMethod: function(namedArgs) {
             	ME.setRegisterVal(namedArgs.$rt, signedAddition(ME.getRegisterVal(namedArgs.$rs), namedArgs.imm));
-            	ME.incerementPC();
             }
         },
         'ADDU': {
             runMethod: function(namedArgs) {
                 ME.setRegisterVal(namedArgs.$rd, unsignedAddition(ME.getRegisterUnsignedVal(namedArgs.$rs), ME.getRegisterUnsignedVal(namedArgs.$rt)));
-                ME.incerementPC();
             }
         },
         'ADDIU': {
             runMethod: function(namedArgs) {
                 ME.setRegisterVal(namedArgs.$rt, unsignedAddition(ME.getRegisterUnsignedVal(namedArgs.$rs), namedArgs.imm));
-                ME.incerementPC();
             }
         },
         'SUB': {
             runMethod: function(namedArgs) {
                 ME.setRegisterVal(namedArgs.$rd, signedAddition(ME.getRegisterVal(namedArgs.$rs), -ME.getRegisterVal(namedArgs.$rt)));
-                ME.incerementPC();
             }
         },
         'SUBU': {
             runMethod: function(namedArgs) {
                 ME.setRegisterVal(namedArgs.$rd, unsignedAddition(ME.getRegisterUnsignedVal(namedArgs.$rs), -ME.getRegisterUnsignedVal(namedArgs.$rt)));
-                ME.incerementPC();
             }
         },
         'LUI': {
             runMethod: function(namedArgs){
                 ME.setRegisterVal(namedArgs.$rd, (namedArgs.imm << 16));
-                ME.incerementPC();
             }
         },
         /////////////////////////////////////////////
@@ -53,7 +46,6 @@ function mipsInstructionExecutor(ME) {
                 ME.setRegisterVal(namedArgs.$rd,
                     ME.getRegisterVal(namedArgs.$rs) & ME.getRegisterVal(namedArgs.$rt)
                 );
-                ME.incerementPC();
             }
         },
         'ANDI': {
@@ -61,7 +53,6 @@ function mipsInstructionExecutor(ME) {
                 ME.setRegisterVal(namedArgs.$rt,
                     ME.getRegisterVal(namedArgs.$rs) & namedArgs.imm
                 );
-                ME.incerementPC();
             }
         },
         'NOR': {
@@ -69,7 +60,6 @@ function mipsInstructionExecutor(ME) {
                 ME.setRegisterVal(namedArgs.$rd,
                     ~(ME.getRegisterVal(namedArgs.$rs) | ME.getRegisterVal(namedArgs.$rt))
                 );
-                ME.incerementPC();
             }
         },
         'OR': {
@@ -77,7 +67,6 @@ function mipsInstructionExecutor(ME) {
                 ME.setRegisterVal(namedArgs.$rd,
                     (ME.getRegisterVal(namedArgs.$rs) | ME.getRegisterVal(namedArgs.$rt))
                 );
-                ME.incerementPC();
             }
         },
         'ORI': {
@@ -85,7 +74,6 @@ function mipsInstructionExecutor(ME) {
                 ME.setRegisterVal(namedArgs.$rt,
                     (ME.getRegisterVal(namedArgs.$rs) | namedArgs.imm)
                 );
-                ME.incerementPC();
             }
         },
         'XOR': {
@@ -93,7 +81,6 @@ function mipsInstructionExecutor(ME) {
                 ME.setRegisterVal(namedArgs.$rd,
                     (ME.getRegisterVal(namedArgs.$rs) ^ ME.getRegisterVal(namedArgs.$rt))
                 );
-                ME.incerementPC();
             }
         },
         'XORI': {
@@ -101,43 +88,36 @@ function mipsInstructionExecutor(ME) {
                 ME.setRegisterVal(namedArgs.$rt,
                     (ME.getRegisterVal(namedArgs.$rs) ^ namedArgs.imm)
                 );
-                ME.incerementPC();
             }
         },
         'SLL': {
             runMethod: function(namedArgs) {
                 ME.setRegisterVal(namedArgs.$rd, ME.getRegisterVal(namedArgs.$rt) << namedArgs.shamt);
-                ME.incerementPC();
             }
         },
         'SLLV': {
             runMethod: function(namedArgs) {
                 ME.setRegisterVal(namedArgs.$rd, ME.getRegisterVal(namedArgs.$rs) << (ME.getRegisterVal(namedArgs.$rt) & 31));
-                ME.incerementPC();
             }
         },
         'SRL': {
             runMethod: function(namedArgs) {
                 ME.setRegisterVal(namedArgs.$rd, ME.getRegisterVal(namedArgs.$rt) >>> namedArgs.shamt);
-                ME.incerementPC();
             }
         },
         'SRLV': {
             runMethod: function(namedArgs) {
                 ME.setRegisterVal(namedArgs.$rd, ME.getRegisterVal(namedArgs.$rs) >>> (ME.getRegisterVal(namedArgs.$rt) & 31));
-                ME.incerementPC();
             }
         },
         'SRA': {
             runMethod: function(namedArgs) {
                 ME.setRegisterVal(namedArgs.$rd, ME.getRegisterVal(namedArgs.$rt) >> namedArgs.shamt);
-                ME.incerementPC();
             }
         },
         'SRAV': {
             runMethod: function(namedArgs) {
                 ME.setRegisterVal(namedArgs.$rd, ME.getRegisterVal(namedArgs.$rs) >> (ME.getRegisterUnsignedVal(namedArgs.$rt) & 31));
-                ME.incerementPC();
             }
         },
         /////////////////////////////////////////////
@@ -153,24 +133,18 @@ function mipsInstructionExecutor(ME) {
             runMethod: function(namedArgs) {
                 if (ME.getRegisterVal(namedArgs.$rs) === ME.getRegisterVal(namedArgs.$rt))
                     ME.goToLabel(namedArgs.label);
-                else
-                    ME.incerementPC();
             }
         },
         'BNE': {
             runMethod: function(namedArgs) {
                 if (ME.getRegisterVal(namedArgs.$rs) !== ME.getRegisterVal(namedArgs.$rt))
                     ME.goToLabel(namedArgs.label);
-                else
-                    ME.incerementPC();
             }
         },
         'BGT': {
             runMethod: function(namedArgs) {
                 if (ME.getRegisterVal(namedArgs.$rs) > ME.getRegisterVal(namedArgs.$rt))
                     ME.goToLabel(namedArgs.label);
-                else
-                    ME.incerementPC();
             },
             pseudoInstruction: true
         },
@@ -178,8 +152,6 @@ function mipsInstructionExecutor(ME) {
             runMethod: function(namedArgs) {
                 if (ME.getRegisterUnsignedVal(namedArgs.$rs) > ME.getRegisterUnsignedVal(namedArgs.$rt))
                     ME.goToLabel(namedArgs.label);
-                else
-                    ME.incerementPC();
             },
             pseudoInstruction: true
         },
@@ -187,8 +159,6 @@ function mipsInstructionExecutor(ME) {
             runMethod: function(namedArgs) {
                 if (ME.getRegisterVal(namedArgs.$rs) >= ME.getRegisterVal(namedArgs.$rt))
                     ME.goToLabel(namedArgs.label);
-                else
-                    ME.incerementPC();
             },
             pseudoInstruction: true
         },
@@ -196,8 +166,6 @@ function mipsInstructionExecutor(ME) {
             runMethod: function(namedArgs) {
                 if (ME.getRegisterUnsignedVal(namedArgs.$rs) >= ME.getRegisterUnsignedVal(namedArgs.$rt))
                     ME.goToLabel(namedArgs.label);
-                else
-                    ME.incerementPC();
             },
             pseudoInstruction: true
         },
@@ -205,8 +173,6 @@ function mipsInstructionExecutor(ME) {
             runMethod: function(namedArgs) {
                 if (ME.getRegisterVal(namedArgs.$rs) < ME.getRegisterVal(namedArgs.$rt))
                     ME.goToLabel(namedArgs.label);
-                else
-                    ME.incerementPC();
             },
             pseudoInstruction: true
         },
@@ -214,8 +180,6 @@ function mipsInstructionExecutor(ME) {
             runMethod: function(namedArgs) {
                 if (ME.getRegisterUnsignedVal(namedArgs.$rs) < ME.getRegisterUnsignedVal(namedArgs.$rt))
                     ME.goToLabel(namedArgs.label);
-                else
-                    ME.incerementPC();
             },
             pseudoInstruction: true
         },
@@ -223,8 +187,6 @@ function mipsInstructionExecutor(ME) {
             runMethod: function(namedArgs) {
                 if (ME.getRegisterVal(namedArgs.$rs) <= ME.getRegisterVal(namedArgs.$rt))
                     ME.goToLabel(namedArgs.label);
-                else
-                    ME.incerementPC();
             },
             pseudoInstruction: true
         },
@@ -232,8 +194,6 @@ function mipsInstructionExecutor(ME) {
             runMethod: function(namedArgs) {
                 if (ME.getRegisterUnsignedVal(namedArgs.$rs) <= ME.getRegisterUnsignedVal(namedArgs.$rt))
                     ME.goToLabel(namedArgs.label);
-                else
-                    ME.incerementPC();
             },
             pseudoInstruction: true
         },
@@ -241,8 +201,6 @@ function mipsInstructionExecutor(ME) {
             runMethod: function(namedArgs) {
                 if (ME.getRegisterVal(namedArgs.$rs) === 0)
                     ME.goToLabel(namedArgs.label);
-                else
-                    ME.incerementPC();
             },
             pseudoInstruction: true
         },
@@ -250,8 +208,6 @@ function mipsInstructionExecutor(ME) {
             runMethod: function(namedArgs) {
                 if (ME.getRegisterVal(namedArgs.$rs) !== 0)
                     ME.goToLabel(namedArgs.label);
-                else
-                    ME.incerementPC();
             },
             pseudoInstruction: true
         },
@@ -259,50 +215,40 @@ function mipsInstructionExecutor(ME) {
             runMethod: function(namedArgs) {
                 if (ME.getRegisterVal(namedArgs.$rs) > 0)
                     ME.goToLabel(namedArgs.label);
-                else
-                    ME.incerementPC();
             }
         },
         'BGEZ': {
             runMethod: function(namedArgs) {
                 if (ME.getRegisterVal(namedArgs.$rs) >= 0)
                     ME.goToLabel(namedArgs.label);
-                else
-                    ME.incerementPC();
             }
         },
         'BGEZAL': {
             runMethod: function(namedArgs) {
                 if (ME.getRegisterVal(namedArgs.$rs) >= 0) {
-                    ME.setRegisterVal('$ra', ME.getLineNumber() + 1);
+                    ME.setRegisterVal('$ra', ME.getNextLineToExecute());
                     ME.goToLabel(namedArgs.label);
-                } else
-                    ME.incerementPC();
+                }
             }
         },
         'BLTZ': {
             runMethod: function(namedArgs) {
                 if (ME.getRegisterVal(namedArgs.$rs) < 0)
                     ME.goToLabel(namedArgs.label);
-                else
-                    ME.incerementPC();
             }
         },
         'BLTZAL': {
             runMethod: function(namedArgs) {
                 if (ME.getRegisterVal(namedArgs.$rs) < 0) {
-                    ME.setRegisterVal('$ra', ME.getLineNumber() + 1);
+                    ME.setRegisterVal('$ra', ME.getNextLineToExecute());
                     ME.goToLabel(namedArgs.label);
-                } else
-                ME.incerementPC();
+                }
             }
         },
         'BLEZ': {
             runMethod: function(namedArgs) {
                 if (ME.getRegisterVal(namedArgs.$rs) <= 0)
                     ME.goToLabel(namedArgs.label);
-                else
-                    ME.incerementPC();
             }
         },
         'J': {
@@ -312,13 +258,13 @@ function mipsInstructionExecutor(ME) {
         },
         'JAL': {
             runMethod: function(namedArgs) {
-                ME.setRegisterVal('$ra', ME.getLineNumber() + 1);
+                ME.setRegisterVal('$ra', ME.getNextLineToExecute());
                 ME.goToLabel(namedArgs.label);
             }
         },
         'JALR': {
             runMethod: function(namedArgs) {
-                ME.setRegisterVal(namedArgs.$rd, ME.getLineNumber() + 1);
+                ME.setRegisterVal(namedArgs.$rd, ME.getNextLineToExecute());
                 var lineNumber = ME.getRegisterUnsignedVal(namedArgs.$rs);
                 ME.goToLine(lineNumber);
             }
@@ -335,7 +281,6 @@ function mipsInstructionExecutor(ME) {
         'LW': {
             runMethod: function(namedArgs) {
                 ME.setRegisterVal(namedArgs.$rd, ME.stack.getWord(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm));
-                ME.incerementPC();
             }
         },
         'LWL': {
@@ -347,7 +292,6 @@ function mipsInstructionExecutor(ME) {
                 var lowerMask = Math.pow(2,bitOffset)-1;
                 var upperMask = ~lowerMask;
                 ME.setRegisterVal(namedArgs.$rd, ((value << bitOffset) & upperMask) | (ME.getRegisterVal(namedArgs.$rd) & lowerMask));
-                ME.incerementPC();
             }
         },
         'LWR': {
@@ -359,7 +303,6 @@ function mipsInstructionExecutor(ME) {
                 var lowerMask = Math.pow(2,bitOffset)-1;
                 var upperMask = ~lowerMask;
                 ME.setRegisterVal(namedArgs.$rd, (ME.getRegisterVal(namedArgs.$rd) & upperMask) | (value & lowerMask));
-                ME.incerementPC();
             }
         },
         'SWL': {
@@ -369,7 +312,6 @@ function mipsInstructionExecutor(ME) {
                 var bitOffset = offset*8;
                 var value = ME.getRegisterVal(namedArgs.$rt) >>> bitOffset;
                 ME.stack.setDataAtAddress(addr, 4-offset, value);
-                ME.incerementPC();
             }
         },
         'SWR': {
@@ -380,50 +322,42 @@ function mipsInstructionExecutor(ME) {
                 var lowerMask = Math.pow(2, bitOffset)-1;
                 var value = ME.getRegisterVal(namedArgs.$rt) & lowerMask;
                 ME.stack.setDataAtAddress(addr & ~3, offset+1, value);
-                ME.incerementPC();
             }
         },
         'SW': {
             runMethod: function(namedArgs) {
                 ME.stack.setWord(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm, ME.getRegisterVal(namedArgs.$rt));
-                ME.incerementPC();
             }
         },
         'LH': {
             runMethod: function(namedArgs) {
                 ME.setRegisterVal(namedArgs.$rd, ME.stack.getHalfword(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm));
-                ME.incerementPC();
             }
         },
         'LHU': {
             runMethod: function(namedArgs) {
                 ME.setRegisterVal(namedArgs.$rd, ME.stack.getUnsignedHalfword(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm));
-                ME.incerementPC();
             }
         },
         'SH': {
             runMethod: function(namedArgs) {
                 ME.stack.setHalfword(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm, ME.getRegisterVal(namedArgs.$rt) & 65535);
-                ME.incerementPC();
             }
         },
         'LB': {
             runMethod: function(namedArgs) {
             	ME.setRegisterVal(namedArgs.$rd, ME.stack.getByte(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm));
-            	ME.incerementPC();
             }
         },
         'LBU': {
             runMethod: function(namedArgs) {
             	ME.setRegisterVal(namedArgs.$rd, ME.stack.getUnsignedByte(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm));
-            	ME.incerementPC();
             }
         },
         'SB': {
             runMethod: function(namedArgs) {
                 // TODO: should these be using unsignedAdd so that the appropriate flags are set?
             	ME.stack.setByte(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm, ME.getRegisterVal(namedArgs.$rt) & 255);
-            	ME.incerementPC();
             }
         },
         /////////////////////////////////////////////
@@ -433,28 +367,24 @@ function mipsInstructionExecutor(ME) {
             runMethod: function(namedArgs) {
                 var value = ME.getRegisterVal(namedArgs.$rs) < ME.getRegisterVal(namedArgs.$rt);
                 ME.setRegisterVal(namedArgs.$rd, value ? 1 : 0);
-                ME.incerementPC();
             }
         },
         'SLTI': {
             runMethod: function(namedArgs) {
                 var value = ME.getRegisterVal(namedArgs.$rs) < namedArgs.imm;
                 ME.setRegisterVal(namedArgs.$rt, value ? 1 : 0);
-                ME.incerementPC();
             }
         },
         'SLTU': {
             runMethod: function(namedArgs) {
                 var value = ME.getRegisterUnsignedVal(namedArgs.$rs) < ME.getRegisterUnsignedVal(namedArgs.$rt);
                 ME.setRegisterVal(namedArgs.$rd, value ? 1 : 0);
-                ME.incerementPC();
             }
         },
         'SLTIU': {
             runMethod: function(namedArgs) {
                 var value = ME.getRegisterUnsignedVal(namedArgs.$rs) < namedArgs.imm;
                 ME.setRegisterVal(namedArgs.$rt, value ? 1 : 0);
-                ME.incerementPC();
             }
         },
         /////////////////////////////////////////////
@@ -466,7 +396,6 @@ function mipsInstructionExecutor(ME) {
                 syscalls.execute();
                 // don't garbage up the registers, since some of the functions return values in the registers (e.g. $v0)
                 //ME.setUnpreservedRegsToGarbage();
-                ME.incerementPC();
             }
         }
     };

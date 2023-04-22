@@ -42,7 +42,7 @@ $(document).ready(function(){
         onFinish: function(){
             addToLog('success', "Emulation complete, returning to line 1");
             me.setLine(1);
-            setHighlights({lineRan: lastLineNoRun, nextLine: me.getLineNumber()});
+            setHighlights({lineRan: lastLineNoRun, nextLine: me.getNextLineToExecute()});
             running = false;
         },
         /*
@@ -110,8 +110,8 @@ $(document).ready(function(){
     // Keeps track of the next line we will run, we want to set it to the
     // first valid line.
     var nextMarker = editor.markText(
-        {line: me.getLineNumber()-1, ch: 0},
-        {line: me.getLineNumber(), ch: 0},
+        {line: me.getNextLineToExecute()-1, ch: 0},
+        {line: me.getNextLineToExecute(), ch: 0},
         {title: "Next line to be run", className: 'nextLine'}
     );
 
@@ -136,8 +136,8 @@ $(document).ready(function(){
         var newLine = $("#currentLineInput").val();
         // if(debug) console.log("Setting new line: "+ newLine);
         if(!_.isNumber(me.setLine(Number(newLine)))) console.error("Error setting line: " + newLine);
-        // if(debug) console.log("nextLine"+ me.getLineNumber());
-        setHighlights({lineRan: null, nextLine: me.getLineNumber()})
+        // if(debug) console.log("nextLine"+ me.getNextLineToExecute());
+        setHighlights({lineRan: null, nextLine: me.getNextLineToExecute()})
         return false;
     };
     function markEditorAsInvalid(){
@@ -163,7 +163,7 @@ $(document).ready(function(){
             }
         }
         try{
-            lastLineAttempted = me.getLineNumber();
+            lastLineAttempted = me.getNextLineToExecute();
             lineResult = me.step();
             if(lineResult){
                 setHighlights(lineResult);
@@ -226,7 +226,7 @@ $(document).ready(function(){
     function setHighlights(lines){
         lines = lines || {};
         lastLineNoRun = lines.lineRan || lastLineNoRun || null;
-        nextLine = lines.nextLine || me.getLineNumber();
+        nextLine = lines.nextLine || me.getNextLineToExecute();
         // if(debug) console.log("Active line: " + lastLineNoRun);
         // if(debug) console.log("Next line: " + nextLine);
         $("#currentLineInput").val(nextLine);

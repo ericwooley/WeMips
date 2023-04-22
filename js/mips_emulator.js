@@ -102,7 +102,6 @@ function MipsEmulator(mipsArgs){
     var readonlyRegs = [
         '$zero', '$at', '$k0', '$k1', '$gp'
     ];
-    // The intial line where we start the emulation.
     /**
      * The current line the mips emulator is looking at.
      * @property currentLine
@@ -110,7 +109,15 @@ function MipsEmulator(mipsArgs){
      * @member mipsEmulator
      * @type {Number}
      */
-    var currentLine = 1;
+    var nextLineToExecute = 1;
+    /** The current line being executed
+     * This is used for error messages
+     * @property currentLine
+     * @private
+     * @member mipsEmulator
+     * @type {Number}
+     */
+    var currentLine;
     /** Flag for enabling pseudo instructions
      * @property pseudoInstructionsEnabled
      * @private
@@ -277,9 +284,8 @@ function MipsEmulator(mipsArgs){
         var line = mipsCode.code[lineNo];
         if(debug) console.log("setting line: "+ lineNo + " - " + JSON.stringify(line));
         if(!line) return false;
-        currentLine = lineNo;
-        if(line.ignore) incrementLine();
-        return currentLine;
+        nextLineToExecute = getFirstActiveLine(lineNo);
+        return nextLineToExecute;
     },
     /**
      * Checks if a string is a valid mips line
@@ -372,21 +378,30 @@ function MipsEmulator(mipsArgs){
      * and object.nextLine which is the line that is about to be run.
      */
     this.step = function(){
+        /* Advance the pipeline */
+        currentLine = nextLineToExecute;
+        nextLineToExecute = getFirstActiveLine(nextLineToExecute+1);
+        
         if(debug) console.log("Running line: " + currentLine + " - " + JSON.stringify(mipsCode.code[currentLine]));
         // check if we are finished with the emulation
         if(currentLine > mipsCode.code.length - 1) return finishEmulation();
         if(!mipsCode.code[currentLine]) throw new MipsError("Line " + currentLine + " does not exist");
         if(mipsCode.code[currentLine].error) throw new MipsError(mipsCode.code[currentLine].error.toString());
-        if(mipsCode.code[currentLine].ignore) incrementLine();
+        assert(!mipsCode.code[currentLine].ignore);
         // we need to check again, because the remainder of the lines could have been comments or blank.
 
 
         var ret = {
             lineRan: Number(currentLine)
         };
-        runLine(mipsCode.code[currentLine]);
-        ret.nextLine = currentLine;
-        if(currentLine > mipsCode.code.length - 1) finishEmulation();
+        /* We pre-set the next line here, so that we do not need to call
+         * incrementPC all the time and get more centralized control over
+         * execution progress.
+         */
+        var lineToExecute = mipsCode.code[currentLine];
+        runLine(lineToExecute);
+        ret.nextLine = nextLineToExecute;
+        if(nextLineToExecute > mipsCode.code.length - 1) finishEmulation();
         return ret;
     },
     /**
@@ -394,16 +409,8 @@ function MipsEmulator(mipsArgs){
      * @member mipsEmulator
      * @return {Number}
      */
-    this.getLineNumber = function(){
-        return currentLine;
-    },
-    /**
-     * Increments the line to be executed until it finds a valid line.
-     * @member mipsEmulator
-     * @return {null}
-     */
-    this.incerementPC = function() {
-        incrementLine();
+    this.getNextLineToExecute = function(){
+        return nextLineToExecute;
     },
     /**
      * Jump to a specified label
@@ -469,19 +476,20 @@ function MipsEmulator(mipsArgs){
         return ME.FINISHED_EMULATION;
     };
 
-    /**
-     * Increments the current line to the next line which is not ignored.
-     * @return {null}
+    /** Determine the first line that is not marked to be ignored
+     * @param {Number} lineNo   The starting line number
+     * @return {Number}  The first line not marked to be ignored
+     *                   at or after the given starting line number
      */
-    function incrementLine(){
-        currentLine++;
-        while(mipsCode.code[currentLine]
-                && currentLine <= mipsCode.code.length
-                && mipsCode.code[currentLine].ignore != false
-        ){
-            if(debug) console.log("ignoring line: " + currentLine);
-            currentLine++;
+    function getFirstActiveLine(lineNo) {
+        while(lineNo <= mipsCode.code.length
+            && mipsCode.code[lineNo]
+            && mipsCode.code[lineNo].ignore != false)
+        {
+            if(debug) console.log("ignoring line: " + lineNo);
+            lineNo++;
         }
+        return lineNo;
     }
     /**
      * Run an individual line
@@ -497,8 +505,7 @@ function MipsEmulator(mipsArgs){
         }
         if (!line || line.ignore || line.error) {
             if(!line) error("Line is null");
-            else error(line.error, currentLine); // returns error if there is one or null if not.
-            incrementLine();
+            else error(line.error); // returns error if there is one or null if not.
             return false;
         }
         instruction = instructions[line.instruction];
