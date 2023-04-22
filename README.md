@@ -106,10 +106,22 @@ Most of them are self explanatory, or have comments that explain how they work.
 
 #### Auto switch register/stack/log tabs
 
-![Register/Stack/Log Tabs](images/image07.png)
+![Option Switches](images/image07.png)
 
 With this feature enabled, whenever a register (or stack) is modified, the tab will automatically switch the corresponding tab so that you can see the relevant change.
 In the case where multiple things are modified at once, the last change will take precedence.
+
+#### Enable/Disable Pseudo-Instruction Support
+
+By default, the supported pseudo-instructions are active.
+To disable them, remove the checkmark.
+The emulator will then report an error when you use a pseudo-instruction.
+
+#### Pipeline Emulation
+
+By default, emulation of pipeline effects - such as delayed branch execution - is disabled.
+To enable it, activate the checkmark.
+Note that now branch and jump instructions will be delayed by one instruction, so that the instructions immediately after the branch/jump will be executed before the command that is being jumped to.
 
 #### Show stack byte as number/ascii/binary
 
@@ -142,7 +154,9 @@ You can click a register's value and overwrite its contents with whatever you wa
 | Shift Operations                 | SLL, SLLV, SRL, SRLV, SRA, SRAV        |
 | Jump Instructions                | B, J, JAL, JR, JALR                    |
 | Branch Instructions              | BEQ, BNE, BGE, BGT, BLE, BLT           |
+| Branch Instructions (unsigned)   | BGEU, BGTU, BLEU, BLTU                 |
 | Branch Instructions (zero comp.) | BEQZ, BNEZ, BGEZ, BGTZ, BLEZ, BLTZ     |
+| Branch and Link Instructions     | BGEZAL, BLTZAL                         |
 | Memory Load Instructions         | LB, LBU, LH, LHW, LW, LWL, LWR         |
 | Memory Store Instructions        | SB, SH, SW, SWL, SWR                   |
 
