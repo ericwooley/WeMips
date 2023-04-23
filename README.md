@@ -144,19 +144,21 @@ You can click a register's value and overwrite its contents with whatever you wa
 
 ## Available MIPS instructions
 
-| Category                         | Instructions                           |
-| -------------------------------- | -------------------------------------- |
-| Arithmetic Operations            | ADD, ADDI, ADDU, ADDIU, SUB, SUBU, LUI |
-| Comparison Instructions          | SLT, SLTI, SLTU, SLTIU                 |
-| Logical Operations               | AND, ANDI, OR, ORI, XOR, XORI, NOR     |
-| Shift Operations                 | SLL, SLLV, SRL, SRLV, SRA, SRAV        |
-| Jump Instructions                | B, J, JAL, JR, JALR                    |
-| Branch Instructions              | BEQ, BNE, BGE, BGT, BLE, BLT           |
-| Branch Instructions (unsigned)   | BGEU, BGTU, BLEU, BLTU                 |
-| Branch Instructions (zero comp.) | BEQZ, BNEZ, BGEZ, BGTZ, BLEZ, BLTZ     |
-| Branch and Link Instructions     | BGEZAL, BLTZAL                         |
-| Memory Load Instructions         | LB, LBU, LH, LHW, LW, LWL, LWR         |
-| Memory Store Instructions        | SB, SH, SW, SWL, SWR                   |
+| Category                         | Instructions                                                       |
+| -------------------------------- | ------------------------------------------------------------------ |
+| Arithmetic Operations            | **ADD**, **ADDI**, **ADDU**, **ADDIU**, **SUB**, **SUBU**, **LUI** |
+| Comparison Instructions          | **SLT**, **SLTI**, **SLTU**, **SLTIU**                             |
+| Logical Operations               | **AND**, **ANDI**, **OR**, **ORI**, **XOR**, **XORI**, **NOR**     |
+| Shift Operations                 | **SLL**, **SLLV**, **SRL**, **SRLV**, **SRA**, **SRAV**            |
+| Jump Instructions                | B, **J**, **JAL**, **JR**, **JALR**                                |
+| Branch Instructions              | **BEQ**, **BNE**, BGT, BGE, BLT, BLE                               |
+| Branch Instructions (unsigned)   | BGTU, BGEU, BLTU, BLEU                                             |
+| Branch Instructions (zero comp.) | BEQZ, BNEZ, **BGTZ**, **BGEZ**, **BLTZ**, **BLEZ**                 |
+| Branch and Link Instructions     | **BGEZAL**, **BLTZAL**                                             |
+| Memory Load Instructions         | **LB**, **LBU**, **LH**, **LHW**, **LW**, **LWL**, **LWR**         |
+| Memory Store Instructions        | **SB**, **SH**, **SW**, **SWL**, **SWR**                           |
+
+Instructions shown in **bold** are hardware instructions, all others are pseudo-instructions.
 
 Note that the floating point unit (FPU) is not implemented!
 
