@@ -101,6 +101,12 @@
             <span class="input-group-addon">Embed</span>
             <input type="text" id="embedCode" class="form-control" value=''>
           </div><!-- /input-group -->
+          <ul>
+            <li><input type="checkbox" id="pseudoSwitch" checked><label for="pseudoSwitch">Enable
+                pseudo-instructions</label></li>
+            <li><input type="checkbox" id="pipelineSwitch"><label for="pipelineSwitch">Enable
+              pipeline emulation</label></li>
+          </ul>
         </div>
         <br />
         <span class='pull-right'>
@@ -119,11 +125,7 @@
         <button id="run"> Run </button>
         <ul>
           <li><input type="checkbox" id="autoSwitch" checked><label for="autoSwitch">Enable auto switching</label></li>
-          <li><input type="checkbox" id="pseudoSwitch" checked><label for="pseudoSwitch">Enable
-              pseudo-instructions</label></li>
-          <li><input type="checkbox" id="pipelineSwitch"><label for="pipelineSwitch">Enable
-            pipeline emulation</label></li>
-          </ul>
+        </ul>
         <!-- Nav tabs -->
         <ul class="nav nav-tabs">
           <li class='active'><a href="#s-registers" data-toggle="tab">S</a></li>

@@ -106,22 +106,20 @@ Most of them are self explanatory, or have comments that explain how they work.
 
 #### Auto switch register/stack/log tabs
 
-![Option Switches](images/image07.png)
+![Auto switch register/stack/log tabs](images/image07.png)
 
 With this feature enabled, whenever a register (or stack) is modified, the tab will automatically switch the corresponding tab so that you can see the relevant change.
 In the case where multiple things are modified at once, the last change will take precedence.
 
-#### Enable/Disable Pseudo-Instruction Support
 
-By default, the supported pseudo-instructions are active.
-To disable them, remove the checkmark.
-The emulator will then report an error when you use a pseudo-instruction.
+#### Emulation Options
 
-#### Pipeline Emulation
+![Emulation Options](images/image08.png)
 
-By default, emulation of pipeline effects - such as delayed branch execution - is disabled.
-To enable it, activate the checkmark.
-Note that now branch and jump instructions will be delayed by one instruction, so that the instructions immediately after the branch/jump will be executed before the command that is being jumped to.
+By default, support for pseudo-instructions is active and pipeline emulation is inactive.
+To change that, use the emulation options below the text editor.
+
+Note that when pipeline emulation is activated, branch and jump instructions will be delayed by one instruction slot, and the instruction immediately following them will be executed before the first instruction at the target location.
 
 #### Show stack byte as number/ascii/binary
 
