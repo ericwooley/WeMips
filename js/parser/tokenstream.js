@@ -82,6 +82,27 @@ Parser.TokenStream = function(lexer) {
         currentTokenIndex = rewindStack.pop();
     }
 
+    /** Perform a parsing action speculatively
+     * @param {Function}  fn   The function object to call
+     * @param             defValue   The default value to return if parsing fails
+     * @return The return value of the function or the given default value
+    */
+    this.tryParsing = function(fn, defValue) {
+        try {
+            this.pushCheckpoint();
+            let ret = fn();
+            this.commit();
+            return ret;
+        } catch (e) {
+            if (e instanceof Parser.ParseError) {
+                this.rewind();
+                return defValue;
+            } else {
+                throw e;
+            }
+        }
+    }
+
     /** Take a look at the current token without consuming it
      * @param {number}   offset  The offset from the next token to the token to lookahead (optional, default: 0=next token)
      * @returns {Parser.Token}   The lookahead token

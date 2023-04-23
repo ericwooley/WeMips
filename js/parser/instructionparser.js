@@ -254,30 +254,17 @@ Parser.InstructionParser = function (tokenStream, symbols) {
      * @returns {String} The label name.
      */
     this.parseLabel = function() {
-        this.tokenStream.pushCheckpoint();
         let labelToken = this.tokenStream.consume(Parser.TokenType.Identifier);
         this.tokenStream.consume(Parser.TokenType.Colon);
         return labelToken.value;
     }
 
-    /** Parse an optional label.
-     * 
-     * If the following token sequence is not a label, this will consume no tokens.
-     * 
-     * @returns {(String|undefined)} The label name or <code>undefined</code> if no label is present.
+    /** Parse an optional label
+     * @returns {(String|undefined)} The label name or undefined, if no label present.
      */
     this.parseOptionalLabel = function() {
-        try {
-            this.tokenStream.pushCheckpoint();
-            let label = this.parseLabel();
-            this.tokenStream.commit();
-            return label;
-        } catch (e) {
-            if (e instanceof Parser.ParseError) {
-                this.tokenStream.rewind();
-                return undefined;
-            }
-        }
+        let that = this;
+        return this.tokenStream.tryParsing(function() { return that.parseLabel(); });
     }
 
     /** Parse a possibly non-empty sequence of labels

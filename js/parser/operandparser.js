@@ -113,27 +113,25 @@ Parser.OperandParser = function(tokenStream, symbols) {
      * @return {Object} A dictionary containing the offset in key `imm` and the register name in key  `$rs`.
      */
     this.parseLoadStoreAddress = function(bits) {
-        let imm;
-        try {
-            this.tokenStream.pushCheckpoint();
-            imm = this.parseSignedConstant(bits);
-            this.tokenStream.commit();
-        } catch (e) {
-            this.tokenStream.rewind();
-            if (e instanceof Parser.ParseError) {
-                imm = 0;
-            } else {
-                throw e;
-            }
-        }
-        this.tokenStream.consume(Parser.TokenType.LParen);
-        let reg = this.parseRegister();
-        this.tokenStream.consume(Parser.TokenType.RParen);
+        let that = this;
+        let imm = this.tokenStream.tryParsing(
+            function() { return that.parseSignedConstant(bits); },
+            0
+        );
+        let reg = this.tokenStream.tryParsing(
+            function() {
+                that.tokenStream.consume(Parser.TokenType.LParen);
+                let reg = that.parseRegister();
+                that.tokenStream.consume(Parser.TokenType.RParen);
+                return reg;
+            },
+            '$zero'
+        );
         return {
             'imm': imm,
             '$rs': reg
         };
-    }
+}
 }
 
 /** Create an {@link Parser.OperandParser} from a string
