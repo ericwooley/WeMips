@@ -198,7 +198,7 @@
     
 
     
-    <h4 class="name" id="checkNext"><span class="type-signature"></span>checkNext<span class="signature">(type, index)</span><span class="type-signature"> &rarr; {boolean}</span></h4>
+    <h4 class="name" id="checkNext"><span class="type-signature"></span>checkNext<span class="signature">(type, offset)</span><span class="type-signature"> &rarr; {boolean}</span></h4>
     
 
     
@@ -265,7 +265,7 @@
 
         <tr>
             
-                <td class="name"><code>index</code></td>
+                <td class="name"><code>offset</code></td>
             
 
             <td class="type">
@@ -281,7 +281,7 @@
 
             
 
-            <td class="description last">The number of tokens to look ahead (optional, missing or 0=next token)</td>
+            <td class="description last">The offset from the next token to the token to lookahead (optional, default: 0=next token)</td>
         </tr>
 
     
@@ -322,7 +322,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="parser_tokenstream.js.html">parser/tokenstream.js</a>, <a href="parser_tokenstream.js.html#line25">line 25</a>
+        <a href="parser_tokenstream.js.html">parser/tokenstream.js</a>, <a href="parser_tokenstream.js.html#line101">line 101</a>
     </li></ul></dd>
     
 
@@ -369,6 +369,94 @@
 </dl>
 
     
+
+
+
+
+
+        
+            
+
+    
+
+    
+    <h4 class="name" id="commit"><span class="type-signature"></span>commit<span class="signature">()</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Remove the last rewind checkpoint
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="parser_tokenstream.js.html">parser/tokenstream.js</a>, <a href="parser_tokenstream.js.html#line75">line 75</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -481,7 +569,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="parser_tokenstream.js.html">parser/tokenstream.js</a>, <a href="parser_tokenstream.js.html#line53">line 53</a>
+        <a href="parser_tokenstream.js.html">parser/tokenstream.js</a>, <a href="parser_tokenstream.js.html#line111">line 111</a>
     </li></ul></dd>
     
 
@@ -620,7 +708,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="parser_tokenstream.js.html">parser/tokenstream.js</a>, <a href="parser_tokenstream.js.html#line66">line 66</a>
+        <a href="parser_tokenstream.js.html">parser/tokenstream.js</a>, <a href="parser_tokenstream.js.html#line124">line 124</a>
     </li></ul></dd>
     
 
@@ -685,144 +773,7 @@
     
 
     
-    <h4 class="name" id="ensureLookaheadAvailable"><span class="type-signature"></span>ensureLookaheadAvailable<span class="signature">(count)</span><span class="type-signature"></span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    Ensure that the lookahead array is filled sufficienty
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>count</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The minimum number of tokens that should be in the lookahead array</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="parser_tokenstream.js.html">parser/tokenstream.js</a>, <a href="parser_tokenstream.js.html#line42">line 42</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
-
-    
-
-    
-    <h4 class="name" id="lookahead"><span class="type-signature"></span>lookahead<span class="signature">(index)</span><span class="type-signature"> &rarr; {<a href="Parser.Token.html">Parser.Token</a>}</span></h4>
+    <h4 class="name" id="lookahead"><span class="type-signature"></span>lookahead<span class="signature">(offset)</span><span class="type-signature"> &rarr; {<a href="Parser.Token.html">Parser.Token</a>}</span></h4>
     
 
     
@@ -866,7 +817,7 @@
 
         <tr>
             
-                <td class="name"><code>index</code></td>
+                <td class="name"><code>offset</code></td>
             
 
             <td class="type">
@@ -882,7 +833,7 @@
 
             
 
-            <td class="description last">The number of tokens to look ahead (optional, missing or 0=next token)</td>
+            <td class="description last">The offset from the next token to the token to lookahead (optional, default: 0=next token)</td>
         </tr>
 
     
@@ -923,7 +874,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="parser_tokenstream.js.html">parser/tokenstream.js</a>, <a href="parser_tokenstream.js.html#line14">line 14</a>
+        <a href="parser_tokenstream.js.html">parser/tokenstream.js</a>, <a href="parser_tokenstream.js.html#line89">line 89</a>
     </li></ul></dd>
     
 
@@ -981,7 +932,7 @@
     
 
     
-    <h4 class="name" id="nextToken"><span class="type-signature"></span>nextToken<span class="signature">()</span><span class="type-signature"> &rarr; {<a href="Parser.Token.html">Parser.Token</a>}</span></h4>
+    <h4 class="name" id="pushCheckpoint"><span class="type-signature"></span>pushCheckpoint<span class="signature">()</span><span class="type-signature"></span></h4>
     
 
     
@@ -989,7 +940,7 @@
 
 
 <div class="description">
-    Get the next token, consuming the current token in the process, if any
+    Add a checkpoint for rewinding
 </div>
 
 
@@ -1033,7 +984,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="parser_tokenstream.js.html">parser/tokenstream.js</a>, <a href="parser_tokenstream.js.html#line33">line 33</a>
+        <a href="parser_tokenstream.js.html">parser/tokenstream.js</a>, <a href="parser_tokenstream.js.html#line54">line 54</a>
     </li></ul></dd>
     
 
@@ -1058,28 +1009,94 @@
 
 
 
-<h5>Returns:</h5>
+
+
+
+
 
         
-<div class="param-desc">
-    The (new) current token
+            
+
+    
+
+    
+    <h4 class="name" id="rewind"><span class="type-signature"></span>rewind<span class="signature">()</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Rewind to the last rewind checkpoint
 </div>
 
 
 
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type"><a href="Parser.Token.html">Parser.Token</a></span>
 
 
-    </dd>
-</dl>
+
+
+
+
+
+
+
+
+<dl class="details">
 
     
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="parser_tokenstream.js.html">parser/tokenstream.js</a>, <a href="parser_tokenstream.js.html#line81">line 81</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1107,7 +1124,7 @@
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Sun Apr 23 2023 09:37:26 GMT+0200 (Mitteleuropäische Sommerzeit)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Sun Apr 23 2023 21:02:24 GMT+0200 (Mitteleuropäische Sommerzeit)
 </footer>
 
 <script> prettyPrint(); </script>
