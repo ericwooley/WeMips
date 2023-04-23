@@ -3,46 +3,48 @@
  * @param {Parser.Lexer}  lexer   The lexer to source the tokens from
  */
 Parser.TokenStream = function(lexer) {
-    this.lexer = lexer;
-    this.lookaheadTokens = [];
-    this.token = undefined;
+    var lookaheadTokens = [];
+
+    /** Ensure that the lookahead array is filled sufficienty
+     * @member Parser.TokenStream
+     * @private
+     * @param {number}  count   The minimum number of tokens that should be in the lookahead array
+     */
+    function ensureLookaheadAvailable(count) {
+        while (lookaheadTokens.length < count) {
+            lookaheadTokens.push(lexer.next());
+        }
+    }
+
+    /** Consume the given number of tokens
+     * @member Parser.TokenStream
+     * @private
+     * @param {number} count   The number of tokens to consume (optional, default: 1)
+     */
+    function consumeTokens(count) {
+        count = count || 1;
+        ensureLookaheadAvailable(count);
+        lookaheadTokens.splice(0, count);
+    }
 
     /** Take a look at the current token without consuming it
-     * @param {number}   index   The number of tokens to look ahead (optional, missing or 0=next token)
+     * @param {number}   offset  The offset from the next token to the token to lookahead (optional, default: 0=next token)
      * @returns {Parser.Token}   The lookahead token
      */
-    this.lookahead = function(index) {
-        index = index || 0
-        this.ensureLookaheadAvailable(index+1);
-        return this.lookaheadTokens[index];
+    this.lookahead = function(offset) {
+        offset = offset || 0
+        ensureLookaheadAvailable(offset+1);
+        return lookaheadTokens[offset];
     }
 
     /** Check if the next token has a specific type
-     * @param {string}  type   The token type to check for
-     * @param {number}   index   The number of tokens to look ahead (optional, missing or 0=next token)
+     * @param {string}   type     The token type to check for
+     * @param {number}   offset   The offset from the next token to the token to lookahead (optional, default: 0=next token)
      * @returns {boolean} <code>true</code> if and only if the next token has the specified type.
      */
-    this.checkNext = function(type, index) {
-        let token = this.lookahead(index);
+    this.checkNext = function(type, offset) {
+        let token = this.lookahead(offset);
         return (token.type == type);
-    }
-
-    /** Get the next token, consuming the current token in the process, if any
-     * @returns {Parser.Token}   The (new) current token
-     */
-    this.nextToken = function() {
-        this.ensureLookaheadAvailable(1);
-        this.lookaheadTokens.shift();
-        return this.lookahead();
-    }
-
-    /** Ensure that the lookahead array is filled sufficienty
-     * @param {number}  count   The minimum number of tokens that should be in the lookahead array
-     */
-    this.ensureLookaheadAvailable = function (count) {
-        while (this.lookaheadTokens.length < count) {
-            this.lookaheadTokens.push(this.lexer.next());
-        }
     }
 
     /** Check the current token for the given token type, raising an error on mismatch, otherwise fetching the next token
@@ -55,7 +57,7 @@ Parser.TokenStream = function(lexer) {
         if (type && token.type != type) {
             throw new Parser.UnexpectedTokenError(token, type);
         }
-        this.nextToken();
+        consumeTokens();
         return token;
     }
 
