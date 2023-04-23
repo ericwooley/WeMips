@@ -55,9 +55,26 @@ Parser.TokenStream = function(lexer) {
         rewindStack.push(currentTokenIndex);
     }
 
+    function trimRetainedTokens() {
+        /* Determine the first token index that we still have to retain */
+        minRequiredTokenIndex = currentTokenIndex;
+        for (let checkpoint of rewindStack) {
+            if (checkpoint < minRequiredTokenIndex) {
+                minRequiredTokenIndex = checkpoint;
+            }
+        }
+
+        if (minRequiredTokenIndex > firstTokenIndex) {
+            /* We can trim the retained tokens array */
+            retainedTokens.splice(0, minRequiredTokenIndex - firstTokenIndex);
+            firstTokenIndex = minRequiredTokenIndex;
+        }
+    }
+
     /** Remove the last rewind checkpoint */
     this.commit = function() {
         rewindStack.pop();
+        trimRetainedTokens();
     }
 
     /** Rewind to the last rewind checkpoint */
