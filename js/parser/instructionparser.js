@@ -250,6 +250,16 @@ Parser.InstructionParser = function (tokenStream, symbols) {
         }
     }
 
+    /** Parse a label
+     * @returns {String} The label name.
+     */
+    this.parseLabel = function() {
+        this.tokenStream.pushCheckpoint();
+        let labelToken = this.tokenStream.consume(Parser.TokenType.Identifier);
+        this.tokenStream.consume(Parser.TokenType.Colon);
+        return labelToken.value;
+    }
+
     /** Parse an optional label.
      * 
      * If the following token sequence is not a label, this will consume no tokens.
@@ -257,14 +267,16 @@ Parser.InstructionParser = function (tokenStream, symbols) {
      * @returns {(String|undefined)} The label name or <code>undefined</code> if no label is present.
      */
     this.parseOptionalLabel = function() {
-        if (this.tokenStream.checkNext(Parser.TokenType.Identifier, 0) &&
-            this.tokenStream.checkNext(Parser.TokenType.Colon, 1)) {
-            let labelToken = this.tokenStream.lookahead();
-            this.tokenStream.consume();
-            this.tokenStream.consume();
-            return labelToken.value;
-        } else {
-            return undefined;
+        try {
+            this.tokenStream.pushCheckpoint();
+            let label = this.parseLabel();
+            this.tokenStream.commit();
+            return label;
+        } catch (e) {
+            if (e instanceof Parser.ParseError) {
+                this.tokenStream.rewind();
+                return undefined;
+            }
         }
     }
 

@@ -115,8 +115,11 @@ Parser.OperandParser = function(tokenStream, symbols) {
     this.parseLoadStoreAddress = function(bits) {
         let imm;
         try {
+            this.tokenStream.pushCheckpoint();
             imm = this.parseSignedConstant(bits);
+            this.tokenStream.commit();
         } catch (e) {
+            this.tokenStream.rewind();
             if (e instanceof Parser.ParseError) {
                 imm = 0;
             } else {

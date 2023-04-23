@@ -208,6 +208,7 @@ test('Instruction Parsing', function() {
 	ok(isValidLine("mylabel: ADD $t0, $t1, $t2 # comment here"), "we can have labels and comments.");
 
 	ok(isValidLine("loop:"), "we can have single line labels.");
+	ok(isValidLine("loop: loop2:"), "we can have multiple labels per line");
 	ok(isValidLine(" loop  :"), "A label can have whitespace between the text and the colon");
 	ok(!isValidLine("loop start:"), "A label cannot have more than one word");
 	ok(isValidLine("mylabel:ADD $t0, $t1, $t2"), "we can have attached labels.");
