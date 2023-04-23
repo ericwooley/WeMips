@@ -3,16 +3,39 @@
  * @param {Parser.Lexer}  lexer   The lexer to source the tokens from
  */
 Parser.TokenStream = function(lexer) {
-    var lookaheadTokens = [];
+    /** Token index of first entry in tokens array
+     * @member Parser.TokenStream
+     * @private
+     * @type {Number}
+     */
+    var firstTokenIndex = 0;
+    /** Array of fetched and still required tokens
+     * @member Parser.TokenStream
+     * @private
+     * @type {Number}
+     */
+    var retainedTokens = [];
+    /** Token index of current token
+     * @member Parser.TokenStream
+     * @private
+     * @type {Number}
+     */
+    var currentTokenIndex = 0;
+    /** Stack of rewind positions
+     * @member Parser.TokenStream
+     * @private
+     * @type {Array}
+     */
+    var rewindStack = [];
 
     /** Ensure that the lookahead array is filled sufficienty
      * @member Parser.TokenStream
      * @private
-     * @param {number}  count   The minimum number of tokens that should be in the lookahead array
+     * @param {number}  tokenIndex   The index of the token that must be available
      */
-    function ensureLookaheadAvailable(count) {
-        while (lookaheadTokens.length < count) {
-            lookaheadTokens.push(lexer.next());
+    function ensureLookaheadAvailable(tokenIndex) {
+        while (firstTokenIndex + retainedTokens.length <= tokenIndex) {
+            retainedTokens.push(lexer.next());
         }
     }
 
@@ -23,8 +46,23 @@ Parser.TokenStream = function(lexer) {
      */
     function consumeTokens(count) {
         count = count || 1;
-        ensureLookaheadAvailable(count);
-        lookaheadTokens.splice(0, count);
+        ensureLookaheadAvailable(currentTokenIndex + count);
+        currentTokenIndex += count;
+    }
+
+    /** Add a checkpoint for rewinding */
+    this.pushCheckpoint = function() {
+        rewindStack.push(currentTokenIndex);
+    }
+
+    /** Remove the last rewind checkpoint */
+    this.commit = function() {
+        rewindStack.pop();
+    }
+
+    /** Rewind to the last rewind checkpoint */
+    this.rewind = function() {
+        currentTokenIndex = rewindStack.pop();
     }
 
     /** Take a look at the current token without consuming it
@@ -33,8 +71,9 @@ Parser.TokenStream = function(lexer) {
      */
     this.lookahead = function(offset) {
         offset = offset || 0
-        ensureLookaheadAvailable(offset+1);
-        return lookaheadTokens[offset];
+        let tokenIndex = currentTokenIndex + offset;
+        ensureLookaheadAvailable(tokenIndex);
+        return retainedTokens[tokenIndex - firstTokenIndex];
     }
 
     /** Check if the next token has a specific type

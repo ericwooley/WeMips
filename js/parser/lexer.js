@@ -11,7 +11,7 @@ Parser.Token = function(type, value, begin, end, text) {
     this.value = value;
     this.begin = begin;
     this.end = end;
-    this.text
+    this.text = text;
 }
 Parser.Token.prototype.toString = function() {
     return this.type + ' \''+this.text+'\'';

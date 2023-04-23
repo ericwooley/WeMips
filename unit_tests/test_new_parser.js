@@ -42,6 +42,45 @@ test("Lexer", function() {
     equal(token.type, Parser.TokenType.LogicalShiftRight);
 });
 
+
+test("Token Stream", function() {
+    let tokens = [
+        new Parser.Token(Parser.TokenType.Identifier),
+        new Parser.Token(Parser.TokenType.LParen),
+        new Parser.Token(Parser.TokenType.Number),
+        new Parser.Token(Parser.TokenType.RParen)
+    ];
+    let lexerIndex = 0;
+    let lexer = {
+        next: function() {
+            if (lexerIndex >= tokens.length) {
+                return new Parser.Token(Parser.TokenType.EndOfString);
+            } else {
+                return tokens[lexerIndex++];
+            }
+        }
+    };
+
+    let tokenStream = new Parser.TokenStream(lexer);
+
+    ok(tokenStream.checkNext(Parser.TokenType.Identifier));
+    tokenStream.consume();
+    ok(tokenStream.checkNext(Parser.TokenType.LParen));
+    tokenStream.pushCheckpoint();
+    tokenStream.consume();
+    ok(tokenStream.checkNext(Parser.TokenType.Number));
+    tokenStream.pushCheckpoint();
+    tokenStream.consume();
+    ok(tokenStream.checkNext(Parser.TokenType.RParen));
+    tokenStream.rewind();
+    ok(tokenStream.checkNext(Parser.TokenType.Number));
+    tokenStream.consume();
+    tokenStream.commit();
+    ok(tokenStream.checkNext(Parser.TokenType.RParen));
+    tokenStream.consume();
+    tokenStream.enforceCompletion();
+});
+
 test('Expression Parser', function() {
     let parseExpression = function(text, symbols) {
         let parser = Parser.exprParserFromString(text, symbols);
