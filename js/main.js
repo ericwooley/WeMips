@@ -346,6 +346,7 @@ $(document).ready(function(){
         }
     }
     function onStackChange(address, val, visualize) {
+        extendStack(address);
         if (!val || val == '') val = me.stack.getByte(address);
         if (typeof visualize == 'undefined')
             visualize = true;
