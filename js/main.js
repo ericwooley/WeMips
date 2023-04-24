@@ -71,7 +71,7 @@ $(document).ready(function(){
         onAlert: function(message) {
             window.alert(message);
         },
-        onStackChange: addStackAddress,
+        onStackChange: onStackChange,
         // Set the starting code to be the defualt in the editor.
         startingCode: $("#editor").val()
     });
@@ -290,80 +290,84 @@ $(document).ready(function(){
         lastLineNoRun = null;
         setHighlights();
     };
-    function setSP(address){
-        addStackAddress(address, '', false);
+    function setSP(address) {
+        extendStack(address);
         $(".glyphicon-arrow-right").removeClass("glyphicon-arrow-right");
         $("#stackEntry-" + address + " .glyphicon").addClass("glyphicon-arrow-right lastRegChanged");
-        if(autoSwitch) $('#registers a[href="#stack-container-div"]').tab('show');
-            };
+        if (autoSwitch) $('#registers a[href="#stack-container-div"]').tab('show');
+    };
     var colorizeAddrBG = false;
     var stackDisplayMode = "integer";
-    function addStackAddress(address, val, visualize){
-        if(!val || val == '') val = me.stack.getByte(address);
-        if(typeof visualize == 'undefined')
-            visualize = true;
+    function extendStack(address) {
         showAddReal = '';
-            showAddRelative = 'style="display: none"';
-        if(showRelative){
+        showAddRelative = 'style="display: none"';
+        if (showRelative) {
             showAddReal = 'style="display: none"';
             showAddRelative = '';
         }
-        while(address <= stackLow){
+        while (address < stackLow) {
+            stackLow--;
             var bgColorClass = '';
             var addressVal = me.stack.getByte(stackLow);
             var valRep = changeToStackRep(addressVal);
-            if(colorizeAddrBG) bgColorClass = 'lightGreyBG';
+            if (colorizeAddrBG) bgColorClass = 'lightGreyBG';
             colorizeAddrBG = !colorizeAddrBG;
             $("#stackRep").prepend(
                 "<div id='stackEntry-" + stackLow + "' >"
                 + "<span class='glyphicon'></span>&nbsp"
-                    + "<span class='"+bgColorClass+"'>"
-                        + "<span class='stackAddrReal stackAddr' "+ showAddReal +" id='stackAddr-"+stackLow+"'>"
-                            + stackLow + ": "
-                        + "</span>"
-                        + "<span class='stackAddrRelative stackAddr' "+ showAddRelative +" id='stackAddrRelative-"+stackLow+"'>"
-                            + (stackLow - stackEnd) + ": "
-                        + "</span>"
-                        + "<span "
-                            + "class='stackVal stackSpacer' "
-                            + "id='stackVal-"+stackLow+"' "
-                            + "address='"+stackLow+"' "
-                            + "contenteditable='true' "
-                            + "integer='"+addressVal+"' "
-                            + "ascii='"+asChar(addressVal)+"' "
-                            + "binary='"+asBin(addressVal)+"' "
-                        + ">"
-                            + valRep
-                        +"</span>"
-                        // + "<span class='regSpacer charBin' id='stackChar-"+stackLow+"'>"
-                        //     + asChar(me.stack.getByte(stackLow))
-                        // +"</span>"
-                        // + "<span class='regSpacer charBin' id='stackBin-"+stackLow+"' style='display: none'>"
-                        //     + asBin(me.stack.getByte(stackLow))
-                        // +"</span>"
-                    + "</span>"
+                + "<span class='" + bgColorClass + "'>"
+                + "<span class='stackAddrReal stackAddr' " + showAddReal + " id='stackAddr-" + stackLow + "'>"
+                + stackLow + ": "
+                + "</span>"
+                + "<span class='stackAddrRelative stackAddr' " + showAddRelative + " id='stackAddrRelative-" + stackLow + "'>"
+                + (stackLow - stackEnd) + ": "
+                + "</span>"
+                + "<span "
+                + "class='stackVal stackSpacer' "
+                + "id='stackVal-" + stackLow + "' "
+                + "address='" + stackLow + "' "
+                + "contenteditable='true' "
+                + "integer='" + addressVal + "' "
+                + "ascii='" + asChar(addressVal) + "' "
+                + "binary='" + asBin(addressVal) + "' "
+                + ">"
+                + valRep
+                + "</span>"
+                // + "<span class='regSpacer charBin' id='stackChar-"+stackLow+"'>"
+                //     + asChar(me.stack.getByte(stackLow))
+                // +"</span>"
+                // + "<span class='regSpacer charBin' id='stackBin-"+stackLow+"' style='display: none'>"
+                //     + asBin(me.stack.getByte(stackLow))
+                // +"</span>"
+                + "</span>"
                 + "</div>"
             );
-            $("#stackVal-"+stackLow).on('blur', manualStackEdit);
-            stackLow--;
-            
+            $("#stackVal-" + stackLow).on('blur', manualStackEdit);
         }
+    }
+    function onStackChange(address, val, visualize) {
+        if (!val || val == '') val = me.stack.getByte(address);
+        if (typeof visualize == 'undefined')
+            visualize = true;
 
-        $("#stackVal-"+address).html(changeToStackRep(val));
-        $("#stackVal-"+address).attr('binary', asBin(val));
-        $("#stackVal-"+address).attr('integer', val);
-        $("#stackVal-"+address).attr('ascii', asChar(val));
+        $("#stackVal-" + address).html(changeToStackRep(val));
+        $("#stackVal-" + address).attr('binary', asBin(val));
+        $("#stackVal-" + address).attr('integer', val);
+        $("#stackVal-" + address).attr('ascii', asChar(val));
 
-    
-        if(visualize){
-            if(autoSwitch) $('#registers a[href="#stack-container-div"]').tab('show');
+
+        if (visualize) {
+            if (autoSwitch) $('#registers a[href="#stack-container-div"]').tab('show');
             $(".lastRegChanged").removeClass('lastRegChanged');
-            $("#stackVal-"+address).addClass('lastRegChanged');
+            $("#stackVal-" + address).addClass('lastRegChanged');
         }
-    };
-    var stackLow = me.stack.pointerToBottomOfStack()-1;
+    }
     var stackEnd = me.stack.pointerToBottomOfStack();
-    addStackAddress(stackLow, me.stack.getByte(stackLow), false);
+    var stackLow = stackEnd;
+    $("#stackRep").prepend(
+        "<div id='stackEntry-" + stackLow + "' >"
+        + "<span class='glyphicon'></span>&nbsp"
+        + "</div>");
 
     
     function changeStackType(e){
@@ -402,7 +406,6 @@ $(document).ready(function(){
         }
         if(typeof newVal != "Number") newVal = Number(newVal);
         me.stack.setByte(address, newVal);
-        addStackAddress(address, newVal, false);
     };
     //setSP(stackEnd);
     function setupTests(){
