@@ -202,8 +202,6 @@ function MipsEmulator(mipsArgs){
      * @return {Number}
      */
     this.getRegisterVal = function(reg) {
-        if(!reg)throw new Error("Register must be non empty");
-        if(reg.charAt(0) != '$') reg = '$'+reg;
         var regval = MIPS.unsignedNumberToSignedNumber(this.getRegister(reg).val, this.BITS_PER_REGISTER);
         if(debug) console.log("Getting signed register value: " + regval );
         return regval;
@@ -215,8 +213,7 @@ function MipsEmulator(mipsArgs){
      * @return {Number}
      */
     this.getRegisterUnsignedVal = function(reg) {
-        if(reg.charAt(0) != '$') reg = '$'+reg;
-        var regval = MIPS.signedNumberToUnsignedNumber(this.getRegisterVal(reg), this.BITS_PER_REGISTER);
+        var regval = MIPS.signedNumberToUnsignedNumber(this.getRegister(reg).val, this.BITS_PER_REGISTER);
         if(debug) console.log("Getting unsigned register value: " + regval);
         return regval;
     },
@@ -227,7 +224,7 @@ function MipsEmulator(mipsArgs){
      * @return {Object} register object.
      */
     this.getRegister = function(reg) {
-        if(reg.charAt(0) != '$') reg = '$'+reg;
+        if(!reg)throw new Error("Register must be non empty");
         if(!this.isValidRegister(reg)) throw new RegisterError('Non existant register: {0}'.format(reg));
         return registers[reg];
     },
