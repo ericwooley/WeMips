@@ -146,8 +146,8 @@ You can click a register's value and overwrite its contents with whatever you wa
 
 | Category                         | Instructions                                                        |
 | -------------------------------- | ------------------------------------------------------------------- |
-| Arithmetic Operations (signed)   | **ADD**, **ADDI**, **SUB**, **MULT**                                |
-| Arithmetic Operations (unsigned) | **ADDU**, **ADDIU**, **SUBU**, **MULTU**                            |
+| Arithmetic Operations (signed)   | **ADD**, **ADDI**, **SUB**, **MULT**, **DIV**                       |
+| Arithmetic Operations (unsigned) | **ADDU**, **ADDIU**, **SUBU**, **MULTU**, **DIVU**                  |
 | Comparison Instructions          | **SLT**, **SLTI**, **SLTU**, **SLTIU**                              |
 | Logical Operations               | **AND**, **ANDI**, **OR**, **ORI**, **XOR**, **XORI**, **NOR**      |
 | Shift Operations                 | **SLL**, **SLLV**, **SRL**, **SRLV**, **SRA**, **SRAV**             |

@@ -257,6 +257,58 @@ test('MULTU', function() {
 	equal(ME.getRegisterUnsignedVal('lo'), 0xC0000000);
 });
 
+test('DIV', function() {
+	ME.setRegisterVal('$t0', -0x80000000);
+	ME.setRegisterVal('$t1', 1)
+	ME.runLines([
+		"DIV $t0, $t1"
+	]);
+	equal(ME.getRegisterVal('lo'), -0x80000000);
+	equal(ME.getRegisterVal('hi'), 0);
+
+	ME.setRegisterVal('$t0', 123);
+	ME.setRegisterVal('$t1', 21)
+	ME.runLines([
+		"DIV $t0, $t1"
+	]);
+	equal(ME.getRegisterVal('lo'), 5);
+	equal(ME.getRegisterVal('hi'), 18);
+
+	ME.setRegisterVal('$t0', -123);
+	ME.setRegisterVal('$t1', 21)
+	ME.runLines([
+		"DIV $t0, $t1"
+	]);
+	equal(ME.getRegisterVal('lo'), -5);
+	equal(ME.getRegisterVal('hi'), -18);
+
+	ME.setRegisterVal('$t0', 123);
+	ME.setRegisterVal('$t1', -21)
+	ME.runLines([
+		"DIV $t0, $t1"
+	]);
+	equal(ME.getRegisterVal('lo'), -5);
+	equal(ME.getRegisterVal('hi'), 18);
+});
+
+test('DIVU', function() {
+	ME.setRegisterVal('$t0', 0x80000000);
+	ME.setRegisterVal('$t1', 1)
+	ME.runLines([
+		"DIVU $t0, $t1"
+	]);
+	equal(ME.getRegisterUnsignedVal('lo'), 0x80000000);
+	equal(ME.getRegisterUnsignedVal('hi'), 0);
+
+	ME.setRegisterVal('$t0', 0x80000000);
+	ME.setRegisterVal('$t1', 21);
+	ME.runLines([
+		"DIVU $t0, $t1"
+	]);
+	equal(ME.getRegisterUnsignedVal('lo'), 102261126);
+	equal(ME.getRegisterUnsignedVal('hi'), 2);
+});
+
 test("LB, LBU, SB", function() {
 	var ME2 = new MipsEmulator({ baseStackAddress: MIPS.maxUnsignedValue(ME.BITS_PER_REGISTER - 1) }); // TODO: don't need the -1 here
 	equal(ME2.stack.pointerToBottomOfStack(), MIPS.maxUnsignedValue(ME.BITS_PER_REGISTER - 1), 'Ensure the stack is actually at the max value.');

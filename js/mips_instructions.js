@@ -53,6 +53,26 @@ function mipsInstructionExecutor(ME) {
                 ME.setRegisterVal('lo', multResult.lo);
             }
         },
+        'DIV': {
+            runMethod: function(namedArgs) {
+                let dividend = ME.getRegisterVal(namedArgs.$rs);
+                let divisor = ME.getRegisterVal(namedArgs.$rt);
+                var quotient = Math.trunc(dividend / divisor);
+                let remainder = dividend - divisor * quotient;
+                ME.setRegisterVal('lo', quotient);
+                ME.setRegisterVal('hi', remainder);
+            }
+        },
+        'DIVU': {
+            runMethod: function(namedArgs) {
+                let dividend = ME.getRegisterUnsignedVal(namedArgs.$rs);
+                let divisor = ME.getRegisterUnsignedVal(namedArgs.$rt);
+                let quotient = Math.trunc(dividend / divisor);
+                let remainder = dividend - divisor * quotient;
+                ME.setRegisterVal('lo', quotient);
+                ME.setRegisterVal('hi', remainder);
+            }
+        },
         'LUI': {
             runMethod: function(namedArgs){
                 ME.setRegisterVal(namedArgs.$rd, (namedArgs.imm << 16));

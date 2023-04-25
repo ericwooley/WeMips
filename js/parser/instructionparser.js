@@ -174,6 +174,8 @@ Parser.InstructionParsers = {
     'SUBU': Parser.parseRdRsRt,
     'MULT': Parser.parseRsRt,
     'MULTU': Parser.parseRsRt,
+    'DIV': Parser.parseRsRt,
+    'DIVU': Parser.parseRsRt,
     /* Integer Comparison Instructions */
     'SLT': Parser.parseRdRsRt,
     'SLTU': Parser.parseRdRsRt,
