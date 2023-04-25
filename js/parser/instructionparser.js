@@ -92,6 +92,17 @@ Parser.parseRd = function(operandParser) {
     };
 };
 
+Parser.parseRsRt = function (operandParser) {
+    let rs = operandParser.parseRegister();
+    operandParser.tokenStream.consume(Parser.TokenType.Comma);
+    let rt = operandParser.parseRegister();
+
+    return {
+        '$rs': rs,
+        '$rt': rt
+    };
+};
+
 Parser.parseRsRtLabel = function (operandParser) {
     let rs = operandParser.parseRegister();
     operandParser.tokenStream.consume(Parser.TokenType.Comma);
@@ -161,6 +172,8 @@ Parser.InstructionParsers = {
     'ADDIU': Parser.parseRtRsImmUnsigned,
     'SUB': Parser.parseRdRsRt,
     'SUBU': Parser.parseRdRsRt,
+    'MULT': Parser.parseRsRt,
+    'MULTU': Parser.parseRsRt,
     /* Integer Comparison Instructions */
     'SLT': Parser.parseRdRsRt,
     'SLTU': Parser.parseRdRsRt,

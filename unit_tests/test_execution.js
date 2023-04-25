@@ -221,6 +221,42 @@ test("ADDIU", function() {
 	equal(ME.getRegisterUnsignedVal('$t0'), 2147483648, "Unsigned addition will not overflow.");
 });
 
+test('MULT', function() {
+	ME.setRegisterVal('$t0', 0x40000001);
+	ME.setRegisterVal('$t1', 0x40000000)
+	ME.runLines([
+		"MULT $t0, $t1"
+	]);
+	equal(ME.getRegisterVal('hi'), 0x10000000);
+	equal(ME.getRegisterVal('lo'), 0x40000000);
+
+	ME.setRegisterVal('$t0', -0x40000001);
+	ME.setRegisterVal('$t1',  0x40000000)
+	ME.runLines([
+		"MULT $t0, $t1"
+	]);
+	equal(ME.getRegisterVal('hi'), -0x10000001);
+	equal(ME.getRegisterVal('lo'), -0x40000000);
+});
+
+test('MULTU', function() {
+	ME.setRegisterVal('$t0', 0x40000001);
+	ME.setRegisterVal('$t1', 0x40000000)
+	ME.runLines([
+		"MULTU $t0, $t1"
+	]);
+	equal(ME.getRegisterVal('hi'), 0x10000000);
+	equal(ME.getRegisterVal('lo'), 0x40000000);
+
+	ME.setRegisterVal('$t0', 0xBFFFFFFF);
+	ME.setRegisterVal('$t1', 0x40000000)
+	ME.runLines([
+		"MULTU $t0, $t1"
+	]);
+	equal(ME.getRegisterUnsignedVal('hi'), 0x2FFFFFFF);
+	equal(ME.getRegisterUnsignedVal('lo'), 0xC0000000);
+});
+
 test("LB, LBU, SB", function() {
 	var ME2 = new MipsEmulator({ baseStackAddress: MIPS.maxUnsignedValue(ME.BITS_PER_REGISTER - 1) }); // TODO: don't need the -1 here
 	equal(ME2.stack.pointerToBottomOfStack(), MIPS.maxUnsignedValue(ME.BITS_PER_REGISTER - 1), 'Ensure the stack is actually at the max value.');

@@ -33,6 +33,26 @@ function mipsInstructionExecutor(ME) {
                 ME.setRegisterVal(namedArgs.$rd, unsignedAddition(ME.getRegisterUnsignedVal(namedArgs.$rs), -ME.getRegisterUnsignedVal(namedArgs.$rt)));
             }
         },
+        'MULT': {
+            runMethod: function(namedArgs) {
+                let multResult = multiplication(
+                    ME.getRegisterVal(namedArgs.$rs),
+                    ME.getRegisterVal(namedArgs.$rt)
+                );
+                ME.setRegisterVal('hi', multResult.hi);
+                ME.setRegisterVal('lo', multResult.lo);
+            }
+        },
+        'MULTU': {
+            runMethod: function(namedArgs) {
+                let multResult = multiplication(
+                    ME.getRegisterUnsignedVal(namedArgs.$rs),
+                    ME.getRegisterUnsignedVal(namedArgs.$rt)
+                );
+                ME.setRegisterVal('hi', multResult.hi);
+                ME.setRegisterVal('lo', multResult.lo);
+            }
+        },
         'LUI': {
             runMethod: function(namedArgs){
                 ME.setRegisterVal(namedArgs.$rd, (namedArgs.imm << 16));
@@ -438,6 +458,13 @@ function mipsInstructionExecutor(ME) {
         if (result.carryFlag)
             ME.onSetCarryFlag();
         return result.result;
+    }
+    function multiplication(value1, value2) {
+        var result = BigInt(value1)*BigInt(value2);
+        return {
+            hi: Number(result>>BigInt(32)),
+            lo: Number(result & BigInt(0xFFFFFFFF))
+        };
     }
 
     return instructions;
