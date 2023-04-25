@@ -53,331 +53,376 @@ Parser.TokenType = {
     EndOfString: 'EndOfString',
 };
 
-/** Dictionary associating single-character atoms to their token types */
-Parser.AtomTypes = {
-    '+': Parser.TokenType.Addition,
-    '-': Parser.TokenType.Subtraction,
-    '*': Parser.TokenType.Multiplication,
-    '/': Parser.TokenType.Division,
-    '%': Parser.TokenType.Remainder,
-    '^': Parser.TokenType.BitwiseXOR,
-    '~': Parser.TokenType.BitwiseNOT,
-    '(': Parser.TokenType.LParen,
-    ')': Parser.TokenType.RParen,
-    ',': Parser.TokenType.Comma,
-    ':': Parser.TokenType.Colon,
-    '?': Parser.TokenType.QuestionMark,
-};
-
-/** Determine whether the given character is whitespace
- * @param {string} ch   The character to check
- * @return {boolean} <code>true</code> if and only if the character is whitespace
- */
-Parser.isWhitespace = function(ch) {
-    return (ch=='\t' || ch==' ' || ch=='\n' || ch=='\r');
-}
-
-Parser.DigitsUpperCase = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-Parser.DigitsLowerCase = "0123456789abcdefghijklmnopqrstuvwxyz";
-
-/** Determine whether the given character is a digit for the given base
- * 
- * Ignores case, i.e. 'a' and 'A' are considered the same character.
- * 
- * @param {string}  ch   The character to check
- * @param {number}  base The base to check against (e.g., 10 for decimal numbers, 16 for hexadecimal, etc.)
- * @return {boolean} <code>true</code> if and only if the character is a digit for the given base
- */
-Parser.isBaseDigit = function(ch, base) {
-    assert(base <= 36);
-    if (ch >= '0' && ch <= '9') {
-        return (base >= 10 || Parser.DigitsUpperCase.charAt(base));
-    } else if (ch >= 'A' && ch <= 'Z') {
-        return (ch <= Parser.DigitsUpperCase.charAt(base));
-    } else if (ch >= 'a' && ch <= 'z') {
-        return (ch <= Parser.DigitsLowerCase.charAt(base));
-    } else {
-        return false;
-    }
-}
-
-/** Determine whether the given character is a decimal digit
- * @param {string}  ch   The character to check
- * @return {boolean} <code>true</code> if and only if the character is a decimal digit
- */
-Parser.isDigit = function(ch) {
-    return (ch >= '0' && ch <= '9');
-}
-
-/** Determine whether the given character is an octal digit
- * @param {string}  ch   The character to check
- * @return {boolean} <code>true</code> if and only if the character is an octal digit
- */
-Parser.isOctalDigit = function(ch) {
-    return (ch >= '0' && ch <= '7');
-}
-
-/** Determine whether the given character is a letter
- * @param {string}  ch   The character to check
- * @return {boolean} <code>true</code> if and only if the character is a letter
- */
-Parser.isLetter = function(ch) {
-    return ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z'));
-}
-
-/** Determine whether the given character can be the start of an identifier
- * @param {string}  ch   The character to check
- * @return {boolean} <code>true</code> if and only if the character can be the start of an identifier
- */
-Parser.isIdentifierStart = function(ch) {
-    return Parser.isLetter(ch) || ch=='_';
-}
-
-/** Determine whether the given character can be part of an identifier
- * @param {string}  ch   The character to check
- * @return {boolean} <code>true</code> if and only if the character can be part of an identifier
- */
-Parser.isIdentifierPart = function(ch) {
-    return Parser.isIdentifierStart(ch) || Parser.isDigit(ch);
-}
-
 /** General lexer
  * Transforms an input string into a stream of tokens
  * @constructor
  * @param {string} input    The string to transform
  */
 Parser.Lexer = function(input) {
-    this.input = input;
-    this.index = 0;
-    this.marker = 0;
-    this.length = input.length;
+    /**
+     * Index of the next character to be processed
+     * @member Parser.Lexer
+     * @private
+     * @type {Number}
+     */
+    let index = 0;
+    /**
+     * Start index of the current token
+     * @member Parser.Lexer
+     * @private
+     * @type {Number}
+     */
+    let marker = 0;
 
     /** Determine whether we have reached the end of the input string
+     * @member Parser.Lexer
+     * @private
      * @returns {boolean} <code>true</code> if and only if there are no more characters left
      */
-    this.endOfString = function() {
-        return this.index >= this.length;
+    function endOfString() {
+        return index >= input.length;
     }
 
-    /** Start the next token */
-    this.startToken = function() {
-        this.marker = this.index;
+    /** Start the next token
+     * @member Parser.Lexer
+     * @private
+     */
+    function startToken() {
+        marker = index;
     }
 
     /** Determine the next character without advancing the input position
+     * @member Parser.Lexer
+     * @private
      * @returns {(string|undefined)} The next character of undefined if there are no more characters left.
      */
-    this.peekNextChar = function() {
-        return (!this.endOfString() ? this.input.charAt(this.index) : undefined);
+    function peekNextChar() {
+        return (!endOfString() ? input.charAt(index) : undefined);
     }
 
-    /** Determine the next character, advancing the input position
-     * @returns {(string|undefined)} The next character of undefined if there are no more characters left.
+    /** Skip the next character, if any 
+     * @member Parser.Lexer
+     * @private
      */
-    this.nextChar = function() {
-        return (!this.endOfString() ? this.input.charAt(this.index++) : undefined);
-    }
-
-    /** Skip the next character, if any */
-    this.skipChar = function() {
-        if (!this.endOfString()) {
-            this.index++;
+    function skipChar() {
+        if (!endOfString()) {
+            index++;
         }
     }
 
     /** Throw a {@link Parser.LexerError}, specifying the current input token
+     * @member Parser.Lexer
+     * @private
      * @param {string} message A human-readable message explaining the kind of exception
      * @throws {Parser.LexerError}
      */
-    this.error = function(message) {
-        throw new Parser.LexerError(message, this.input.substring(this.marker, this.index), this.marker, this.index);
+    function error(message) {
+        throw new Parser.LexerError(message, input.substring(marker, index), marker, index);
     }
 
-    /** Skip a comment until the end of the line */
-    this.skipComment = function() {
-        this.skipChar();
-        let ch = this.peekNextChar();
-        while (!this.endOfString() && ch != '\n') {
-            this.skipChar();
-            ch = this.peekNextChar();
+    /** Skip a comment until the end of the line
+     * @member Parser.Lexer
+     * @private
+     */
+    function skipComment() {
+        skipChar();
+        let ch = peekNextChar();
+        while (!endOfString() && ch != '\n') {
+            skipChar();
+            ch = peekNextChar();
         }
     }
 
-    /** Skip spaces until the first non-whitespace character */
-    this.skipSpaces = function() {
+    /** Determine whether the given character is whitespace
+     * @member Parser.Lexer
+     * @private
+     * @param {string} ch   The character to check
+     * @return {boolean} <code>true</code> if and only if the character is whitespace
+     */
+    function isWhitespace(ch) {
+        return (ch=='\t' || ch==' ' || ch=='\n' || ch=='\r');
+    }
+
+    let digitsUpperCase = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    let digitsLowerCase = "0123456789abcdefghijklmnopqrstuvwxyz";
+    
+    /** Determine whether the given character is a digit for the given base
+     * 
+     * Ignores case, i.e. 'a' and 'A' are considered the same character.
+     * @member Parser.Lexer
+     * @private
+     * @param {string}  ch   The character to check
+     * @param {number}  base The base to check against (e.g., 10 for decimal numbers, 16 for hexadecimal, etc.)
+     * @return {boolean} <code>true</code> if and only if the character is a digit for the given base
+     */
+    function isBaseDigit(ch, base) {
+        assert(base <= 36);
+        if (ch >= '0' && ch <= '9') {
+            return (base >= 10 || digitsUpperCase.charAt(base));
+        } else if (ch >= 'A' && ch <= 'Z') {
+            return (ch <= digitsUpperCase.charAt(base));
+        } else if (ch >= 'a' && ch <= 'z') {
+            return (ch <= digitsLowerCase.charAt(base));
+        } else {
+            return false;
+        }
+    }
+    
+    /** Determine whether the given character is a decimal digit
+     * @member Parser.Lexer
+     * @private
+     * @param {string}  ch   The character to check
+     * @return {boolean} <code>true</code> if and only if the character is a decimal digit
+     */
+    function isDigit(ch) {
+        return (ch >= '0' && ch <= '9');
+    }
+    
+    /** Determine whether the given character is an octal digit
+     * @member Parser.Lexer
+     * @private
+     * @param {string}  ch   The character to check
+     * @return {boolean} <code>true</code> if and only if the character is an octal digit
+     */
+    function isOctalDigit(ch) {
+        return (ch >= '0' && ch <= '7');
+    }
+    
+    /** Determine whether the given character is a letter
+     * @member Parser.Lexer
+     * @private
+     * @param {string}  ch   The character to check
+     * @return {boolean} <code>true</code> if and only if the character is a letter
+     */
+    function isLetter(ch) {
+        return ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z'));
+    }
+    
+    /** Determine whether the given character can be the start of an identifier
+     * @member Parser.Lexer
+     * @private
+     * @param {string}  ch   The character to check
+     * @return {boolean} <code>true</code> if and only if the character can be the start of an identifier
+     */
+    function isIdentifierStart(ch) {
+        return isLetter(ch) || ch=='_';
+    }
+    
+    /** Determine whether the given character can be part of an identifier
+     * @member Parser.Lexer
+     * @private
+     * @param {string}  ch   The character to check
+     * @return {boolean} <code>true</code> if and only if the character can be part of an identifier
+     */
+    function isIdentifierPart(ch) {
+        return isIdentifierStart(ch) || isDigit(ch);
+    }
+    
+    /** Skip spaces until the first non-whitespace character
+     * @member Parser.Lexer
+     * @private
+     */
+    function skipSpaces() {
         let ch;
-        while (!this.endOfString()) {
-            ch = this.peekNextChar();
+        while (!endOfString()) {
+            ch = peekNextChar();
             if (ch == '#') {
-                this.skipComment();
-            } else if (!Parser.isWhitespace(ch)) {
+                skipComment();
+            } else if (!isWhitespace(ch)) {
                 break;
             }
-            this.skipChar();
+            skipChar();
         }
     }
 
     /** Create a token from the currently parsed input
+     * @member Parser.Lexer
+     * @private
      * @param {string}   type   The type of the token to create
      * @param            value  The value of the token
      * @returns {Parser.Token}  The newly created token
      */
-    this.createToken = function(type, value) {
-        return new Parser.Token(type, value, this.marker, this.index, this.input.substring(this.marker, this.index));
+    function createToken(type, value) {
+        return new Parser.Token(type, value, marker, index, input.substring(marker, index));
     }
 
     /** Parse a number of the given base
+     * @member Parser.Lexer
+     * @private
      * @param {number}   base    The base of the number to parse
      * @returns {Parser.Token}  The token representing the parsed number
      */
-    this.parseAnyNumber = function(base) {
+    function parseAnyNumber(base) {
         let str = '';
-        let ch = this.peekNextChar()
-        while (Parser.isBaseDigit(ch, base)) {
-            this.skipChar();
+        let ch = peekNextChar()
+        while (isBaseDigit(ch, base)) {
+            skipChar();
             str = str + ch;
-            ch = this.peekNextChar();
+            ch = peekNextChar();
         }
-        return this.createToken(Parser.TokenType.Number, parseInt(str, base));
+        return createToken(Parser.TokenType.Number, parseInt(str, base));
     }
 
     /** Parse a register name
      * A register name is composed of a dollar sign followed by an identifier or number
+     * @member Parser.Lexer
+     * @private
      * @returns {Parser.Token} The token representing the register
      */
-    this.parseRegister = function() {
-        let id = this.peekNextChar();
-        this.skipChar();
-        let ch = this.peekNextChar();
-        while (Parser.isIdentifierPart(ch)) {
+    function parseRegister() {
+        let id = peekNextChar();
+        skipChar();
+        let ch = peekNextChar();
+        while (isIdentifierPart(ch)) {
             id = id + ch;
-            this.skipChar();
-            ch = this.peekNextChar();
+            skipChar();
+            ch = peekNextChar();
         }
-        return this.createToken(Parser.TokenType.Register, id);
+        return createToken(Parser.TokenType.Register, id);
     }
 
     /** Parse a number
      * A number can be binary, octal, decimal or hexadecimal.
      * 
+     * @member Parser.Lexer
+     * @private
      * @returns {Parser.Token}  The token representing the parsed number
      */
-    this.parseNumber = function() {
-        let ch = this.peekNextChar();
+    function parseNumber() {
+        let ch = peekNextChar();
         if (ch == '0') {
-            this.skipChar();
-            ch = this.peekNextChar();
+            skipChar();
+            ch = peekNextChar();
             switch (ch) {
             case 'b': case 'B':
-                this.skipChar();
-                return this.parseAnyNumber(2);
+                skipChar();
+                return parseAnyNumber(2);
             case 'x': case 'X':
-                this.skipChar();
-                return this.parseAnyNumber(16);
+                skipChar();
+                return parseAnyNumber(16);
             default:
-                if (Parser.isOctalDigit(ch)) {
-                    return this.parseAnyNumber(8);
+                if (isOctalDigit(ch)) {
+                    return parseAnyNumber(8);
                 } else {
-                    return this.createToken(Parser.TokenType.Number, 0);
+                    return createToken(Parser.TokenType.Number, 0);
                 }
             }
         } else {
-            return this.parseAnyNumber(10);
+            return parseAnyNumber(10);
         }
     }
 
     /** Parse an identifier
+     * @member Parser.Lexer
+     * @private
      * @returns {Parser.Token}  A token representing the identifier
      */
-    this.parseIdentifier = function() {
-        let id = this.nextChar();
-        let ch = this.peekNextChar();
-        while (Parser.isIdentifierPart(ch)) {
+    function parseIdentifier() {
+        let id = peekNextChar();
+        skipChar();
+        let ch = peekNextChar();
+        while (isIdentifierPart(ch)) {
             id = id + ch;
-            this.skipChar();
-            ch = this.peekNextChar();
+            skipChar();
+            ch = peekNextChar();
         }
-        return this.createToken(Parser.TokenType.Identifier, id);
+        return createToken(Parser.TokenType.Identifier, id);
     }
+
+    let atomTypes = {
+        '+': Parser.TokenType.Addition,
+        '-': Parser.TokenType.Subtraction,
+        '*': Parser.TokenType.Multiplication,
+        '/': Parser.TokenType.Division,
+        '%': Parser.TokenType.Remainder,
+        '^': Parser.TokenType.BitwiseXOR,
+        '~': Parser.TokenType.BitwiseNOT,
+        '(': Parser.TokenType.LParen,
+        ')': Parser.TokenType.RParen,
+        ',': Parser.TokenType.Comma,
+        ':': Parser.TokenType.Colon,
+        '?': Parser.TokenType.QuestionMark,
+    };
 
     /** Parse an atom
      * Atoms are operators such as `>>>` or `+`
-     * 
+     * @member Parser.Lexer
+     * @private
      * @returns {Parser.Token}  A token representing the atom
      */
-    this.parseAtom = function() {
-        let ch = this.peekNextChar();
+    function parseAtom() {
+        let ch = peekNextChar();
         if (ch == '<') {
-            this.skipChar();
-            ch = this.peekNextChar();
+            skipChar();
+            ch = peekNextChar();
             if (ch == '<') {
-                this.skipChar();
-                return this.createToken(Parser.TokenType.LogicalShiftLeft);
+                skipChar();
+                return createToken(Parser.TokenType.LogicalShiftLeft);
             } else if (ch == '=') {
-                this.skipChar();
-                return this.createToken(Parser.TokenType.LessEqual);
+                skipChar();
+                return createToken(Parser.TokenType.LessEqual);
             } else {
-                return this.createToken(Parser.TokenType.LessThan);
+                return createToken(Parser.TokenType.LessThan);
             }
         } else if (ch == '>') {
-            this.skipChar();
-            ch = this.peekNextChar();
+            skipChar();
+            ch = peekNextChar();
             if (ch == '>') {
-                this.skipChar();
-                ch = this.peekNextChar();
+                skipChar();
+                ch = peekNextChar();
                 if (ch == '>') {
-                    this.skipChar();
-                    return this.createToken(Parser.TokenType.LogicalShiftRight);
+                    skipChar();
+                    return createToken(Parser.TokenType.LogicalShiftRight);
                 } else {
-                    return this.createToken(Parser.TokenType.ArithmeticShiftRight);
+                    return createToken(Parser.TokenType.ArithmeticShiftRight);
                 }
             } else if (ch == '=') {
-                this.skipChar();
-                return this.createToken(Parser.TokenType.GreaterEqual);
+                skipChar();
+                return createToken(Parser.TokenType.GreaterEqual);
             } else {
-                return this.createToken(Parser.TokenType.GreaterThan);
+                return createToken(Parser.TokenType.GreaterThan);
             }
         } else if (ch == '|') {
-            this.skipChar();
-            ch = this.peekNextChar();
+            skipChar();
+            ch = peekNextChar();
             if (ch == '|') {
-                this.skipChar();
-                return this.createToken(Parser.TokenType.LogicalOR);
+                skipChar();
+                return createToken(Parser.TokenType.LogicalOR);
             } else {
-                return this.createToken(Parser.TokenType.BitwiseOR);
+                return createToken(Parser.TokenType.BitwiseOR);
             }
         } else if (ch == '&') {
-            this.skipChar();
-            ch = this.peekNextChar();
+            skipChar();
+            ch = peekNextChar();
             if (ch == '&') {
-                this.skipChar();
-                return this.createToken(Parser.TokenType.LogicalAND);
+                skipChar();
+                return createToken(Parser.TokenType.LogicalAND);
             } else {
-                return this.createToken(Parser.TokenType.BitwiseAND);
+                return createToken(Parser.TokenType.BitwiseAND);
             }
         } else if (ch == '=') {
-            this.skipChar();
-            ch = this.peekNextChar();
+            skipChar();
+            ch = peekNextChar();
             if (ch == '=') {
-                this.skipChar();
-                return this.createToken(Parser.TokenType.Equals);
+                skipChar();
+                return createToken(Parser.TokenType.Equals);
             } else {
-                return this.createToken(Parser.TokenType.Assignment);
+                return createToken(Parser.TokenType.Assignment);
             }
         } else if (ch == '!') {
-            this.skipChar();
-            ch = this.peekNextChar();
+            skipChar();
+            ch = peekNextChar();
             if (ch == '=') {
-                this.skipChar();
-                return this.createToken(Parser.TokenType.NotEquals);
+                skipChar();
+                return createToken(Parser.TokenType.NotEquals);
             } else {
-                return this.createToken(Parser.TokenType.LogicalNOT);
+                return createToken(Parser.TokenType.LogicalNOT);
             }
-        } else if (ch in Parser.AtomTypes) {
-            this.skipChar();
-            return this.createToken(Parser.AtomTypes[ch]);
+        } else if (ch in atomTypes) {
+            skipChar();
+            return createToken(atomTypes[ch]);
         }
-        this.error('Unknown token');
+        error('Unknown token');
     }
 
     /** Get the next token and advance the input position
@@ -385,22 +430,22 @@ Parser.Lexer = function(input) {
      *          or an end-of-string token if the end of the string has been reached
      */
     this.next = function() {
-        this.skipSpaces();
+        skipSpaces();
 
-        this.startToken();
-        if (this.endOfString()) {
-            return this.createToken(Parser.TokenType.EndOfString);
+        startToken();
+        if (endOfString()) {
+            return createToken(Parser.TokenType.EndOfString);
         }
 
-        let ch = this.peekNextChar();
+        let ch = peekNextChar();
         if (ch == '$') {
-            return this.parseRegister();
-        } else if (Parser.isDigit(ch)) {
-            return this.parseNumber();
-        } else if (Parser.isIdentifierStart(ch)) {
-            return this.parseIdentifier();
+            return parseRegister();
+        } else if (isDigit(ch)) {
+            return parseNumber();
+        } else if (isIdentifierStart(ch)) {
+            return parseIdentifier();
         } else {
-            return this.parseAtom();
+            return parseAtom();
         }
     }
 }
