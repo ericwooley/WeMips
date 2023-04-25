@@ -94,9 +94,3 @@ Parser.UnknownSymbolError = function(token) {
         token);
 }
 Parser.UnknownSymbolError.prototype = Object.create( Parser.ParseError.prototype );
-
-function assert(condition, message) {
-    if (!condition) {
-        throw new Error(message) || new Error("Assertion failed");
-    }
-}

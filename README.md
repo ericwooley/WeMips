@@ -155,6 +155,7 @@ You can click a register's value and overwrite its contents with whatever you wa
 | Branch Instructions (unsigned)   | BGTU, BGEU, BLTU, BLEU                                             |
 | Branch Instructions (zero comp.) | BEQZ, BNEZ, **BGTZ**, **BGEZ**, **BLTZ**, **BLEZ**                 |
 | Branch and Link Instructions     | **BGEZAL**, **BLTZAL**                                             |
+| Register Transfer Instructions   | **MFHI**, **MFLO**, **MTHI**, **MTLO**                             |
 | Memory Load Instructions         | **LB**, **LBU**, **LH**, **LHW**, **LW**, **LWL**, **LWR**         |
 | Memory Store Instructions        | **SB**, **SH**, **SW**, **SWL**, **SWR**                           |
 

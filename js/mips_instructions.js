@@ -276,6 +276,29 @@ function mipsInstructionExecutor(ME) {
             }
         },
         /////////////////////////////////////////////
+        // Mips Register Transfer Instructions
+        /////////////////////////////////////////////
+        'MTHI': {
+            runMethod: function(namedArgs) {
+                ME.setRegisterVal('hi', ME.getRegisterVal(namedArgs.$rs));
+            }
+        },
+        'MTLO': {
+            runMethod: function(namedArgs) {
+                ME.setRegisterVal('lo', ME.getRegisterVal(namedArgs.$rs));
+            }
+        },
+        'MFHI': {
+            runMethod: function(namedArgs) {
+                ME.setRegisterVal(namedArgs.$rd, ME.getRegisterVal('hi'));
+            }
+        },
+        'MFLO': {
+            runMethod: function(namedArgs) {
+                ME.setRegisterVal(namedArgs.$rd, ME.getRegisterVal('lo'));
+            }
+        },
+        /////////////////////////////////////////////
         // Mips Memory Access Instructions
         /////////////////////////////////////////////
         'LW': {

@@ -1004,6 +1004,38 @@ test("BLTZAL", function() {
 	equal(ME.getRegisterVal('$ra'), 3);
 });
 
+test("MTHI", function() {
+	ME.setRegisterVal('lo', 222);
+	ME.setRegisterVal('hi', 222);
+	ME.setRegisterVal('$t0', 15);
+	ME.runLine("MTHI $t0");
+	equal(ME.getRegisterVal('hi'), 15);
+});
+
+test("MTLO", function() {
+	ME.setRegisterVal('lo', 222);
+	ME.setRegisterVal('hi', 222);
+	ME.setRegisterVal('$t0', 15);
+	ME.runLine("MTLO $t0");
+	equal(ME.getRegisterVal('lo'), 15);
+});
+
+test("MFHI", function() {
+	ME.setRegisterVal('lo', 222);
+	ME.setRegisterVal('hi', 223);
+	ME.setRegisterVal('$t0', 15);
+	ME.runLine("MFHI $t0");
+	equal(ME.getRegisterVal('$t0'), 223);
+});
+
+test("MFLO", function() {
+	ME.setRegisterVal('lo', 222);
+	ME.setRegisterVal('hi', 223);
+	ME.setRegisterVal('$t0', 15);
+	ME.runLine("MFLO $t0");
+	equal(ME.getRegisterVal('$t0'), 222);
+});
+
 test("LUI", function(){
 	ME.runLines([
 	"ADDI $t0, $zero, 10",
