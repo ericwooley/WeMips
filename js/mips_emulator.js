@@ -60,7 +60,9 @@ function MipsEmulator(mipsArgs){
     // Private Variables / Setup
     //////////////////////////////////
 
-   var stack = new Stack({onChange: mipsArgs.onStackChange, baseAddress: mipsArgs.baseStackAddress});
+   var stack = new BigEndianAccess(
+        new Stack({onChange: mipsArgs.onStackChange, baseAddress: mipsArgs.baseStackAddress})
+   );
 
     /**
      * Hash table of registers

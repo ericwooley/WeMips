@@ -50,10 +50,10 @@ function Stack(options) {
     // element will store a single byte (e.g. a number between 0 and 255).
     var data = [];
 
-    function getByteAtAddress(address) {
+    this.getByteAtAddress = function(address) {
         return data[indexForAddress(address)];
     }
-    function setByteAtAddress(address, byte) {
+    this.setByteAtAddress = function(address, byte) {
         assert(typeof byte === "number");
         assert(0 <= byte && byte <= 255);
         data[indexForAddress(address)] = byte;
@@ -83,7 +83,30 @@ function Stack(options) {
         }
         return index;
     }
+    /**
+     * Clear the data contained in the stack
+     * @return {null}
+     */
+    this.reset = function() {
+        data = [];
+    };
+    /**
+     * Get a pointer to the address at the bottom of the stack
+     * @return {Number} Address to the bottom of the stack
+     */
+    this.pointerToBottomOfStack = function () {
+        // the initial value of the stack pointer. before you read or write to it, you must decrement the stack pointer.
+        return options.baseAddress;
+    };
+}
 
+/**
+ * @class BigEndianAccess
+ * Provides word and half-word access in big-endian-order to a byte-based memory
+ * 
+ * @param {Object} memory   The memory to access
+ */
+function BigEndianAccess(memory) {
     // Public variables
 
     this.MIN_BYTE_VALUE = 0;
@@ -93,7 +116,6 @@ function Stack(options) {
     this.BYTES_PER_HALFWORD = 2;
     this.BYTES_PER_WORD = 4;
 
-    // Privileged methods
     /**
      * Get a given number of bytes at an address
      * @param  {Number} address    The starting address for your data
@@ -105,7 +127,7 @@ function Stack(options) {
         asUnsigned = asUnsigned || false;
         var result = 0;
         for (var i = 0; i < byteCount; i++) {
-            var value = getByteAtAddress(address + i);
+            var value = memory.getByteAtAddress(address + i);
             assert(this.MIN_BYTE_VALUE <= value && value <= this.MAX_BYTE_VALUE);
             result = result << this.BITS_PER_BYTE;
             result += value;
@@ -155,7 +177,7 @@ function Stack(options) {
         /* Split it up into the respective bytes */
         for (var i = byteCount - 1; i >= 0; i--) {
             var rightMostByte = data & this.MAX_BYTE_VALUE;
-            setByteAtAddress(address + i, rightMostByte);
+            memory.setByteAtAddress(address + i, rightMostByte);
             data = data >>> this.BITS_PER_BYTE;
         };
     };
@@ -164,15 +186,14 @@ function Stack(options) {
      * @return {null}
      */
     this.reset = function() {
-        data = [];
+        return memory.reset();
     };
     /**
      * Get a pointer to the address at the bottom of the stack
      * @return {Number} Address to the bottom of the stack
      */
     this.pointerToBottomOfStack = function () {
-        // the initial value of the stack pointer. before you read or write to it, you must decrement the stack pointer.
-        return options.baseAddress;
+        return memory.pointerToBottomOfStack();
     };
 }
 
@@ -182,7 +203,7 @@ function Stack(options) {
  * @param  {Number} pointer The address the wanted data lives
  * @return {Number} Requested data
  */
-Stack.prototype.getByte = function (pointer) {
+BigEndianAccess.prototype.getByte = function (pointer) {
     return this.getDataAtAddress(pointer, this.BYTES_PER_BYTE);
 };
 /**
@@ -190,7 +211,7 @@ Stack.prototype.getByte = function (pointer) {
  * @param  {Number} pointer Address where you want data from.
  * @return {Number} Data at address.
  */
-Stack.prototype.getUnsignedByte = function (pointer) {
+BigEndianAccess.prototype.getUnsignedByte = function (pointer) {
     return this.getDataAtAddress(pointer, this.BYTES_PER_BYTE, true);
 };
 /**
@@ -198,7 +219,7 @@ Stack.prototype.getUnsignedByte = function (pointer) {
  * @param  {Number} pointer Address where data lives
  * @return {Number} Retrieved data
  */
-Stack.prototype.getHalfword = function (pointer) {
+BigEndianAccess.prototype.getHalfword = function (pointer) {
     return this.getDataAtAddress(pointer, this.BYTES_PER_HALFWORD);
 };
 /**
@@ -206,7 +227,7 @@ Stack.prototype.getHalfword = function (pointer) {
  * @param  {Number} pointer Address where data lives
  * @return {Number} Retrieved data
  */
-Stack.prototype.getUnsignedHalfword = function (pointer) {
+BigEndianAccess.prototype.getUnsignedHalfword = function (pointer) {
     return this.getDataAtAddress(pointer, this.BYTES_PER_HALFWORD, true);
 };
 /**
@@ -214,7 +235,7 @@ Stack.prototype.getUnsignedHalfword = function (pointer) {
  * @param  {Number} pointer Address where data lives
  * @return {Number} Retrieved data
  */
-Stack.prototype.getWord = function (pointer) {
+BigEndianAccess.prototype.getWord = function (pointer) {
     return this.getDataAtAddress(pointer, this.BYTES_PER_WORD);
 };
 /**
@@ -222,7 +243,7 @@ Stack.prototype.getWord = function (pointer) {
  * @param  {Number} pointer Address where data lives
  * @return {Number} Retrieved data
  */
-Stack.prototype.getUnsignedWord = function (pointer) {
+BigEndianAccess.prototype.getUnsignedWord = function (pointer) {
     return this.getDataAtAddress(pointer, this.BYTES_PER_WORD, true);
 };
 /**
@@ -230,7 +251,7 @@ Stack.prototype.getUnsignedWord = function (pointer) {
  * @param {Number} pointer The address with data you want to set
  * @param {Number} data The data you want to write to the address
  */
-Stack.prototype.setByte = function (pointer, data) {
+BigEndianAccess.prototype.setByte = function (pointer, data) {
     this.setDataAtAddress(pointer, this.BYTES_PER_BYTE, data);
 };
 
@@ -239,7 +260,7 @@ Stack.prototype.setByte = function (pointer, data) {
  * @param {Number} pointer Address to overwrite with half word of data
  * @param {Number} data Data to write to address
  */
-Stack.prototype.setHalfword = function (pointer, data) {
+BigEndianAccess.prototype.setHalfword = function (pointer, data) {
     this.setDataAtAddress(pointer, this.BYTES_PER_HALFWORD, data);
 };
 
@@ -248,6 +269,6 @@ Stack.prototype.setHalfword = function (pointer, data) {
  * @param {Number} pointer where data will be written
  * @param {Number} data Data to be written to the address
  */
-Stack.prototype.setWord = function (pointer, data) {
+BigEndianAccess.prototype.setWord = function (pointer, data) {
     this.setDataAtAddress(pointer, this.BYTES_PER_WORD, data);
 };

@@ -1,4 +1,4 @@
-var stack = new Stack();
+var stack = new BigEndianAccess(new Stack());
 var stackPointer = stack.pointerToBottomOfStack();
 
 module("Stack", {
@@ -113,7 +113,7 @@ test("Save/load integers to stack", function() {
 
 test("Addresses", function() {
 	// use our own stack, since we don't want to deal with random addresses that the official stack gets, nor the extremely high values it might start at (e.g. if it starts at 10000 and we access address 0, it is going to create 10000 elements for us.)
-	var stack = new Stack({baseAddress: 100});
+	var stack = new BigEndianAccess(new Stack({baseAddress: 100}));
 	stackPointer = stack.pointerToBottomOfStack();
 
 	throws(function() { stack.getByte(stackPointer); }, StackError, "Accessing the top of the stack should throw an error.");
