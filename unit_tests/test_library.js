@@ -3,9 +3,9 @@ module("Library");
 test("Exception handling", function() {
 	expect(1);
 	try {
-		throw new StackError('foo');
+		throw new MemoryError('foo');
 	} catch (e) {
-		ok(e instanceof StackError, "Must be able to capture stack errors in the setDataAtAddress method of the stack.");
+		ok(e instanceof MemoryError, "Must be able to capture stack errors in the setDataAtAddress method of the stack.");
 	}
 });
 

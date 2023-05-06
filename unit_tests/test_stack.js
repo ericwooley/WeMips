@@ -80,9 +80,9 @@ test("Save/load integers to stack", function() {
 	equal(stack.getUnsignedByte(stackPointer + 3), 128, " 00000000  00000000  00000000 [10000000]");
 
 	stackPointer -= 1;
-	throws(function() { stack.setByte(stackPointer, -129); }, StackError, "Out of range.");
-	throws(function() { stack.setByte(stackPointer, 257); }, StackError, "Out of range.");
-	throws(function() { stack.setByte(stackPointer, Math.pow(2, 32)); }, StackError, "Out of range.");
+	throws(function() { stack.setByte(stackPointer, -129); }, MemoryError, "Out of range.");
+	throws(function() { stack.setByte(stackPointer, 257); }, MemoryError, "Out of range.");
+	throws(function() { stack.setByte(stackPointer, Math.pow(2, 32)); }, MemoryError, "Out of range.");
 	stack.setByte(stackPointer, -128);
 	stack.setByte(stackPointer, 0);
 	stack.setByte(stackPointer, 127);
@@ -116,10 +116,10 @@ test("Addresses", function() {
 	var stack = new BigEndianAccess(new Stack({baseAddress: 100}));
 	stackPointer = stack.pointerToBottomOfStack();
 
-	throws(function() { stack.getByte(stackPointer); }, StackError, "Accessing the top of the stack should throw an error.");
+	throws(function() { stack.getByte(stackPointer); }, MemoryError, "Accessing the top of the stack should throw an error.");
 	stack.getByte(0); // "Accessing address 0 is valid.";
-	throws(function() { stack.getByte(-1); }, StackError, "Accessing anything below 0 is invalid.");
-	throws(function() { stack.getByte(stackPointer + 20); }, StackError, "Accessing anything above the top of the stack should throw an error.");
+	throws(function() { stack.getByte(-1); }, MemoryError, "Accessing anything below 0 is invalid.");
+	throws(function() { stack.getByte(stackPointer + 20); }, MemoryError, "Accessing anything above the top of the stack should throw an error.");
 
 	stackPointer -= 1;
 	equal(stackPointer, 99, "99 should be the first accessible address.");

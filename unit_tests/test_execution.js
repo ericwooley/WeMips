@@ -322,7 +322,7 @@ test("LB, LBU, SB", function() {
 	ME2.runLine("ADDI $sp, $sp, -10");
 	ME2.runLine("SB $t5, 0($sp)"); // should not cause any problems
 	// ME2.runLine("ADDI $sp, $sp, -100");
-	// throws(function() { ME2.runLine('SB $t5, 0($sp)'); }, StackError, "When the stack address starts high, you should never use addi, use addiu instead.");
+	// throws(function() { ME2.runLine('SB $t5, 0($sp)'); }, MemoryError, "When the stack address starts high, you should never use addi, use addiu instead.");
 
 
 	// saving a byte should take the bottom 8 bits
