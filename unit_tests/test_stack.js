@@ -145,3 +145,22 @@ test("Heap", function() {
 	heap.adjustSize(-4);
 	equal(heap.size, 4);
 });
+
+test("Combined Memory", function() {
+	var heap1 = new Heap({baseAddress: 100});
+	var heap2 = new Heap({baseAddress: 200});
+	var memory = new CombinedMemory([heap1, heap2]);
+	heap1.adjustSize(16);
+	heap2.adjustSize(16);
+	throws(function() { memory.getByteAtAddress(216); } , MemoryError, "No memory should be available at this address");
+	memory.setByteAtAddress(100, 10);
+	equal(heap1.getByteAtAddress(100), 10);
+	memory.setByteAtAddress(100, 20);
+	equal(heap1.getByteAtAddress(100), 20);
+	memory.setByteAtAddress(200, 30);
+	equal(heap1.getByteAtAddress(100), 20);
+	equal(heap2.getByteAtAddress(200), 30);
+	memory.setByteAtAddress(200, 40);
+	equal(heap1.getByteAtAddress(100), 20);
+	equal(heap2.getByteAtAddress(200), 40);
+});

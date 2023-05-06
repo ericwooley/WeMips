@@ -146,6 +146,40 @@ Heap.prototype.getMaxValidAddress = function() {
 }
 
 /**
+ * @class CombinedMemory
+ * 
+ * A memory entity that is constructed from the combination of a set of memories.
+ * Each access is routed to the first memory that contains the address between its
+ * min and maximum addresses.
+ * 
+ * @param {Array} memories 
+ */
+function CombinedMemory(memories) {
+    let minAddress = memories.map(m => m.getMinValidAddress()).reduce((m1, m2) => Math.min(m1, m2));
+    let maxAddress = memories.map(m => m.getMaxValidAddress()).reduce((m1, m2) => Math.max(m1, m2));
+
+    this.getMinValidAddress = function() {
+        return minAddress;
+    }
+    this.getMaxValidAddress = function() {
+        return maxAddress;
+    }
+    function getAccessedMemory(address) {
+        let accessedMemory =  memories.find(mem => (mem.getMinValidAddress() <= address && address <= mem.getMaxValidAddress()));
+        if (typeof accessedMemory == 'undefined') {
+            throw new MemoryError("Invalid Memory Address {0}: No memory associated with the given address".format(address));
+        }
+        return accessedMemory;
+    }
+    this.getByteAtAddress = function(address) {
+        return getAccessedMemory(address).getByteAtAddress(address);
+    }
+    this.setByteAtAddress = function(address, value) {
+        return getAccessedMemory(address).setByteAtAddress(address, value);
+    }
+};
+
+/**
  * @class BigEndianAccess
  * Provides word and half-word access in big-endian-order to a byte-based memory delegate
  * 
