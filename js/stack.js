@@ -14,6 +14,10 @@ MemoryError.prototype.toString = function() {
  * @param {Object} options constructor options
  * - options.onChange A function to be called when a stack address changes.
  * - options.baseAddress The default base address.
+ * 
+ * Subclasses must implement
+ * - getMinValidAddress()
+ * - getMaxValidAddress()
  */
 function MemoryBase(options) {
     var BITS_PER_REGISTER = 32; // TODO: get this from somewhere else?
@@ -63,12 +67,6 @@ function MemoryBase(options) {
     function isValidAddress(address) {
         return (that.getMinValidAddress() <= address && address <= that.getMaxValidAddress());
     }
-    this.getMinValidAddress = function() {
-        return 0;
-    }
-    this.getMaxValidAddress = function() {
-        return options.baseAddress-1;
-    }
     this.getBaseAddress = function() {
         return options.baseAddress;
     }
@@ -116,6 +114,35 @@ Stack.prototype.pointerToBottomOfStack = function() {
 }
 Stack.prototype.indexForAddress = function (address) {
     return this.getMaxValidAddress() - address;
+}
+Stack.prototype.getMinValidAddress = function() {
+    return 0;
+}
+Stack.prototype.getMaxValidAddress = function() {
+    return this.getBaseAddress()-1;
+}
+
+function Heap(options) {
+    options = options || {}
+    _.defaults(options, {
+        initialSize: 0
+    })
+    MemoryBase.call(this, options);
+    this.size = options.initialSize;
+}
+Object.setPrototypeOf(Heap.prototype, MemoryBase.prototype);
+Heap.prototype.adjustSize = function(adjustAmount) {
+    assert (this.size + adjustAmount >= 0);
+    this.size = this.size + adjustAmount;
+}
+Heap.prototype.indexForAddress = function (address) {
+    return address - this.getBaseAddress();
+}
+Heap.prototype.getMinValidAddress = function() {
+    return this.getBaseAddress();
+}
+Heap.prototype.getMaxValidAddress = function() {
+    return this.getBaseAddress() + this.size-1;
 }
 
 /**
