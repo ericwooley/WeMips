@@ -198,31 +198,11 @@ $(document).ready(function(){
         var regName = target.attr("reg");
         newVal = parseInt(newVal);
         try{
-            me.setRegisterVal(regName, newVal, false);
+            me.setRegisterVal('$'+regName, newVal, false);
         } catch(e) {
-            target.html(me.getRegisterVal(regName));
+            target.html(me.getRegisterVal('$'+regName));
             addToLog('error', e);
         }
-    };
-    function manualRegistryValidate(e){
-        var newVal = $(e.target).html();
-        var target =  $(e.target);
-        var regName = target.attr("reg");
-        if(newVal.search(/[^-\d]/) >= 0){
-            target.html(newVal.replace(/[\D\s]/g, ''));
-            alert("You cannot enter in characters into registers");
-        }
-        if(newVal.length > 11){
-            if(newVal.length == 12 && newVal.charAt(0) == '-'){
-                return true;
-            } else {
-                target.html(newVal.substring(0, 11));
-                alert("The 32 bit integers can only be 11 digits long.");
-            }
-
-        }
-
-        return true;
     };
     function setHighlights(lines){
         lines = lines || {};
