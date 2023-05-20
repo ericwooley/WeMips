@@ -69,6 +69,15 @@ function MipsEmulator(mipsArgs){
         onStackChange: function(){
 
         },
+        onStackAdd: function() {
+
+        },
+        onHeapChange: function(){
+
+        },
+        onHeapAdjustSize: function(){
+
+        },
         onOutput: function(message) {
             console.log(message)
         },
@@ -81,14 +90,26 @@ function MipsEmulator(mipsArgs){
         onAlert: function(message) {
             assert(false, "Expecting alert to be displayed, but there is no handler.");
         },
-        baseStackAddress: undefined
+        baseStackAddress: undefined,
+        baseHeapAddress: undefined
     });
     var debug = mipsArgs.debug;
     //////////////////////////////////
     // Private Variables / Setup
     //////////////////////////////////
 
-   var stack = new Stack({onChange: mipsArgs.onStackChange, baseAddress: mipsArgs.baseStackAddress});
+   var stack = new Stack({
+        onChange: mipsArgs.onStackChange,
+        baseAddress: mipsArgs.baseStackAddress
+   });
+   var heap = new Heap({
+        onChange: mipsArgs.onHeapChange,
+        onAdjustSize: mipsArgs.onHeapAdjustSize,
+        baseAddress: mipsArgs.baseHeapAddress
+   });
+   var memory = new BigEndianAccess(
+    new CombinedMemory([heap, stack])
+   );
 
     /**
      * Hash table of registers
@@ -224,6 +245,8 @@ function MipsEmulator(mipsArgs){
     this.BITS_PER_REGISTER = 32,
     this.running = false,
     this.stack = stack,
+    this.heap = heap,
+    this.memory = memory;
     /**
      * Returns a specified registers value
      * @member mipsEmulator
@@ -358,7 +381,7 @@ function MipsEmulator(mipsArgs){
         mipsCode.labels = {};
         mipsCode.code = [null];
         mipsCode.symbols = {};
-        stack.reset();
+        memory.reset();
         registers.$sp.val = stack.pointerToBottomOfStack();
     },
     /**
@@ -737,13 +760,13 @@ function MipsEmulator(mipsArgs){
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Parser.Error.html">Error</a></li><li><a href="Parser.ExprParser.html">ExprParser</a></li><li><a href="Parser.InstructionParser.html">InstructionParser</a></li><li><a href="Parser.Lexer.html">Lexer</a></li><li><a href="Parser.LexerError.html">LexerError</a></li><li><a href="Parser.OperandParser.html">OperandParser</a></li><li><a href="Parser.ParseError.html">ParseError</a></li><li><a href="Parser.Token.html">Token</a></li><li><a href="Parser.TokenStream.html">TokenStream</a></li><li><a href="Parser.UnexpectedTokenError.html">UnexpectedTokenError</a></li><li><a href="Parser.UnknownInstructionError.html">UnknownInstructionError</a></li><li><a href="Parser.UnknownSymbolError.html">UnknownSymbolError</a></li><li><a href="global.html#Stack">Stack</a></li></ul><h3>Global</h3><ul><li><a href="global.html#deepEqual">deepEqual</a></li><li><a href="global.html#equal">equal</a></li><li><a href="global.html#getDataAtAddress">getDataAtAddress</a></li><li><a href="global.html#mipsCode">mipsCode</a></li><li><a href="global.html#mipsEmulator">mipsEmulator</a></li><li><a href="global.html#notDeepEqual">notDeepEqual</a></li><li><a href="global.html#notEqual">notEqual</a></li><li><a href="global.html#notPropEqual">notPropEqual</a></li><li><a href="global.html#notStrictEqual">notStrictEqual</a></li><li><a href="global.html#ok">ok</a></li><li><a href="global.html#onChange">onChange</a></li><li><a href="global.html#pointerToBottomOfStack">pointerToBottomOfStack</a></li><li><a href="global.html#propEqual">propEqual</a></li><li><a href="global.html#regName">regName</a></li><li><a href="global.html#reset">reset</a></li><li><a href="global.html#setDataAtAddress">setDataAtAddress</a></li><li><a href="global.html#strictEqual">strictEqual</a></li><li><a href="global.html#val">val</a></li><li><a href="global.html#writable">writable</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="BigEndianAccess.html">BigEndianAccess</a></li><li><a href="CombinedMemory.html">CombinedMemory</a></li><li><a href="global.html#MemoryBase">MemoryBase</a></li><li><a href="Parser.Error.html">Error</a></li><li><a href="Parser.ExprParser.html">ExprParser</a></li><li><a href="Parser.InstructionParser.html">InstructionParser</a></li><li><a href="Parser.Lexer.html">Lexer</a></li><li><a href="Parser.LexerError.html">LexerError</a></li><li><a href="Parser.OperandParser.html">OperandParser</a></li><li><a href="Parser.ParseError.html">ParseError</a></li><li><a href="Parser.Token.html">Token</a></li><li><a href="Parser.TokenStream.html">TokenStream</a></li><li><a href="Parser.UnexpectedTokenError.html">UnexpectedTokenError</a></li><li><a href="Parser.UnknownInstructionError.html">UnknownInstructionError</a></li><li><a href="Parser.UnknownSymbolError.html">UnknownSymbolError</a></li></ul><h3>Global</h3><ul><li><a href="global.html#deepEqual">deepEqual</a></li><li><a href="global.html#equal">equal</a></li><li><a href="global.html#mipsCode">mipsCode</a></li><li><a href="global.html#mipsEmulator">mipsEmulator</a></li><li><a href="global.html#notDeepEqual">notDeepEqual</a></li><li><a href="global.html#notEqual">notEqual</a></li><li><a href="global.html#notPropEqual">notPropEqual</a></li><li><a href="global.html#notStrictEqual">notStrictEqual</a></li><li><a href="global.html#ok">ok</a></li><li><a href="global.html#onChange">onChange</a></li><li><a href="global.html#propEqual">propEqual</a></li><li><a href="global.html#regName">regName</a></li><li><a href="global.html#reset">reset</a></li><li><a href="global.html#strictEqual">strictEqual</a></li><li><a href="global.html#val">val</a></li><li><a href="global.html#writable">writable</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Tue Apr 25 2023 14:48:22 GMT+0200 (Mitteleuropäische Sommerzeit)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Sat May 20 2023 20:46:25 GMT+0200 (Mitteleuropäische Sommerzeit)
 </footer>
 
 <script> prettyPrint(); </script>

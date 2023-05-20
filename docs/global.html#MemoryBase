@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Class: LexerError</title>
+    <title>JSDoc: Class: MemoryBase</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,7 +17,7 @@
 
 <div id="main">
 
-    <h1 class="page-title">Class: LexerError</h1>
+    <h1 class="page-title">Class: MemoryBase</h1>
 
     
 
@@ -28,7 +28,7 @@
 
 <header>
     
-        <h2><span class="attribs"><span class="type-signature"></span></span>LexerError<span class="signature">(message, text, start, end)</span><span class="type-signature"></span></h2>
+        <h2><span class="attribs"><span class="type-signature"></span></span>MemoryBase<span class="signature">(options)</span><span class="type-signature"></span></h2>
         
     
 </header>
@@ -41,16 +41,12 @@
     
 
     
-    <h4 class="name" id="LexerError"><span class="type-signature"></span>new LexerError<span class="signature">(message, text, start, end)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="MemoryBase"><span class="type-signature"></span>new MemoryBase<span class="signature">(options)</span><span class="type-signature"></span></h4>
     
 
     
 
 
-
-<div class="description">
-    Exception for lexer errorsThrown when the lexer cannot associate part of the input with a lexeme.
-</div>
 
 
 
@@ -85,13 +81,13 @@
 
         <tr>
             
-                <td class="name"><code>message</code></td>
+                <td class="name"><code>options</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">string</span>
+<span class="param-type">Object</span>
 
 
             
@@ -101,76 +97,7 @@
 
             
 
-            <td class="description last">A human-readable message explaining the kind of exception</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>text</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">string</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The text of the relevant token or character as processed so far</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>start</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The start index of the text within the input string</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>end</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">number</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The index of the next character within the input string plus one</td>
+            <td class="description last">constructor options- options.onChange A function to be called when a stack address changes.- options.baseAddress The default base address.Subclasses must implement- getMinValidAddress()- getMaxValidAddress()</td>
         </tr>
 
     
@@ -211,7 +138,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="parser_utils.js.html">parser/utils.js</a>, <a href="parser_utils.js.html#line23">line 23</a>
+        <a href="stack.js.html">stack.js</a>, <a href="stack.js.html#line12">line 12</a>
     </li></ul></dd>
     
 

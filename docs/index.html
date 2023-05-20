@@ -64,7 +64,7 @@ These lines indicate which lines the emulator is processing.
 The last line the emulator successfully ran will be highlighted in green.
 The next line to be run will be highlighted in grey.
 If the emulator runs into a MIPS error, it will be highlighted in red.
-You will notice as you step through your program that the last register, or stack address changed, is also highlighted in green.
+You will notice as you step through your program that the last register, or stack or heap address changed, is also highlighted in green.
 See the Auto Switch feature for more details.</li>
 <li>The second way to process your code is to &quot;run&quot; it.
 This can be accomplished by clicking the run button.
@@ -124,18 +124,18 @@ This will become the next line the mips engine will run.</p>
 Tap a demo (e.g. Hello World) to replace the existing MIPS code with the predefined MIPS code for that demo.
 Then press run (or step) to watch it execute.
 Most of them are self explanatory, or have comments that explain how they work.</p>
-<h4>Auto switch register/stack/log tabs</h4>
-<p><img src="images/image07.png" alt="Auto switch register/stack/log tabs"></p>
-<p>With this feature enabled, whenever a register (or stack) is modified, the tab will automatically switch the corresponding tab so that you can see the relevant change.
+<h4>Auto switch register/stack/heap/log tabs</h4>
+<p><img src="images/image07.png" alt="Auto switch register/stack/heap/log tabs"></p>
+<p>With this feature enabled, whenever a register (or heap/stack) is modified, the tab will automatically switch the corresponding tab so that you can see the relevant change.
 In the case where multiple things are modified at once, the last change will take precedence.</p>
 <h4>Emulation Options</h4>
 <p><img src="images/image08.png" alt="Emulation Options"></p>
 <p>By default, support for pseudo-instructions is active and pipeline emulation is inactive.
 To change that, use the emulation options below the text editor.</p>
 <p>Note that when pipeline emulation is activated, branch and jump instructions will be delayed by one instruction slot, and the instruction immediately following them will be executed before the first instruction at the target location.</p>
-<h4>Show stack byte as number/ascii/binary</h4>
-<p>Sometimes it is useful to see the actual bits that compose a byte, or to see the corresponding ASCII character that is stored in the stack.
-You can toggle between seeing any of these three values for a corresponding address in the stack.</p>
+<h4>Show stack/heap byte as number/ascii/binary</h4>
+<p>Sometimes it is useful to see the actual bits that compose a byte, or to see the corresponding ASCII character that is stored in the stack/heap.
+You can toggle between seeing any of these three values for a corresponding address in the stack/heap.</p>
 <h4>View registers</h4>
 <p><img src="images/image06.png" alt="Registers View"></p>
 <p>Up top we can toggle which registers are currently visible (S, T, A, or V registers).
@@ -248,6 +248,12 @@ A register is composed of 32 bits, and can therefore hold 2<sup>32</sup> differe
 <td>$v0 = contains the length of the input string</td>
 </tr>
 <tr>
+<td>Allocate Heap Memory</td>
+<td>9</td>
+<td>$a0 = number of bytes to allocate</td>
+<td>$v0 = contains address of allocated memory</td>
+</tr>
+<tr>
 <td>Confirm Dialog</td>
 <td>50</td>
 <td>$a0 = address of null-terminated string that is the message to user</td>
@@ -305,7 +311,7 @@ A register is composed of 32 bits, and can therefore hold 2<sup>32</sup> differe
 </table>
 <h2>Other Notes</h2>
 <h3>Stack</h3>
-<p>The stack is byte-addressable, and is currently the only place to store anything of great length.
+<p>The stack is byte-addressable.
 Each time you start the emulator, the frame pointer will be initialized to a random address less than 2<sup>32</sup>, in order to simulate the fact that when you first run your program, the frame pointer may be at any given value.</p>
 <p><img src="images/image01.png" alt="Black Arrow"></p>
 <p>The black arrow is used to show where $sp is currently pointing to.</p>
@@ -316,6 +322,10 @@ Each time you start the emulator, the frame pointer will be initialized to a ran
 You can also view it in several modes, as an integer, in binary, and it’s ascii representation (‘None’ if no ascii character is available).
 Viewing the stack in a different mode doesn’t mean you can’t edit it.
 You can edit it in binary mode to save a binary representation, as you could with integers and ascii.</p>
+<h3>Heap</h3>
+<p>The heap is byte-addressable.
+It can be extended using the syscall 9 (see the table above).</p>
+<p>Contents of the heap can be changed as for the stack, and representation (decimal/ascii/binary) can be changed as well.</p>
 <h2>Developer Notes</h2>
 <h3>Installing Node packages</h3>
 <p>WeMIPS uses <a href="https://www.npmjs.com/">npm</a> as its package manager, which comes with <a href="https://nodejs.org/en">node.js</a>.</p>
@@ -333,13 +343,13 @@ You can edit it in binary mode to save a binary representation, as you could wit
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Parser.Error.html">Error</a></li><li><a href="Parser.ExprParser.html">ExprParser</a></li><li><a href="Parser.InstructionParser.html">InstructionParser</a></li><li><a href="Parser.Lexer.html">Lexer</a></li><li><a href="Parser.LexerError.html">LexerError</a></li><li><a href="Parser.OperandParser.html">OperandParser</a></li><li><a href="Parser.ParseError.html">ParseError</a></li><li><a href="Parser.Token.html">Token</a></li><li><a href="Parser.TokenStream.html">TokenStream</a></li><li><a href="Parser.UnexpectedTokenError.html">UnexpectedTokenError</a></li><li><a href="Parser.UnknownInstructionError.html">UnknownInstructionError</a></li><li><a href="Parser.UnknownSymbolError.html">UnknownSymbolError</a></li><li><a href="global.html#Stack">Stack</a></li></ul><h3>Global</h3><ul><li><a href="global.html#deepEqual">deepEqual</a></li><li><a href="global.html#equal">equal</a></li><li><a href="global.html#getDataAtAddress">getDataAtAddress</a></li><li><a href="global.html#mipsCode">mipsCode</a></li><li><a href="global.html#mipsEmulator">mipsEmulator</a></li><li><a href="global.html#notDeepEqual">notDeepEqual</a></li><li><a href="global.html#notEqual">notEqual</a></li><li><a href="global.html#notPropEqual">notPropEqual</a></li><li><a href="global.html#notStrictEqual">notStrictEqual</a></li><li><a href="global.html#ok">ok</a></li><li><a href="global.html#onChange">onChange</a></li><li><a href="global.html#pointerToBottomOfStack">pointerToBottomOfStack</a></li><li><a href="global.html#propEqual">propEqual</a></li><li><a href="global.html#regName">regName</a></li><li><a href="global.html#reset">reset</a></li><li><a href="global.html#setDataAtAddress">setDataAtAddress</a></li><li><a href="global.html#strictEqual">strictEqual</a></li><li><a href="global.html#val">val</a></li><li><a href="global.html#writable">writable</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="BigEndianAccess.html">BigEndianAccess</a></li><li><a href="CombinedMemory.html">CombinedMemory</a></li><li><a href="global.html#MemoryBase">MemoryBase</a></li><li><a href="Parser.Error.html">Error</a></li><li><a href="Parser.ExprParser.html">ExprParser</a></li><li><a href="Parser.InstructionParser.html">InstructionParser</a></li><li><a href="Parser.Lexer.html">Lexer</a></li><li><a href="Parser.LexerError.html">LexerError</a></li><li><a href="Parser.OperandParser.html">OperandParser</a></li><li><a href="Parser.ParseError.html">ParseError</a></li><li><a href="Parser.Token.html">Token</a></li><li><a href="Parser.TokenStream.html">TokenStream</a></li><li><a href="Parser.UnexpectedTokenError.html">UnexpectedTokenError</a></li><li><a href="Parser.UnknownInstructionError.html">UnknownInstructionError</a></li><li><a href="Parser.UnknownSymbolError.html">UnknownSymbolError</a></li></ul><h3>Global</h3><ul><li><a href="global.html#deepEqual">deepEqual</a></li><li><a href="global.html#equal">equal</a></li><li><a href="global.html#mipsCode">mipsCode</a></li><li><a href="global.html#mipsEmulator">mipsEmulator</a></li><li><a href="global.html#notDeepEqual">notDeepEqual</a></li><li><a href="global.html#notEqual">notEqual</a></li><li><a href="global.html#notPropEqual">notPropEqual</a></li><li><a href="global.html#notStrictEqual">notStrictEqual</a></li><li><a href="global.html#ok">ok</a></li><li><a href="global.html#onChange">onChange</a></li><li><a href="global.html#propEqual">propEqual</a></li><li><a href="global.html#regName">regName</a></li><li><a href="global.html#reset">reset</a></li><li><a href="global.html#strictEqual">strictEqual</a></li><li><a href="global.html#val">val</a></li><li><a href="global.html#writable">writable</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Tue Apr 25 2023 14:48:22 GMT+0200 (Mitteleuropäische Sommerzeit)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Sat May 20 2023 20:46:25 GMT+0200 (Mitteleuropäische Sommerzeit)
 </footer>
 
 <script> prettyPrint(); </script>
