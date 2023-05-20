@@ -132,8 +132,10 @@ function Heap(options) {
 }
 Object.setPrototypeOf(Heap.prototype, MemoryBase.prototype);
 Heap.prototype.adjustSize = function(adjustAmount) {
+    var oldEnd = this.getMaxValidAddress();
     assert (this.size + adjustAmount >= 0);
     this.size = this.size + adjustAmount;
+    return oldEnd;
 }
 Heap.prototype.indexForAddress = function (address) {
     return address - this.getBaseAddress();

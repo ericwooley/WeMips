@@ -135,3 +135,16 @@ test('Read/write string', function() {
 	]);
 	equal(output, input, "Should be able to write hello to stack and read it from the stack.");
 });
+
+test('Allocate Heap Memory', function() {
+	var oldHeapEnd = ME.heap.getMaxValidAddress();
+	ME.runLines([
+		"ADDI $v0, $zero, 9 # allocate heap memory",
+		"ADDI $a0, $zero, 100",
+		"SYSCALL"
+	]);
+	var newHeapEnd = ME.heap.getMaxValidAddress();
+	var memoryStart = ME.getRegisterUnsignedVal('$v0');
+	equal(memoryStart, oldHeapEnd, "New area should start at old heap end");
+	equal(newHeapEnd, oldHeapEnd+100, "Heap end should have moved by 100 bytes");
+});

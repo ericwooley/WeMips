@@ -99,6 +99,14 @@ function mipsSyscalls(ME) {
 				ME.setRegisterVal('$v0', input.length);
 			}
 		},
+		'9': {
+			description: 'Allocate Heap Memory',
+			execute: function() {
+				var bytesToAllocate = ME.getRegisterUnsignedVal('$a0');
+				var memoryStart = ME.heap.adjustSize(bytesToAllocate);
+				ME.setRegisterVal('$v0', memoryStart);
+			}
+		},
 		'50': {
 			description: 'Confirm dialog',
 			execute: function() {
