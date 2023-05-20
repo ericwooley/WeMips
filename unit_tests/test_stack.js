@@ -163,4 +163,5 @@ test("Combined Memory", function() {
 	memory.setByteAtAddress(200, 40);
 	equal(heap1.getByteAtAddress(100), 20);
 	equal(heap2.getByteAtAddress(200), 40);
+	memory.reset();
 });

@@ -17,7 +17,7 @@ function mipsSyscalls(ME) {
 		for (var i = 0; i <= maxCharCount; i++) {
 			// null terminate the rest of the addresses
 			var byte = (i < input.length) ? input.charCodeAt(i) : 0;
-			ME.stack.setByte(stackSaveAddress + i, byte);
+			ME.stack.setByteAtAddress(stackSaveAddress + i, byte);
 		}
 
 		return input;
@@ -47,7 +47,7 @@ function mipsSyscalls(ME) {
 					break;
 				}
 
-				var byte =  ME.stack.getByte(address);
+				var byte =  ME.stack.getByteAtAddress(address);
 				if (stopOnceNullReached && byte === 0) {
 					break;
 				}

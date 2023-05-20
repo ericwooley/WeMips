@@ -177,6 +177,11 @@ function CombinedMemory(memories) {
     this.setByteAtAddress = function(address, value) {
         return getAccessedMemory(address).setByteAtAddress(address, value);
     }
+    this.reset = function() {
+        for (memory of memories) {
+            memory.reset();
+        }
+    }
 };
 
 /**

@@ -41,6 +41,9 @@ function MipsEmulator(mipsArgs){
         onStackChange: function(){
 
         },
+        onHeapChange: function(){
+
+        },
         onOutput: function(message) {
             console.log(message)
         },
@@ -53,15 +56,24 @@ function MipsEmulator(mipsArgs){
         onAlert: function(message) {
             assert(false, "Expecting alert to be displayed, but there is no handler.");
         },
-        baseStackAddress: undefined
+        baseStackAddress: undefined,
+        baseHeapAddress: undefined
     });
     var debug = mipsArgs.debug;
     //////////////////////////////////
     // Private Variables / Setup
     //////////////////////////////////
 
-   var stack = new BigEndianAccess(
-        new Stack({onChange: mipsArgs.onStackChange, baseAddress: mipsArgs.baseStackAddress})
+   var stack = new Stack({
+        onChange: mipsArgs.onStackChange,
+        baseAddress: mipsArgs.baseStackAddress
+   });
+   var heap = new Heap({
+        onChange: mipsArgs.onHeapChange,
+        baseAddress: mipsArgs.baseHeapAddress
+   });
+   var memory = new BigEndianAccess(
+    new CombinedMemory([heap, stack])
    );
 
     /**
@@ -198,6 +210,8 @@ function MipsEmulator(mipsArgs){
     this.BITS_PER_REGISTER = 32,
     this.running = false,
     this.stack = stack,
+    this.heap = heap,
+    this.memory = memory;
     /**
      * Returns a specified registers value
      * @member mipsEmulator
@@ -332,7 +346,7 @@ function MipsEmulator(mipsArgs){
         mipsCode.labels = {};
         mipsCode.code = [null];
         mipsCode.symbols = {};
-        stack.reset();
+        memory.reset();
         registers.$sp.val = stack.pointerToBottomOfStack();
     },
     /**

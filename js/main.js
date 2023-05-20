@@ -288,7 +288,7 @@ $(document).ready(function(){
         while (address < stackLow) {
             stackLow--;
             var bgColorClass = '';
-            var addressVal = me.stack.getByte(stackLow);
+            var addressVal = me.stack.getByteAtAddress(stackLow);
             var valRep = changeToStackRep(addressVal);
             if (colorizeAddrBG) bgColorClass = 'lightGreyBG';
             colorizeAddrBG = !colorizeAddrBG;
@@ -313,12 +313,6 @@ $(document).ready(function(){
                 + ">"
                 + valRep
                 + "</span>"
-                // + "<span class='regSpacer charBin' id='stackChar-"+stackLow+"'>"
-                //     + asChar(me.stack.getByte(stackLow))
-                // +"</span>"
-                // + "<span class='regSpacer charBin' id='stackBin-"+stackLow+"' style='display: none'>"
-                //     + asBin(me.stack.getByte(stackLow))
-                // +"</span>"
                 + "</span>"
                 + "</div>"
             );
@@ -327,7 +321,7 @@ $(document).ready(function(){
     }
     function onStackChange(address, val, visualize) {
         extendStack(address);
-        if (!val || val == '') val = me.stack.getByte(address);
+        if (!val || val == '') val = me.stack.getByteAtAddress(address);
         if (typeof visualize == 'undefined')
             visualize = true;
 
@@ -386,7 +380,7 @@ $(document).ready(function(){
                 break;
         }
         if(typeof newVal != "Number") newVal = Number(newVal);
-        me.stack.setByte(address, newVal);
+        me.stack.setByteAtAddress(address, newVal);
     };
     //setSP(stackEnd);
     function setupTests(){

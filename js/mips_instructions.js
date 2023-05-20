@@ -343,14 +343,14 @@ function mipsInstructionExecutor(ME) {
         /////////////////////////////////////////////
         'LW': {
             runMethod: function(namedArgs) {
-                ME.setRegisterVal(namedArgs.$rd, ME.stack.getWord(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm));
+                ME.setRegisterVal(namedArgs.$rd, ME.memory.getWord(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm));
             }
         },
         'LWL': {
             runMethod: function(namedArgs) {
                 var addr = ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm;
                 var offset = addr & 3;
-                var value = ME.stack.getDataAtAddress(addr, 4 - offset);
+                var value = ME.memory.getDataAtAddress(addr, 4 - offset);
                 var bitOffset = offset*8;
                 var lowerMask = Math.pow(2,bitOffset)-1;
                 var upperMask = ~lowerMask;
@@ -361,7 +361,7 @@ function mipsInstructionExecutor(ME) {
             runMethod: function(namedArgs) {
                 var addr = ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm;
                 var offset = addr & 3;
-                var value = ME.stack.getDataAtAddress(addr & ~3, offset+1);
+                var value = ME.memory.getDataAtAddress(addr & ~3, offset+1);
                 var bitOffset = (offset+1)*8;
                 var lowerMask = Math.pow(2,bitOffset)-1;
                 var upperMask = ~lowerMask;
@@ -374,7 +374,7 @@ function mipsInstructionExecutor(ME) {
                 var offset = addr & 3;
                 var bitOffset = offset*8;
                 var value = ME.getRegisterVal(namedArgs.$rt) >>> bitOffset;
-                ME.stack.setDataAtAddress(addr, 4-offset, value);
+                ME.memory.setDataAtAddress(addr, 4-offset, value);
             }
         },
         'SWR': {
@@ -384,43 +384,43 @@ function mipsInstructionExecutor(ME) {
                 var bitOffset = (offset+1)*8;
                 var lowerMask = Math.pow(2, bitOffset)-1;
                 var value = ME.getRegisterVal(namedArgs.$rt) & lowerMask;
-                ME.stack.setDataAtAddress(addr & ~3, offset+1, value);
+                ME.memory.setDataAtAddress(addr & ~3, offset+1, value);
             }
         },
         'SW': {
             runMethod: function(namedArgs) {
-                ME.stack.setWord(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm, ME.getRegisterVal(namedArgs.$rt));
+                ME.memory.setWord(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm, ME.getRegisterVal(namedArgs.$rt));
             }
         },
         'LH': {
             runMethod: function(namedArgs) {
-                ME.setRegisterVal(namedArgs.$rd, ME.stack.getHalfword(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm));
+                ME.setRegisterVal(namedArgs.$rd, ME.memory.getHalfword(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm));
             }
         },
         'LHU': {
             runMethod: function(namedArgs) {
-                ME.setRegisterVal(namedArgs.$rd, ME.stack.getUnsignedHalfword(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm));
+                ME.setRegisterVal(namedArgs.$rd, ME.memory.getUnsignedHalfword(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm));
             }
         },
         'SH': {
             runMethod: function(namedArgs) {
-                ME.stack.setHalfword(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm, ME.getRegisterVal(namedArgs.$rt) & 65535);
+                ME.memory.setHalfword(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm, ME.getRegisterVal(namedArgs.$rt) & 65535);
             }
         },
         'LB': {
             runMethod: function(namedArgs) {
-            	ME.setRegisterVal(namedArgs.$rd, ME.stack.getByte(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm));
+            	ME.setRegisterVal(namedArgs.$rd, ME.memory.getByte(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm));
             }
         },
         'LBU': {
             runMethod: function(namedArgs) {
-            	ME.setRegisterVal(namedArgs.$rd, ME.stack.getUnsignedByte(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm));
+            	ME.setRegisterVal(namedArgs.$rd, ME.memory.getUnsignedByte(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm));
             }
         },
         'SB': {
             runMethod: function(namedArgs) {
                 // TODO: should these be using unsignedAdd so that the appropriate flags are set?
-            	ME.stack.setByte(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm, ME.getRegisterVal(namedArgs.$rt) & 255);
+            	ME.memory.setByte(ME.getRegisterUnsignedVal(namedArgs.$rs) + namedArgs.imm, ME.getRegisterVal(namedArgs.$rt) & 255);
             }
         },
         /////////////////////////////////////////////
