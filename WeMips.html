@@ -61,7 +61,7 @@
       </div>
     </div>
     <div class="row">
-      <div class="col-lg-8">
+      <div class="col-lg-7">
 
         <div id="editorContainer" class="CodeMirror">
           <textarea id="editor">
@@ -120,7 +120,7 @@
         <hr />
       </div>
 
-      <div id="registers" class="col-lg-4">
+      <div id="registers" class="col-lg-5">
         <button id="step"> Step </button>
         <button id="run"> Run </button>
         <ul>
@@ -133,6 +133,7 @@
           <li><a href="#a-registers" data-toggle="tab">A</a></li>
           <li><a href="#v-registers" data-toggle="tab">V</a></li>
           <li><a href="#stack-container-div" data-toggle="tab">Stack</a></li>
+          <li><a href="#heap-container-div" data-toggle="tab">Heap</a></li>
           <li><a href="#logWrapper" data-toggle="tab">Log</a></li>
         </ul>
 
@@ -181,12 +182,12 @@
           <div class="tab-pane" id="stack-container-div">
             <div class='stack-container' id="stack">
               <div id='stackOptions'>
-                <input type="checkbox" id='optionShowRelative'> <span id="addrTypeText">show relative address<span>
-                    <select class="form-control" id="stackDisplayType">
-                      <option>Integer</option>
-                      <option>Ascii</option>
-                      <option>Binary</option>
-                    </select>
+                <input type="checkbox" id='optionShowRelative'> <span id="addrTypeText">show relative address</span>
+                <select class="form-control" id="stackDisplayType">
+                  <option>Integer</option>
+                  <option>Ascii</option>
+                  <option>Binary</option>
+                </select>
               </div>
               <div id='stackRep'>
                 <span class="glyphicon glyphicon-arrow-right"></span>
@@ -194,6 +195,21 @@
                   ------------ Frame Pointer ------------
 
                 </span>
+              </div>
+            </div>
+          </div>
+          <div class="tab-pane" id="heap-container-div">
+            <div class='heap-container' id="heap">
+              <div id='heapOptions'>
+                <select class="form-control" id="heapDisplayType">
+                  <option>Integer</option>
+                  <option>Ascii</option>
+                  <option>Binary</option>
+                </select>
+              </div>
+              <div id='heapRep'>
+                <span class="glyphicon glyphicon-arrow-right"></span>
+                <span class='' id="heapTop"></span>
               </div>
             </div>
           </div>

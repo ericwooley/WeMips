@@ -125,18 +125,21 @@ Stack.prototype.getMaxValidAddress = function() {
 function Heap(options) {
     options = options || {}
     _.defaults(options, {
-        initialSize: 0
+        initialSize: 0,
+        onAdjustSize: null
     })
     MemoryBase.call(this, options);
     this.size = options.initialSize;
+
+    this.adjustSize = function(adjustAmount) {
+        var oldEnd = this.getMaxValidAddress();
+        assert (this.size + adjustAmount >= 0);
+        this.size = this.size + adjustAmount;
+        if (options.onAdjustSize) options.onAdjustSize(this.size);
+        return oldEnd;
+    }
 }
 Object.setPrototypeOf(Heap.prototype, MemoryBase.prototype);
-Heap.prototype.adjustSize = function(adjustAmount) {
-    var oldEnd = this.getMaxValidAddress();
-    assert (this.size + adjustAmount >= 0);
-    this.size = this.size + adjustAmount;
-    return oldEnd;
-}
 Heap.prototype.indexForAddress = function (address) {
     return address - this.getBaseAddress();
 }

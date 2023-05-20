@@ -41,7 +41,13 @@ function MipsEmulator(mipsArgs){
         onStackChange: function(){
 
         },
+        onStackAdd: function() {
+
+        },
         onHeapChange: function(){
+
+        },
+        onHeapAdjustSize: function(){
 
         },
         onOutput: function(message) {
@@ -70,6 +76,7 @@ function MipsEmulator(mipsArgs){
    });
    var heap = new Heap({
         onChange: mipsArgs.onHeapChange,
+        onAdjustSize: mipsArgs.onHeapAdjustSize,
         baseAddress: mipsArgs.baseHeapAddress
    });
    var memory = new BigEndianAccess(
