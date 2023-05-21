@@ -336,25 +336,6 @@ function MipsEmulator(mipsArgs){
         return nextLineToFetch;
     },
     /**
-     * Checks if a string is a valid mips line
-     * @member mipsEmulator
-     * @param  {String}  line
-     * @return {Boolean}
-     */
-    this.isValidLine = function(line){
-        let instructionParser = Parser.instructionParserFromString(line);
-        try {
-            let instruction = instructionParser.parseLine();
-            return instruction.error == null;
-        } catch (e) {
-            if (e instanceof Parser.Error) {
-                return false;
-            } else {
-                throw e;
-            }
-        }
-    },
-    /**
      * Resets mips labes, code, and stack
      * @member mipsEmulator
      * @return {null}

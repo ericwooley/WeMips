@@ -1,4 +1,4 @@
-module('New Parser');
+module('Parser');
 
 test("Lexer", function() {
     let parseSingleToken = function(text) {
@@ -257,6 +257,7 @@ test('Instruction Parsing', function() {
 	ok(isValidLine("J label"));
 	ok(isValidLine("LW $s1, 16( $sp )"), "spaces allowed between parens");
 	ok(isValidLine("LUI $t0, hi16(0x12345678)"), "hi16 call allowed");
+	ok(!isValidLine('ADDIU $t0, $t0, $t0'), "Must have an immediate.");
 	ok(isValidLine("ADDIU $t0, $t0, lo16(0x12345678)"), "lo16 call allowed");
 	ok(!isValidLine("ADDIU $t0, $t0, lo16(0x12345678"), "missing paren leads to error");
 	ok(isValidLine("LW $t0, lo16(0x12345678)($t0)"), "proper parsing of parens for register-relative address");

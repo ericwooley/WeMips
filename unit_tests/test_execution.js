@@ -207,8 +207,6 @@ test("ADDU", function() {
 });
 
 test("ADDIU", function() {
-	ok(!ME.isValidLine('ADDIU $t0, $t0, $t0'), "Must have an immediate.");
-
 	ME.runLine("ADDI $t1, $zero, 1");
 	ME.runLine("SLL $t2, $t1, 31 	# $t2 = 2147483648");
 	ME.runLine("SUBU $t2, $t2, $t1 	# $t2 = 2147483647 (max signed int)");
