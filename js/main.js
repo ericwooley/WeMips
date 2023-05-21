@@ -77,6 +77,7 @@ $(document).ready(function(){
         // Set the starting code to be the defualt in the editor.
         startingCode: $("#editor").val()
     });
+    me.setCode($("#editor").val());
     var running = false;
     // the active line, is the one whose results are being examined.
     var lastLineNoRun;

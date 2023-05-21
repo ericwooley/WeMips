@@ -133,9 +133,11 @@ function Heap(options) {
 
     this.adjustSize = function(adjustAmount) {
         var oldEnd = this.getMaxValidAddress();
-        assert (this.size + adjustAmount >= 0);
-        this.size = this.size + adjustAmount;
-        if (options.onAdjustSize) options.onAdjustSize(this.size);
+        if (adjustAmount != 0) {
+            assert (this.size + adjustAmount >= 0);
+            this.size = this.size + adjustAmount;
+            if (options.onAdjustSize) options.onAdjustSize(this.size);
+        }
         return oldEnd;
     }
 }
