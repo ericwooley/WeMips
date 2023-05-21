@@ -140,7 +140,7 @@ Parser.parseRdAddr = function (operandParser) {
 };
 
 Parser.parseRtAddr = function (operandParser) {
-    let rt = operandParser.parseWritableRegister();
+    let rt = operandParser.parseRegister();
     operandParser.tokenStream.consume(Parser.TokenType.Comma);
     let addr = operandParser.parseLoadStoreAddress(Parser.BitsPerImmediate);
     return {
