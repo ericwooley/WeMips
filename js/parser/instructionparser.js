@@ -254,8 +254,11 @@ Parser.InstructionParsers = {
  */
 Parser.InstructionParser = function (tokenStream, symbols) {
     let that = this;
+    this.symbols = symbols || {};
+    this.labels = {};
+    this.code = [null];
     this.tokenStream = tokenStream;
-    this.operandParser = new Parser.OperandParser(tokenStream, symbols);
+    this.operandParser = new Parser.OperandParser(tokenStream, this.symbols);
 
     /**
      * Parse an instruction with its arguments.
@@ -285,6 +288,7 @@ Parser.InstructionParser = function (tokenStream, symbols) {
     function parseLabel() {
         let labelToken = that.tokenStream.consume(Parser.TokenType.Identifier);
         that.tokenStream.consume(Parser.TokenType.Colon);
+        that.labels[labelToken.value] = that.code.length;
         return labelToken.value;
     }
 
@@ -300,13 +304,10 @@ Parser.InstructionParser = function (tokenStream, symbols) {
      * @returns {array(Parser.Token)} The sequence of labels.
      */
     function parseLabels() {
-        let labels = [];
         let label = parseOptionalLabel();
         while (label !== undefined) {
-            labels.push(label);
             label = parseOptionalLabel();
         }
-        return labels;
     }
 
     function isEndOfLine() {
@@ -316,15 +317,12 @@ Parser.InstructionParser = function (tokenStream, symbols) {
 
     /** Parse a sequence of optional labels and an optional instruction. */
     function parseInstructionLine() {
-        let labels = parseLabels();
-        let instr = undefined;
+        parseLabels();
         if (!isEndOfLine()) {
-            instr = parseInstruction();
+            return parseInstruction();
+        } else {
+            return undefined;
         }
-        return {
-            labels: labels,
-            instr: instr,
-        };
     }
 
     /** Parse an assignment to a global symbol */
@@ -332,14 +330,7 @@ Parser.InstructionParser = function (tokenStream, symbols) {
         let name = that.tokenStream.consume(Parser.TokenType.Identifier);
         that.tokenStream.consume(Parser.TokenType.Assignment);
         let value = that.operandParser.exprParser.parseExpression();
-        return {
-            symbols: [
-                {
-                    name: name.value,
-                    value: value,
-                }
-            ]
-        }
+        that.symbols[name.value] = value;
     }
 
     function skipToEndOfLine() {
@@ -350,10 +341,10 @@ Parser.InstructionParser = function (tokenStream, symbols) {
 
     /** Parse a line */
     this.parseLine = function() {
-        let result;
+        let result = undefined;
         if (this.tokenStream.checkNext(Parser.TokenType.Identifier, 0) &&
             this.tokenStream.checkNext(Parser.TokenType.Assignment, 1)) {
-            result = parseSymbolAssignment();
+            parseSymbolAssignment();
         } else {
             result = parseInstructionLine();
         }
@@ -364,35 +355,20 @@ Parser.InstructionParser = function (tokenStream, symbols) {
     }
 
     this.parseCode = function() {
-        let codeInfo = {
-            symbols:{},
-            labels:{},
-            code:[null]
-        };
         while (!this.tokenStream.checkNext(Parser.TokenType.EndOfString)) {
             let result = {
                 args: [],
                 instruction: [],
                 ignore: true,
                 error: null,
-                lineNo: codeInfo.code.length
+                lineNo: this.code.length
             };
             try {
                 let instruction = this.parseLine();
-                if (instruction.symbols) {
-                    for (symbol of instruction.symbols) {
-                        codeInfo.symbols[symbol.name] = symbol.value;
-                    }
-                }
-                if (instruction.labels) {
-                    for (label of instruction.labels) {
-                        codeInfo.labels[label] = result;
-                    }
-                }
-                if (instruction.instr) {
+                if (instruction) {
                     result.ignore = false;
-                    result.instruction = instruction.instr.mnemonic;
-                    result.args = instruction.instr.args;
+                    result.instruction = instruction.mnemonic;
+                    result.args = instruction.args;
                 }
             } catch(e) {
                 if (e instanceof Parser.Error) {
@@ -404,12 +380,11 @@ Parser.InstructionParser = function (tokenStream, symbols) {
                     throw e;
                 }
             }
-            codeInfo.code.push(result);
+            this.code.push(result);
             if (!this.tokenStream.checkNext(Parser.TokenType.EndOfString)) {
                 this.tokenStream.consume(Parser.TokenType.EndOfLine);
             }
-    }
-        return codeInfo;
+        }
     }
 }
 

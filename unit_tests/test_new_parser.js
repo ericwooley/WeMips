@@ -218,9 +218,13 @@ test('Operand Parser', function() {
 test('Instruction Parsing', function() {
     function parseLine(line, symbols) {
         let instructionParser = Parser.instructionParserFromString(line, symbols);
-        let lineInfo = instructionParser.parseLine();
+        let result = instructionParser.parseLine();
         instructionParser.tokenStream.enforceCompletion()
-        return lineInfo;
+        return {
+            instr: result,
+            labels: instructionParser.labels,
+            symbols: instructionParser.symbols
+        };
     }
     function isValidLine(line, symbols) {
         try {
@@ -273,7 +277,8 @@ test('Instruction Parsing', function() {
 	ok(isValidLine("mylabel:ADD $t0, $t1, $t2"), "we can have attached labels.");
 
     deepEqual(parseLine('ADDIU $t0, $t0, lo16(0x1234)'),
-        {labels: [],
+        {labels: {},
+         symbols: {},
          instr: {
             mnemonic: 'ADDIU',
             args: {
@@ -286,14 +291,19 @@ test('Instruction Parsing', function() {
     );
 
     deepEqual(parseLine('L1: L2: LUI $t0, hi16(0x12345678)'),
-        {labels: ['L1', 'L2'],
-         instr: {
-            mnemonic: 'LUI',
-            args: {
-                '$rd': '$t0',
-                'imm': 0x1234
+        {
+            labels: {
+                'L1': 1,
+                'L2': 1
+            },
+            symbols: {},
+            instr: {
+                mnemonic: 'LUI',
+                args: {
+                    '$rd': '$t0',
+                    'imm': 0x1234
+                }
             }
-         }
         }
     );
 
@@ -302,12 +312,11 @@ test('Instruction Parsing', function() {
 
     deepEqual(parseLine('c = (5+5)*2'),
         {
-            symbols: [
-                {
-                    name: 'c',
-                    value: 20
-                }
-            ]
+            symbols: {
+                'c': 20
+            },
+            labels: {},
+            instr: undefined
         }
     );
 

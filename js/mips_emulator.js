@@ -384,7 +384,12 @@ function MipsEmulator(mipsArgs){
         if(debug) console.log("Analyzing...");
 
         let instructionParser = Parser.instructionParserFromString(mc);
-        mipsCode = instructionParser.parseCode();
+        instructionParser.parseCode();
+        mipsCode = {
+            code: instructionParser.code,
+            symbols: instructionParser.symbols,
+            labels: instructionParser.labels
+        };
         // Reset to first active line, as the code changed
         this.setNextLineToFetch(1);
     },
@@ -489,7 +494,7 @@ function MipsEmulator(mipsArgs){
         var line = mipsCode.labels[label];
         if(debug) console.log("Getting label: "+ label + " - " +JSON.stringify(line) );
         if(line){
-            return this.goToLine(line.lineNo);
+            return this.goToLine(line);
         } else {
             throw new JumpError('Unknown label: {0}'.format(label));
         }
@@ -690,23 +695,13 @@ function MipsEmulator(mipsArgs){
 
         this.lineNo = lineNo;
 
-        let instructionParser = Parser.instructionParserFromString(line, mipsCode.symbols);
+        let instructionParser = Parser.instructionParserFromString(line);
         try {
             let instruction = instructionParser.parseLine();
-            if (instruction.symbols) {
-                for (symbol of instruction.symbols) {
-                    mipsCode.symbols[symbol.name] = symbol.value;
-                }
-            }
-            if (instruction.labels) {
-                for (label of instruction.labels) {
-                    mipsCode.labels[label] = this;
-                }
-            }
-            if (instruction.instr) {
+            if (instruction) {
                 this.ignore = false;
-                this.instruction = instruction.instr.mnemonic;
-                this.args = instruction.instr.args;
+                this.instruction = instruction.mnemonic;
+                this.args = instruction.args;
             }
         } catch (e) {
             if (e instanceof Parser.Error) {
