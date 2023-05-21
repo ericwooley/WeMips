@@ -383,11 +383,8 @@ function MipsEmulator(mipsArgs){
         ME.reset();
         if(debug) console.log("Analyzing...");
 
-        $.each(mc.split('\n'), function(index, val){
-            var line = new mipsLine(val, mipsCode.code.length);
-            // if(debug) console.log(JSON.stringify(line));
-            mipsCode.code.push(line);
-        });
+        let instructionParser = Parser.instructionParserFromString(mc);
+        mipsCode = instructionParser.parseCode();
         // Reset to first active line, as the code changed
         this.setNextLineToFetch(1);
     },

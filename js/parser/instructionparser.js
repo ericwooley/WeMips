@@ -253,6 +253,7 @@ Parser.InstructionParsers = {
  * @param {Parser.TokenStream}  tokenStream The stream of tokens to parse
  */
 Parser.InstructionParser = function (tokenStream, symbols) {
+    let that = this;
     this.tokenStream = tokenStream;
     this.operandParser = new Parser.OperandParser(tokenStream, symbols);
 
@@ -262,13 +263,13 @@ Parser.InstructionParser = function (tokenStream, symbols) {
      * @throws Parser.ParseException The instruction must be a valid assembler instruction.
      * @returns {Object}  A dictionary with 'mnemonic' and 'args' set
      */
-    this.parseInstruction = function() {
-        let token = this.tokenStream.consume(Parser.TokenType.Identifier);
+    function parseInstruction() {
+        let token = that.tokenStream.consume(Parser.TokenType.Identifier);
         let mnemonic = token.value.toUpperCase();
         let instructionParser = Parser.InstructionParsers[mnemonic];
 
         if (instructionParser) {
-            let args = instructionParser(this.operandParser);
+            let args = instructionParser(that.operandParser);
             return {
                 mnemonic: mnemonic,
                 args: args
@@ -281,42 +282,45 @@ Parser.InstructionParser = function (tokenStream, symbols) {
     /** Parse a label
      * @returns {String} The label name.
      */
-    this.parseLabel = function() {
-        let labelToken = this.tokenStream.consume(Parser.TokenType.Identifier);
-        this.tokenStream.consume(Parser.TokenType.Colon);
+    function parseLabel() {
+        let labelToken = that.tokenStream.consume(Parser.TokenType.Identifier);
+        that.tokenStream.consume(Parser.TokenType.Colon);
         return labelToken.value;
     }
 
     /** Parse an optional label
      * @returns {(String|undefined)} The label name or undefined, if no label present.
      */
-    this.parseOptionalLabel = function() {
-        let that = this;
-        return this.tokenStream.tryParsing(function() { return that.parseLabel(); });
+    function parseOptionalLabel() {
+        return that.tokenStream.tryParsing(parseLabel);
     }
 
     /** Parse a possibly non-empty sequence of labels
      * 
      * @returns {array(Parser.Token)} The sequence of labels.
      */
-    this.parseLabels = function() {
+    function parseLabels() {
         let labels = [];
-        let label = this.parseOptionalLabel();
+        let label = parseOptionalLabel();
         while (label !== undefined) {
             labels.push(label);
-            label = this.parseOptionalLabel();
+            label = parseOptionalLabel();
         }
         return labels;
     }
 
+    function isEndOfLine() {
+        return (that.tokenStream.checkNext(Parser.TokenType.EndOfLine) ||
+                that.tokenStream.checkNext(Parser.TokenType.EndOfString));
+    }
+
     /** Parse a sequence of optional labels and an optional instruction. */
-    this.parseInstructionLine = function() {
-        let labels = this.parseLabels();
+    function parseInstructionLine() {
+        let labels = parseLabels();
         let instr = undefined;
-        if (!this.tokenStream.checkNext(Parser.TokenType.EndOfString)) {
-            instr = this.parseInstruction();
+        if (!isEndOfLine()) {
+            instr = parseInstruction();
         }
-        this.tokenStream.enforceCompletion();
         return {
             labels: labels,
             instr: instr,
@@ -324,10 +328,10 @@ Parser.InstructionParser = function (tokenStream, symbols) {
     }
 
     /** Parse an assignment to a global symbol */
-    this.parseSymbolAssignment = function() {
-        let name = this.tokenStream.consume(Parser.TokenType.Identifier);
-        this.tokenStream.consume(Parser.TokenType.Assignment);
-        let value = this.operandParser.exprParser.parseExpression();
+    function parseSymbolAssignment() {
+        let name = that.tokenStream.consume(Parser.TokenType.Identifier);
+        that.tokenStream.consume(Parser.TokenType.Assignment);
+        let value = that.operandParser.exprParser.parseExpression();
         return {
             symbols: [
                 {
@@ -338,14 +342,74 @@ Parser.InstructionParser = function (tokenStream, symbols) {
         }
     }
 
+    function skipToEndOfLine() {
+        while (!isEndOfLine()) {
+            this.tokenStream.consume();
+        }
+    }
+
     /** Parse a line */
     this.parseLine = function() {
+        let result;
         if (this.tokenStream.checkNext(Parser.TokenType.Identifier, 0) &&
             this.tokenStream.checkNext(Parser.TokenType.Assignment, 1)) {
-            return this.parseSymbolAssignment();
+            result = parseSymbolAssignment();
         } else {
-            return this.parseInstructionLine();
+            result = parseInstructionLine();
         }
+        if (!isEndOfLine()) {
+            throw new Parser.ParseError('Trailing text remaining');
+        }
+        return result;
+    }
+
+    this.parseCode = function() {
+        let codeInfo = {
+            symbols:{},
+            labels:{},
+            code:[null]
+        };
+        while (!this.tokenStream.checkNext(Parser.TokenType.EndOfString)) {
+            let result = {
+                args: [],
+                instruction: [],
+                ignore: true,
+                error: null,
+                lineNo: codeInfo.code.length
+            };
+            try {
+                let instruction = this.parseLine();
+                if (instruction.symbols) {
+                    for (symbol of instruction.symbols) {
+                        codeInfo.symbols[symbol.name] = symbol.value;
+                    }
+                }
+                if (instruction.labels) {
+                    for (label of instruction.labels) {
+                        codeInfo.labels[label] = result;
+                    }
+                }
+                if (instruction.instr) {
+                    result.ignore = false;
+                    result.instruction = instruction.instr.mnemonic;
+                    result.args = instruction.instr.args;
+                }
+            } catch(e) {
+                if (e instanceof Parser.Error) {
+                    /* Do not ignore erroneous lines! */
+                    result.ignore = false;
+                    result.error = e;
+                    skipToEndOfLine();
+                } else {
+                    throw e;
+                }
+            }
+            codeInfo.code.push(result);
+            if (!this.tokenStream.checkNext(Parser.TokenType.EndOfString)) {
+                this.tokenStream.consume(Parser.TokenType.EndOfLine);
+            }
+    }
+        return codeInfo;
     }
 }
 
