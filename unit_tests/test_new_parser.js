@@ -228,8 +228,8 @@ test('Instruction Parsing', function() {
     }
     function isValidLine(line, symbols) {
         try {
-            parseLine(line, symbols);
-            return true;
+            let result = parseLine(line, symbols);
+            return (result.instr.error == null);
         } catch (e) {
             if (e instanceof Parser.Error) {
                 return false;
@@ -280,12 +280,14 @@ test('Instruction Parsing', function() {
         {labels: {},
          symbols: {},
          instr: {
-            mnemonic: 'ADDIU',
+            instruction: 'ADDIU',
             args: {
                 '$rs': '$t0',
                 '$rt': '$t0',
                 'imm': 0x1234
-            }
+            },
+            error: null,
+            ignore: false
          }
         }
     );
@@ -298,11 +300,13 @@ test('Instruction Parsing', function() {
             },
             symbols: {},
             instr: {
-                mnemonic: 'LUI',
+                instruction: 'LUI',
                 args: {
                     '$rd': '$t0',
                     'imm': 0x1234
-                }
+                },
+                error: null,
+                ignore: false
             }
         }
     );
@@ -316,7 +320,10 @@ test('Instruction Parsing', function() {
                 'c': 20
             },
             labels: {},
-            instr: undefined
+            instr: {
+                ignore: true,
+                error: null
+            }
         }
     );
 

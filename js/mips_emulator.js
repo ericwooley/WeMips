@@ -345,7 +345,7 @@ function MipsEmulator(mipsArgs){
         let instructionParser = Parser.instructionParserFromString(line);
         try {
             let instruction = instructionParser.parseLine();
-            return true;
+            return instruction.error == null;
         } catch (e) {
             if (e instanceof Parser.Error) {
                 return false;
@@ -400,7 +400,8 @@ function MipsEmulator(mipsArgs){
      * @return {null}
      */
     this.runLine = function(inputLine) {
-        var line = new mipsLine(inputLine);
+        let instructionParser = Parser.instructionParserFromString(inputLine);
+        let line = instructionParser.parseLine();
         // This refers to the private method, private method should probably be renamed.
         runLine(line);
     },
@@ -579,7 +580,7 @@ function MipsEmulator(mipsArgs){
      * @return {null}
      */
     function runLine(line) {
-        if(debug) console.log("running line: " + line.lineNo);
+        if(debug) console.log("running line: " + JSON.stringify(line));
         if (line.error) {
             throw new MipsError('Error on line: {0}'.format(line.error));
             // TODO: get rid of the other error handler
@@ -656,63 +657,6 @@ function MipsEmulator(mipsArgs){
         if(debug) console.error("--->" + message);
         lineNo = lineNo || currentLine;
         mipsArgs.onError(message, lineNo);
-    }
-
-    /**
-     * Turns a string into a mips line object which contains a mips line of code and metadata needed to run it
-     * @member mipsEmulator
-     * @private
-     * @param  {String} line
-     * @return {Object}
-     */
-    function mipsLine(line, lineNo){
-        lineNo = lineNo || null
-
-        /**
-         * Arguments for this line of code ex: [$t0, $s0, $zero]
-         * @member mipsLine
-         * @property {array}
-         */
-        this.args = [];
-        /**
-         * The lines instruction ex: ADD
-         * @member mipsLine
-         * @type {String}
-         */
-        this.instruction = null;
-        /**
-         * flag to indicate weather this line should be ignored (not run).
-         * @member mipsLine
-         * @type {Boolean}
-         */
-        this.ignore = true;
-        /**
-         * Error when running this line of code (if any)
-         * @member mipsLine
-         * @type {String}
-         */
-        this.error = null;
-
-        this.lineNo = lineNo;
-
-        let instructionParser = Parser.instructionParserFromString(line);
-        try {
-            let instruction = instructionParser.parseLine();
-            if (instruction) {
-                this.ignore = false;
-                this.instruction = instruction.mnemonic;
-                this.args = instruction.args;
-            }
-        } catch (e) {
-            if (e instanceof Parser.Error) {
-                /* Do not ignore erroneous lines! */
-                this.ignore = false;
-                this.error = e;
-            } else {
-                throw e;
-            }
-        }
-        if(debug) console.log("Finished parsing line: " + JSON.stringify(this));
     }
 
     // Set the starting code if there was any.

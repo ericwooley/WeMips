@@ -333,57 +333,55 @@ Parser.InstructionParser = function (tokenStream, symbols) {
         that.symbols[name.value] = value;
     }
 
-    function skipToEndOfLine() {
+    function skipToNextLine() {
         while (!isEndOfLine()) {
-            this.tokenStream.consume();
+            that.tokenStream.consume();
+        }
+        if (that.tokenStream.checkNext(Parser.TokenStream.EndOfLine)) {
+            that.tokenStream.consume();
         }
     }
 
     /** Parse a line */
     this.parseLine = function() {
-        let result = undefined;
-        if (this.tokenStream.checkNext(Parser.TokenType.Identifier, 0) &&
-            this.tokenStream.checkNext(Parser.TokenType.Assignment, 1)) {
-            parseSymbolAssignment();
-        } else {
-            result = parseInstructionLine();
-        }
-        if (!isEndOfLine()) {
-            throw new Parser.ParseError('Trailing text remaining');
+        let result = {
+            ignore: true,
+            error: null
+        };
+        try {
+            if (this.tokenStream.checkNext(Parser.TokenType.Identifier, 0) &&
+                this.tokenStream.checkNext(Parser.TokenType.Assignment, 1)) {
+                parseSymbolAssignment();
+            } else {
+                let line = parseInstructionLine();
+                if (line) {
+                    result.ignore = false;
+                    result.instruction = line.mnemonic;
+                    result.args = line.args;
+                }
+            }
+            if (this.tokenStream.checkNext(Parser.TokenType.EndOfLine)) {
+                this.tokenStream.consume();
+            } else if (!this.tokenStream.checkNext(Parser.TokenType.EndOfString)) {
+                throw new Parser.ParseError('Trailing text remaining');
+            }
+        } catch (e) {
+            if (e instanceof Parser.Error) {
+                /* Do not ignore erroneous lines! */
+                result.ignore = false;
+                result.error = e;
+                skipToNextLine();
+            } else {
+                throw e;
+            }
         }
         return result;
     }
 
     this.parseCode = function() {
         while (!this.tokenStream.checkNext(Parser.TokenType.EndOfString)) {
-            let result = {
-                args: [],
-                instruction: [],
-                ignore: true,
-                error: null,
-                lineNo: this.code.length
-            };
-            try {
-                let instruction = this.parseLine();
-                if (instruction) {
-                    result.ignore = false;
-                    result.instruction = instruction.mnemonic;
-                    result.args = instruction.args;
-                }
-            } catch(e) {
-                if (e instanceof Parser.Error) {
-                    /* Do not ignore erroneous lines! */
-                    result.ignore = false;
-                    result.error = e;
-                    skipToEndOfLine();
-                } else {
-                    throw e;
-                }
-            }
-            this.code.push(result);
-            if (!this.tokenStream.checkNext(Parser.TokenType.EndOfString)) {
-                this.tokenStream.consume(Parser.TokenType.EndOfLine);
-            }
+            let instruction = this.parseLine();
+            this.code.push(instruction);
         }
     }
 }
