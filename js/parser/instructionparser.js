@@ -257,6 +257,7 @@ Parser.InstructionParser = function (tokenStream, symbols) {
     this.symbols = symbols || {};
     this.labels = {};
     this.code = [null];
+    this.data = [];
     this.tokenStream = tokenStream;
     this.operandParser = new Parser.OperandParser(tokenStream, this.symbols);
 
@@ -378,10 +379,43 @@ Parser.InstructionParser = function (tokenStream, symbols) {
         return result;
     }
 
+    let sectionDirectives = ['.text', '.data'];
+
+    function isEndOfSection() {
+        let token = that.tokenStream.lookahead();
+        if (token.type == Parser.TokenType.EndOfString) {
+            return true;
+        } else if (token.type == Parser.TokenType.DirectiveName) {
+            return sectionDirectives.includes(token.value);
+        } else {
+            return false;
+        }
+    }
+
+    function addEmptyLine() {
+        that.code.push({
+            ignore: true,
+            error: null
+        });
+    }
+
+    function parseTextSection() {
+        while (!isEndOfSection()) {
+            let instruction = that.parseLine();
+            that.code.push(instruction);
+        }
+    }
+
     this.parseCode = function() {
+        parseTextSection();
         while (!this.tokenStream.checkNext(Parser.TokenType.EndOfString)) {
-            let instruction = this.parseLine();
-            this.code.push(instruction);
+            let token = this.tokenStream.lookahead();
+            this.tokenStream.consume(Parser.TokenType.DirectiveName);
+            this.tokenStream.consume(Parser.TokenType.EndOfLine);
+            addEmptyLine();
+            if (token.value == '.text') {
+                parseTextSection();
+            }
         }
     }
 }

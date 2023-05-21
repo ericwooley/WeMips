@@ -335,3 +335,22 @@ test('Instruction Parsing', function() {
                     "We can use symbols");
     ok(!isValidLine("ADDI $t0, $zero, lo16(c+5)"), "We cannot use undefined symbols");
 });
+
+test('Program Parsing', function() {
+    function parseProgram(programLines) {
+        let programText = programLines.join('\n');
+        let instructionParser = Parser.instructionParserFromString(programText);
+        instructionParser.parseCode();
+        return instructionParser;
+    }
+
+    let parser = parseProgram([
+        'ADDIU $t0, $zero, 15',
+        '.text',
+        'ADDU $t0, $t0, 25'
+    ]);
+    equal(parser.code.length, 4);
+    ok(!parser.code[1].ignore, "Instructions must not be ignored");
+    ok(parser.code[2].ignore, "Directives must be ignored lines");
+    ok(!parser.code[3].ignore, "Instructions must not be ignored");
+});

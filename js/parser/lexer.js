@@ -20,6 +20,7 @@ Parser.Token.prototype.toString = function() {
 /** Dictionary of token types */
 Parser.TokenType = {
     Identifier: 'Identifier',
+    DirectiveName: 'DirectiveName',
     Register: 'Register',
     Number: 'Number',
     Multiplication: 'Multiplication',
@@ -314,6 +315,24 @@ Parser.Lexer = function(input, firstLineNo=1) {
         return createToken(Parser.TokenType.Register, id);
     }
 
+    /** Parse a directive name
+     * A directive is composed of a dot followed by an identifier
+     * @member Parser.Lexer
+     * @private
+     * @returns {Parser.Token} The token representing the directive
+     */
+    function parseDirectiveName() {
+        let id = peekNextChar();
+        skipChar();
+        let ch = peekNextChar();
+        while (isIdentifierPart(ch)) {
+            id = id + ch;
+            skipChar();
+            ch = peekNextChar();
+        }
+        return createToken(Parser.TokenType.DirectiveName, id);
+    }
+
     /** Parse a number
      * A number can be binary, octal, decimal or hexadecimal.
      * 
@@ -476,6 +495,8 @@ Parser.Lexer = function(input, firstLineNo=1) {
             /* New line starts here */
             lineStartOffsets.push(index);
             return createToken(Parser.TokenType.EndOfLine);
+        } else if (ch == '.') {
+            return parseDirectiveName();
         } else if (ch == '$') {
             return parseRegister();
         } else if (isDigit(ch)) {
