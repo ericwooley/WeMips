@@ -94,3 +94,16 @@ Parser.UnknownSymbolError = function(token) {
         token);
 }
 Parser.UnknownSymbolError.prototype = Object.create( Parser.ParseError.prototype );
+
+/** Exception for unknown dirctives
+ * Thrown when the parser encounters an unknown directive.
+ * @constructor
+ * @param {Parser.Token} token   The relevant token that led to the exception
+ */
+Parser.UnknownDirectiveError = function(token) {
+    Parser.ParseError.call(
+        this,
+        'Unknown directive',
+        token);
+}
+Parser.UnknownDirectiveError.prototype = Object.create( Parser.ParseError.prototype );

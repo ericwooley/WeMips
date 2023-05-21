@@ -338,7 +338,7 @@ Parser.InstructionParser = function (tokenStream, symbols) {
         while (!isEndOfLine()) {
             that.tokenStream.consume();
         }
-        if (that.tokenStream.checkNext(Parser.TokenStream.EndOfLine)) {
+        if (that.tokenStream.checkNext(Parser.TokenType.EndOfLine)) {
             that.tokenStream.consume();
         }
     }
@@ -399,10 +399,105 @@ Parser.InstructionParser = function (tokenStream, symbols) {
         });
     }
 
+    function addErrorLine(e) {
+        that.code.push({
+            ignore: false,
+            error: e
+        });
+    }
+
     function parseTextSection() {
         while (!isEndOfSection()) {
             let instruction = that.parseLine();
             that.code.push(instruction);
+        }
+    }
+
+    let BITS_PER_BYTE = 8;
+    let MAX_BYTE_VALUE = 255;
+    let BYTES_PER_WORD = 4;
+    let BITS_PER_WORD = BYTES_PER_WORD * BITS_PER_BYTE;
+
+    function storeData(byteCount, data) {
+        assert(typeof data === "number", "Only numbers supported.");
+        var bitCount = byteCount * BITS_PER_BYTE;
+        assert(0 <= bitCount && bitCount <= 32, "The & operator will only work for up to 32 bits.");
+    
+        /* We check the range as allowed by the given number of bits in either
+            * unsigned or (twos complement) signed representation.
+            */
+        var minValidValue = MIPS.minSignedValue(bitCount);
+        var maxValidValue = MIPS.maxUnsignedValue(bitCount);
+        if (data < minValidValue || maxValidValue < data) {
+            throw new MemoryError('Unable to store out-of-range value ({0}). Valid values are {1} through {2}.'.format(data, minValidValue, maxValidValue));
+        };
+    
+        /* Ensure that the actual data is unsigned so we can split it up into its bytes.
+            * It will then be in the valid range of bitCount bits unsigned integer due to the
+            * check above. */
+        if (data < 0) {
+            // convert negative value to positive one
+            try {
+                data = MIPS.signedNumberToUnsignedNumber(data, bitCount);
+            } catch (e) {
+                if (e instanceof MipsError) {
+                    throw new MemoryError(e.message);
+                } else {
+                    throw e;
+                }
+            }
+        }
+    
+        /* Split it up into the respective bytes */
+        let offset = that.data.length;
+        for (var i = byteCount - 1; i >= 0; i--) {
+            var rightMostByte = data & MAX_BYTE_VALUE;
+            that.data[offset+i]=rightMostByte;
+            data = data >>> BITS_PER_BYTE;
+        };
+    }
+
+    function parseDataWordDirective() {
+        let value = that.operandParser.parseConstant(BITS_PER_WORD);
+        storeData(BYTES_PER_WORD, value);
+        while (!isEndOfLine()) {
+            that.tokenStream.consume(Parser.TokenType.Comma);
+            value = that.operandParser.parseConstant(BITS_PER_WORD);
+            storeData(BYTES_PER_WORD, value);
+        }
+        if (that.tokenStream.checkNext(Parser.TokenType.EndOfLine)) {
+            that.tokenStream.consume(Parser.TokenType.EndOfLine);
+        }
+    }
+
+    let dataDirectives = {
+        '.word': parseDataWordDirective
+    };
+
+    function parseDataDirective() {
+        let token = that.tokenStream.lookahead();
+        that.tokenStream.consume(Parser.TokenType.DirectiveName);
+        let handler = dataDirectives[token.value];
+        if (handler) {
+            handler.call();
+            addEmptyLine();
+        } else {
+            throw new Parser.UnknownDirectiveError(token);
+        }
+    }
+
+    function parseDataSection() {
+        while (!isEndOfSection()) {
+            try {
+                parseDataDirective();
+            } catch (e) {
+                if (e instanceof Parser.ParseError) {
+                    addErrorLine(e);
+                    skipToNextLine();
+                } else {
+                    throw e;
+                }
+            }
         }
     }
 
@@ -415,6 +510,8 @@ Parser.InstructionParser = function (tokenStream, symbols) {
             addEmptyLine();
             if (token.value == '.text') {
                 parseTextSection();
+            } else if (token.value == '.data') {
+                parseDataSection();
             }
         }
     }
