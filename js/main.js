@@ -389,7 +389,7 @@ $(document).ready(function(){
         "<div id='stackEntry-" + stackLow + "' >"
         + "<span class='glyphicon'></span>&nbsp"
         + "</div>");
-    var heapHigh = me.heap.getBaseAddress();
+    var heapHigh = me.heap.getBaseAddress()-1;
 
     
     function changeStackType(e){
