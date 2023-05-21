@@ -161,7 +161,7 @@ $(document).ready(function(){
         // if this code is no longer valid, reanalyze.
         if(!me.valid){
             try{
-                  mipsAnalyze();
+                mipsAnalyze();
             } catch(e){
                 addToLog('error', e.message, 1);
             }
@@ -178,8 +178,6 @@ $(document).ready(function(){
         } catch(e){
             addToLog('error', e.message, lastLineAttempted);
             running = false;
-            //me.setNextLineToFetch(lastLineAttempted + 1);
-            //setHighlights();
         }
 
     };

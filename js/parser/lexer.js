@@ -6,7 +6,7 @@
  * @param {number}  end    The index of the character one past the end of the input region represented by the token
  * @param {string}  text   The text of the token
  */
-Parser.Token = function(type, value, begin, end, text) {
+Parser.Token = function(type, value, begin, end, lineno, text) {
     this.type = type;
     this.value = value;
     this.begin = begin;
@@ -50,15 +50,18 @@ Parser.TokenType = {
     Comma: 'Comma',
     Colon: 'Colon',
     QuestionMark: 'QuestionMark',
+    EndOfLine: 'EndOfLine',
     EndOfString: 'EndOfString',
 };
 
 /** General lexer
  * Transforms an input string into a stream of tokens
  * @constructor
- * @param {string} input    The string to transform
+ * @param {string} input         The string to transform
+ * @param {Number} firstLineNo   Start value for the line number counter
  */
-Parser.Lexer = function(input) {
+Parser.Lexer = function(input, firstLineNo=1) {
+    let that = this;
     /**
      * Index of the next character to be processed
      * @member Parser.Lexer
@@ -66,6 +69,12 @@ Parser.Lexer = function(input) {
      * @type {Number}
      */
     let index = 0;
+    /**
+     * Start indices for each line
+     * 
+     * The index for line n is n-firstLineNo
+     */
+    let lineStartOffsets = [0];
     /**
      * Start index of the current token
      * @member Parser.Lexer
@@ -76,10 +85,9 @@ Parser.Lexer = function(input) {
 
     /** Determine whether we have reached the end of the input string
      * @member Parser.Lexer
-     * @private
      * @returns {boolean} <code>true</code> if and only if there are no more characters left
      */
-    function endOfString() {
+    this.endOfString = function() {
         return index >= input.length;
     }
 
@@ -97,7 +105,7 @@ Parser.Lexer = function(input) {
      * @returns {(string|undefined)} The next character of undefined if there are no more characters left.
      */
     function peekNextChar() {
-        return (!endOfString() ? input.charAt(index) : undefined);
+        return (!that.endOfString() ? input.charAt(index) : undefined);
     }
 
     /** Skip the next character, if any 
@@ -105,7 +113,7 @@ Parser.Lexer = function(input) {
      * @private
      */
     function skipChar() {
-        if (!endOfString()) {
+        if (!that.endOfString()) {
             index++;
         }
     }
@@ -127,7 +135,7 @@ Parser.Lexer = function(input) {
     function skipComment() {
         skipChar();
         let ch = peekNextChar();
-        while (!endOfString() && ch != '\n') {
+        while (!that.endOfString() && ch != '\n') {
             skipChar();
             ch = peekNextChar();
         }
@@ -140,7 +148,7 @@ Parser.Lexer = function(input) {
      * @return {boolean} <code>true</code> if and only if the character is whitespace
      */
     function isWhitespace(ch) {
-        return (ch=='\t' || ch==' ' || ch=='\n' || ch=='\r');
+        return (ch=='\t' || ch==' ' || ch=='\r');
     }
 
     let digitsUpperCase = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -224,14 +232,15 @@ Parser.Lexer = function(input) {
      */
     function skipSpaces() {
         let ch;
-        while (!endOfString()) {
+        while (!that.endOfString()) {
             ch = peekNextChar();
             if (ch == '#') {
                 skipComment();
             } else if (!isWhitespace(ch)) {
                 break;
+            } else {
+                skipChar();
             }
-            skipChar();
         }
     }
 
@@ -244,6 +253,30 @@ Parser.Lexer = function(input) {
      */
     function createToken(type, value) {
         return new Parser.Token(type, value, marker, index, input.substring(marker, index));
+    }
+
+    /**
+     * Find the line and column number for the given index.
+     * 
+     * Note that columns are counted starting with 0.
+     * 
+     * @member Parser.Lexer
+     * @param {Number} index   The index of the character
+     * @returns {Array} An array containing a 'lineno' and 'column' field
+     *                  with the obvious meanings.
+     */
+    this.getLineInfoForIndex = function(index) {
+        if (index > lineStartOffsets[lineStartOffsets.length-1]) {
+            lineIdx = lineStartOffsets.length-1;
+        } else {
+            lineIdx = lineStartOffsets.findLastIndex(
+                (element) => (element <= index)
+            );
+        }
+        return {
+            lineno: lineIdx+firstLineNo,
+            column: index-lineStartOffsets[lineIdx]
+        };
     }
 
     /** Parse a number of the given base
@@ -433,12 +466,17 @@ Parser.Lexer = function(input) {
         skipSpaces();
 
         startToken();
-        if (endOfString()) {
+        if (this.endOfString()) {
             return createToken(Parser.TokenType.EndOfString);
         }
 
         let ch = peekNextChar();
-        if (ch == '$') {
+        if (ch=='\n') {
+            skipChar();
+            /* New line starts here */
+            lineStartOffsets.push(index);
+            return createToken(Parser.TokenType.EndOfLine);
+        } else if (ch == '$') {
             return parseRegister();
         } else if (isDigit(ch)) {
             return parseNumber();

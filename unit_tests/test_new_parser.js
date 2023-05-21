@@ -5,6 +5,18 @@ test("Lexer", function() {
         let lexer = new Parser.Lexer(text);
         return lexer.next();
     };
+
+    let parseAllTokens = function(text) {
+        let lexer = new Parser.Lexer(text);
+        let tokens = [];
+        while (!lexer.endOfString()) {
+            tokens.push(lexer.next());
+        }
+        return {
+            lexer: lexer,
+            tokens: tokens
+        };
+    }
     
     let token;
 
@@ -40,6 +52,53 @@ test("Lexer", function() {
 
     token = parseSingleToken('>>>');
     equal(token.type, Parser.TokenType.LogicalShiftRight);
+
+    let result = parseAllTokens('   $a0 #bcd \n   $b0');
+    equal(result.tokens[0].type, Parser.TokenType.Register);
+    equal(result.tokens[1].type, Parser.TokenType.EndOfLine);
+    equal(result.tokens[2].type, Parser.TokenType.Register);
+    deepEqual(
+        result.lexer.getLineInfoForIndex(result.tokens[0].begin),
+        {
+            lineno: 1,
+            column: 3
+        }
+    );
+    deepEqual(
+        result.lexer.getLineInfoForIndex(result.tokens[0].end),
+        {
+            lineno: 1,
+            column: 6
+        }
+    );
+    deepEqual(
+        result.lexer.getLineInfoForIndex(result.tokens[1].begin),
+        {
+            lineno: 1,
+            column: 12
+        }
+    );
+    deepEqual(
+        result.lexer.getLineInfoForIndex(result.tokens[1].end),
+        {
+            lineno: 2,
+            column: 0
+        }
+    );
+    deepEqual(
+        result.lexer.getLineInfoForIndex(result.tokens[2].begin),
+        {
+            lineno: 2,
+            column: 3
+        }
+    );
+    deepEqual(
+        result.lexer.getLineInfoForIndex(result.tokens[2].end),
+        {
+            lineno: 2,
+            column: 6
+        }
+    );
 });
 
 
