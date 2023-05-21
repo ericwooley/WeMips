@@ -342,7 +342,17 @@ function MipsEmulator(mipsArgs){
      * @return {Boolean}
      */
     this.isValidLine = function(line){
-        return !(new mipsLine(line).error);
+        let instructionParser = Parser.instructionParserFromString(line);
+        try {
+            let instruction = instructionParser.parseLine();
+            return true;
+        } catch (e) {
+            if (e instanceof Parser.Error) {
+                return false;
+            } else {
+                throw e;
+            }
+        }
     },
     /**
      * Resets mips labes, code, and stack
@@ -375,7 +385,6 @@ function MipsEmulator(mipsArgs){
 
         $.each(mc.split('\n'), function(index, val){
             var line = new mipsLine(val, mipsCode.code.length);
-            line.lineNo = mipsCode.code.length; // save the line number
             // if(debug) console.log(JSON.stringify(line));
             mipsCode.code.push(line);
         });
@@ -657,37 +666,32 @@ function MipsEmulator(mipsArgs){
     function mipsLine(line, lineNo){
         lineNo = lineNo || null
 
-        // Object that will save information about a line of code.
         /**
-         * @class line
-         * Contains information about a single line of mips code
-         * @member mipsEmulator
-         * @private
+         * Arguments for this line of code ex: [$t0, $s0, $zero]
+         * @member mipsLine
+         * @property {array}
          */
-        var LINE = {
-            /**
-             * Arguments for this line of code ex: [$t0, $s0, $zero]
-             * @property {array}
-             */
-            args: [],
-            /**
-             * The lines instruction ex: ADD
-             * @type {String}
-             */
-            instruction: null,
-            /**
-             * flag to indicate weather this line should be ignored (not run).
-             * @type {Boolean}
-             */
-            ignore: true,
-            /**
-             * Error when running this line of code (if any)
-             * @type {String}
-             */
-            error: null,
-            lineNo: lineNo,
-            text: line
-        };
+        this.args = [];
+        /**
+         * The lines instruction ex: ADD
+         * @member mipsLine
+         * @type {String}
+         */
+        this.instruction = null;
+        /**
+         * flag to indicate weather this line should be ignored (not run).
+         * @member mipsLine
+         * @type {Boolean}
+         */
+        this.ignore = true;
+        /**
+         * Error when running this line of code (if any)
+         * @member mipsLine
+         * @type {String}
+         */
+        this.error = null;
+
+        this.lineNo = lineNo;
 
         let instructionParser = Parser.instructionParserFromString(line, mipsCode.symbols);
         try {
@@ -699,24 +703,24 @@ function MipsEmulator(mipsArgs){
             }
             if (instruction.labels) {
                 for (label of instruction.labels) {
-                    mipsCode.labels[label] = LINE;
+                    mipsCode.labels[label] = this;
                 }
             }
             if (instruction.instr) {
-                LINE.ignore = false;
-                LINE.instruction = instruction.instr.mnemonic;
-                LINE.args = instruction.instr.args;
+                this.ignore = false;
+                this.instruction = instruction.instr.mnemonic;
+                this.args = instruction.instr.args;
             }
         } catch (e) {
             if (e instanceof Parser.Error) {
                 /* Do not ignore erroneous lines! */
-                LINE.ignore = false;
-                LINE.error = e;
+                this.ignore = false;
+                this.error = e;
+            } else {
+                throw e;
             }
         }
-        if(debug) console.log("Finished parsing line: " + JSON.stringify(LINE));
-
-        return LINE;
+        if(debug) console.log("Finished parsing line: " + JSON.stringify(this));
     }
 
     // Set the starting code if there was any.
