@@ -196,7 +196,7 @@ function mipsSyscalls(ME) {
 				var stackPointer = ME.getRegisterUnsignedVal('$a0');
 				var string = MSYS.getStringAtAddress(stackPointer);
 				var number = ME.getRegisterUnsignedVal('$a1');
-				ME.alert(string + number);
+				ME.mipsAlert(string + number);
 			}
 		},
 		'59': {
@@ -207,7 +207,7 @@ function mipsSyscalls(ME) {
 				stackPointer = ME.getRegisterUnsignedVal('$a1');
 				var string2 = MSYS.getStringAtAddress(stackPointer);
 
-				ME.alert(string1 + string2);
+				ME.mipsAlert(string1 + string2);
 			}
 		},
 		'60': {
