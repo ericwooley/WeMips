@@ -44,7 +44,11 @@ Parser.ParseError = function(message, token) {
 }
 Parser.ParseError.prototype = Object.create( Parser.Error.prototype );
 Parser.ParseError.prototype.toString = function() {
-    return this.message+" ('"+this.token.value+"')";
+    if (this.token) {
+        return this.message+" ('"+this.token.value+"')";
+    } else {
+        return this.message;
+    }
 }
 
 /** Exception for unexpected tokens
