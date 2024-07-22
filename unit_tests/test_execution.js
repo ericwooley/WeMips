@@ -727,7 +727,7 @@ test("BGEU", function() {
 	}, JumpError, "There is no foo label.");
 
 	ME.runLines([
-		"ADDIU $t0, $zero, 0xF000",
+		"ORI $t0, $zero, 0xF000",
 		"ADDI $t1, $zero, 1",
 		"BGEU $t1, $t0, skip1    # jump not taken",
 		"ADDI $t1, $t1, 1",
@@ -778,7 +778,7 @@ test("BGTU", function() {
 	}, JumpError, "There is no foo label.");
 
 	ME.runLines([
-		"ADDIU $t0, $zero, 0xF000",
+		"ORI $t0, $zero, 0xF000",
 		"ADDI $t1, $zero, 1",
 		"BGTU $t1, $t0, skip    # jump not taken",
 		"ADDI $t1, $t1, 1",
@@ -822,7 +822,7 @@ test("BLEU", function() {
 	}, JumpError, "There is no foo label.");
 
 	ME.runLines([
-		"ADDIU $t0, $zero, 0xF000",
+		"ORI $t0, $zero, 0xF000",
 		"ADDI $t1, $zero, 1",
 		"BLEU $t0, $t1, skip1    # jump not taken",
 		"ADDI $t1, $t1, 1",
@@ -873,7 +873,7 @@ test("BLTU", function() {
 	}, JumpError, "There is no foo label.");
 
 	ME.runLines([
-		"ADDIU $t0, $zero, 0xF000",
+		"ORI $t0, $zero, 0xF000",
 		"ADDI $t1, $zero, 1",
 		"BLTU $t0, $t1, skip    # jump not taken",
 		"ADDI $t1, $t1, 1",
