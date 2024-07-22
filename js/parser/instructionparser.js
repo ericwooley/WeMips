@@ -169,7 +169,7 @@ Parser.InstructionParsers = {
     'ADD': Parser.parseRdRsRt,
     'ADDU': Parser.parseRdRsRt,
     'ADDI': Parser.parseRtRsImmSigned,
-    'ADDIU': Parser.parseRtRsImmUnsigned,
+    'ADDIU': Parser.parseRtRsImmSigned,
     'SUB': Parser.parseRdRsRt,
     'SUBU': Parser.parseRdRsRt,
     'MULT': Parser.parseRsRt,

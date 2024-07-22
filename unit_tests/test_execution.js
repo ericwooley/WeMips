@@ -214,9 +214,11 @@ test("ADDIU", function() {
 	resetFlags();
 	ME.runLine("ADDIU $t0, $t2, 1");
 	equal(overflowFlag, false, "Adding one would cause the number to become negative.");
-	equal(carryFlag, false);
+	equal(carryFlag, false, "Adding one would not imply carry");
 	equal(ME.getRegisterVal('$t0'), -2147483648, "Signed addition will overflow.");
 	equal(ME.getRegisterUnsignedVal('$t0'), 2147483648, "Unsigned addition will not overflow.");
+	ME.runLine("ADDIU $t0, $t0, -1");
+	equal(ME.getRegisterUnsignedVal('$t0'), 2147483647, "Unsigned addition works with negative immediate");
 });
 
 test('MULT', function() {
